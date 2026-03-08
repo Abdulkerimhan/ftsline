@@ -1,0 +1,405 @@
+:root{
+  --sf-bg: var(--sa-bg, #070b16);
+  --sf-panel: var(--sa-panel, rgba(255,255,255,.06));
+  --sf-panel2: var(--sa-panel2, rgba(255,255,255,.08));
+  --sf-border: var(--sa-border, rgba(255,255,255,.12));
+  --sf-text: var(--sa-text, rgba(245,248,255,.92));
+  --sf-muted: var(--sa-muted, rgba(245,248,255,.62));
+  --sf-muted2: var(--sa-muted2, rgba(245,248,255,.48));
+  --sf-radius: var(--sa-radius2, 22px);
+  --sf-shadow: var(--sa-shadow, 0 22px 70px rgba(0,0,0,.45));
+}
+
+/* =========================
+   WRAP / PAGE BG
+========================= */
+.sfWrap{
+  width: 100%;
+  color: var(--sf-text);
+
+  /* ✅ gerçek sayfa zemini */
+  background: radial-gradient(circle at top, rgba(11,18,36,.95), rgba(5,7,15,.98) 70%);
+  min-height: 100vh;
+  padding: 16px;
+}
+
+/* =========================
+   TOP
+========================= */
+.sfTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sfTitle{
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: .2px;
+}
+.sfSub{
+  margin: 6px 0 0 0;
+  color: var(--sf-muted);
+  font-size: 13px;
+}
+
+.sfActions{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+}
+
+.sfError{
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 80, 80, .10);
+  border: 1px solid rgba(255, 80, 80, .22);
+  color: rgba(255,255,255,.92);
+}
+
+/* =========================
+   SUMMARY
+========================= */
+.sfGrid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* ✅ Panel görünürlüğü biraz artır */
+.sfCard,
+.sfPanel{
+  background: rgba(255,255,255,.07);
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius);
+  box-shadow: var(--sf-shadow);
+}
+
+.sfCard{
+  padding: 12px 12px;
+}
+
+.sfCardLabel{
+  color: var(--sf-muted);
+  font-size: 12px;
+}
+.sfCardValue{
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+.sfCardHint{
+  margin-top: 6px;
+  color: var(--sf-muted2);
+  font-size: 12px;
+}
+
+/* =========================
+   PANEL
+========================= */
+.sfPanel{
+  overflow:hidden;
+}
+
+.sfPanelHead{
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.sfPanelTitle{
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+/* =========================
+   FILTERS
+========================= */
+.sfFilters{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.sfInput, .sfSelect{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--sf-text);
+  border-radius: 12px;
+  padding: 10px 10px;
+  outline: none;
+  min-height: 40px;
+}
+
+.sfInput{ width: 240px; }
+.sfSelect{ width: 170px; }
+
+.sfInput::placeholder{
+  color: rgba(245,248,255,.45);
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.sfBtn{
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--sf-text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor:pointer;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  user-select:none;
+}
+.sfBtn:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18); }
+.sfBtn:active{ transform: translateY(1px); }
+.sfBtn:disabled{ opacity:.6; cursor:not-allowed; }
+
+.sfBtn.primary{
+  background: linear-gradient(135deg, rgba(47,107,255,.85), rgba(31,213,255,.35));
+  border-color: rgba(47,107,255,.35);
+}
+.sfBtn.ghost{
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.12);
+}
+
+/* =========================
+   TABLE
+========================= */
+.sfTableWrap{
+  overflow:auto;
+}
+
+.sfTable{
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.sfTable th, .sfTable td{
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align:left;
+  vertical-align:top;
+  font-size: 13px;
+}
+
+/* ✅ header daha net + sticky blur */
+.sfTable th{
+  color: rgba(245,248,255,.72);
+  font-weight: 700;
+  background: rgba(10,15,30,.72);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.sfTdMuted{
+  color: var(--sf-muted);
+  padding: 18px 10px !important;
+}
+
+.sfMono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  color: rgba(245,248,255,.78);
+  white-space: nowrap;
+}
+.sfMoney{
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sfTitleCell .sfMain{ font-weight: 800; }
+.sfTitleCell .sfSubCell{
+  margin-top: 4px;
+  color: var(--sf-muted);
+  font-size: 12px;
+}
+
+.sfTag{
+  white-space: nowrap;
+  color: rgba(245,248,255,.78);
+}
+
+/* =========================
+   STATUS
+========================= */
+.sfStatus{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sfStatus.paid, .sfStatus.success{
+  border-color: rgba(50, 220, 140, .28);
+  background: rgba(50, 220, 140, .10);
+}
+.sfStatus.pending{
+  border-color: rgba(255, 205, 80, .28);
+  background: rgba(255, 205, 80, .10);
+}
+.sfStatus.failed, .sfStatus.canceled{
+  border-color: rgba(255, 80, 80, .28);
+  background: rgba(255, 80, 80, .10);
+}
+
+/* =========================
+   PAGER
+========================= */
+.sfPager{
+  padding: 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+}
+.sfMuted{ color: var(--sf-muted); }
+.sfPageBox{
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+}
+
+/* =========================
+   MODAL
+========================= */
+.sfModalOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.sfModal{
+  width: min(760px, 100%);
+  background: rgba(10,15,30,.92);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 22px;
+  box-shadow: 0 30px 120px rgba(0,0,0,.55);
+  backdrop-filter: blur(14px);
+  overflow:hidden;
+}
+
+.sfModalHead{
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 10px;
+}
+
+.sfModalTitle{
+  font-weight: 900;
+  letter-spacing: .2px;
+}
+.sfModalSub{
+  margin-top: 6px;
+  color: rgba(245,248,255,.62);
+  font-size: 12px;
+}
+
+.sfForm{
+  padding: 12px;
+  display:grid;
+  gap: 10px;
+}
+
+.sfLabel{
+  display:grid;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(245,248,255,.72);
+}
+
+.sfRow{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sfFormActions{
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.sfTiny{
+  color: rgba(245,248,255,.52);
+  font-size: 12px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 980px){
+  .sfGrid{ grid-template-columns: 1fr 1fr; }
+  .sfInput{ width: 220px; }
+}
+@media (max-width: 560px){
+  .sfTop{ flex-direction: column; align-items: stretch; }
+  .sfActions{ justify-content: flex-start; }
+  .sfGrid{ grid-template-columns: 1fr; }
+  .sfRow{ grid-template-columns: 1fr; }
+  .sfInput, .sfSelect{ width: 100%; }
+}
+.sfTable tbody tr:hover{ background: rgba(255,255,255,.04); }
+.sfCard{ transition: transform .15s ease; }
+.sfCard:hover{ transform: translateY(-2px); }
+/* =========================
+   FIX: SELECT DROPDOWN (options görünmüyor)
+========================= */
+
+/* select kendisi */
+.sfSelect{
+  color: var(--sf-text) !important;
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color-scheme: dark; /* ✅ chrome native dropdown koyulaşır */
+}
+
+/* açılan seçenekler (option listesi) */
+.sfSelect option{
+  background: #0b1224 !important;  /* koyu */
+  color: rgba(245,248,255,.92) !important; /* açık yazı */
+}
+
+/* bazı chrome sürümlerinde optgroup da lazım olabiliyor */
+.sfSelect optgroup{
+  background: #0b1224 !important;
+  color: rgba(245,248,255,.92) !important;
+}
+
+/* input içindeki yazı da garanti olsun */
+.sfInput{
+  color: var(--sf-text) !important;
+}
+
+/* placeholder zaten var ama garanti */
+.sfInput::placeholder{
+  color: rgba(245,248,255,.45) !important;
+}

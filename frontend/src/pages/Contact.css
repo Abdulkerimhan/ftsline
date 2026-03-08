@@ -1,0 +1,76 @@
+.ctPage{
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #0b1224, #05070f 70%);
+  color: rgba(245,248,255,.92);
+}
+
+.ctContainer{
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 28px 16px;
+}
+
+.ctHead{
+  margin-bottom: 16px;
+}
+
+.ctTitle{
+  font-size: 30px;
+  font-weight: 900;
+  margin: 0 0 6px;
+}
+
+.ctSub{
+  color: rgba(245,248,255,.65);
+  margin: 0;
+}
+
+.ctGrid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.ctCard{
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.ctCard h3{
+  margin: 0 0 8px;
+}
+
+.ctCard p{
+  margin: 0 0 10px;
+  color: rgba(245,248,255,.70);
+}
+
+.ctLink{
+  display:inline-flex;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(60,120,255,.28);
+  background: rgba(60,120,255,.12);
+  color: rgba(245,248,255,.92);
+  text-decoration:none;
+}
+
+.ctLink:hover{
+  background: rgba(60,120,255,.18);
+}
+
+.ctNote{
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+  color: rgba(245,248,255,.70);
+}
+
+@media (max-width: 900px){
+  .ctGrid{ grid-template-columns: 1fr; }
+}

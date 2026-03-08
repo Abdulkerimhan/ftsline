@@ -1,0 +1,70 @@
+.abPage{
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #0b1224, #05070f 70%);
+  color: rgba(245,248,255,.92);
+}
+
+.abContainer{
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 30px 16px;
+}
+
+.abTitle{
+  font-size: 32px;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.abText{
+  color: rgba(245,248,255,.7);
+  margin-bottom: 24px;
+}
+
+.abGrid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.abCard{
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.abCard h3{
+  margin-bottom: 6px;
+}
+
+.abCard p{
+  font-size: 13px;
+  color: rgba(245,248,255,.7);
+}
+
+.abBox{
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.abBox h2{
+  margin-bottom: 10px;
+}
+
+.abBox ul{
+  padding-left: 16px;
+}
+
+.abBox li{
+  margin-bottom: 6px;
+}
+
+@media (max-width: 800px){
+  .abGrid{
+    grid-template-columns: 1fr;
+  }
+}

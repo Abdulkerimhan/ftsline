@@ -1,0 +1,293 @@
+/* =========================
+   NAVBAR (Premium - Parlamento)  ✅ FULL + FIX
+========================= */
+
+.nvWrap{
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  backdrop-filter: blur(12px) saturate(140%);
+  background: rgba(7, 11, 22, .72);
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+/* ✅ layout + click fix base */
+.nvInner{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 14px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 14px;
+
+  position: relative; /* ✅ */
+}
+
+/* LEFT */
+.nvLeft{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  cursor: pointer;
+  user-select:none;
+
+  flex: 0 0 auto;      /* ✅ taşmayı azalt */
+  max-width: 55%;      /* ✅ sol taraf sağa binmesin */
+  position: relative;  /* ✅ */
+  z-index: 1;          /* ✅ */
+}
+
+.nvLogoImg{
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 0 18px rgba(60,120,255,.35);
+}
+
+.nvBrandText{
+  display:flex;
+  flex-direction: column;
+  line-height: 1.05;
+  min-width: 0; /* ✅ */
+}
+
+.nvLogo{
+  font-weight: 900;
+  letter-spacing: .3px;
+  font-size: 15px;
+  color: rgba(245,248,255,.95);
+  white-space: nowrap;      /* ✅ */
+  overflow: hidden;         /* ✅ */
+  text-overflow: ellipsis;  /* ✅ */
+}
+
+.nvSlogan{
+  color: rgba(245,248,255,.55);
+  font-size: 11px;
+  white-space: nowrap;      /* ✅ */
+  overflow: hidden;         /* ✅ */
+  text-overflow: ellipsis;  /* ✅ */
+}
+
+/* NAV (desktop) */
+.nvNav{
+  display:flex;
+  gap: 10px;
+
+  flex: 1 1 auto;    /* ✅ */
+  min-width: 0;      /* ✅ */
+  justify-content: center;
+  position: relative; /* ✅ */
+  z-index: 2;         /* ✅ */
+}
+
+.nvLink{
+  color: rgba(245,248,255,.72);
+  text-decoration:none;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: .15s ease;
+  white-space: nowrap;
+}
+
+.nvLink:hover{
+  color: rgba(245,248,255,.92);
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.10);
+}
+
+.nvLink.active{
+  color: rgba(245,248,255,.95);
+  background: rgba(60,120,255,.12);
+  border-color: rgba(60,120,255,.25);
+}
+
+/* RIGHT */
+.nvRight{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+
+  flex: 0 0 auto;     /* ✅ */
+  position: relative; /* ✅ */
+  z-index: 50;        /* ✅ sağ taraf her zaman üstte */
+  pointer-events: auto;
+}
+
+.nvAuth{
+  display:flex;
+  gap: 8px;
+}
+
+.nvBtn{
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.08);
+  color: rgba(245,248,255,.92);
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor:pointer;
+  transition: .15s ease;
+}
+
+.nvBtn:hover{
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.22);
+}
+
+.nvBtn.ghost{
+  background: transparent;
+}
+
+/* user */
+.nvUser{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+}
+
+.nvChip{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.nvUserName{
+  color: rgba(245,248,255,.95);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.nvUserRole{
+  color: rgba(245,248,255,.55);
+  font-size: 12px;
+}
+
+/* ✅ nvChip button olunca default stilleri sıfırla + hover */
+button.nvChip{
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button.nvChip:hover{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.18);
+}
+
+/* icon button (cart) */
+.nvIconBtn{
+  position: relative;
+  width: 40px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(245,248,255,.92);
+  cursor: pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition: .15s ease;
+
+  z-index: 60;          /* ✅ */
+  pointer-events: auto; /* ✅ */
+}
+
+.nvIconBtn:hover{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.22);
+}
+
+.nvCartBadge{
+  position:absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(60,120,255,.9);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.25);
+}
+
+/* burger */
+.nvBurger{
+  display:none;
+  width: 40px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  cursor:pointer;
+  align-items:center;
+  justify-content:center;
+  flex-direction: column;
+  gap: 5px;
+
+  position: relative;
+  z-index: 60; /* ✅ */
+}
+
+.nvBurger span{
+  width: 18px;
+  height: 2px;
+  background: rgba(245,248,255,.85);
+  border-radius: 999px;
+}
+
+/* mobile menu */
+.nvMobile{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 14px 14px;
+  display:none;
+  gap: 8px;
+}
+
+.nvMobileLink{
+  width: 100%;
+  text-align:left;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(245,248,255,.88);
+  cursor:pointer;
+}
+
+.nvMobileLink.active{
+  background: rgba(60,120,255,.12);
+  border-color: rgba(60,120,255,.25);
+}
+
+.nvMobileLink.danger{
+  background: rgba(255,70,70,.10);
+  border-color: rgba(255,70,70,.25);
+}
+
+.nvMobileSep{
+  height: 1px;
+  background: rgba(255,255,255,.10);
+  margin: 6px 0;
+}
+
+/* responsive */
+@media (max-width: 860px){
+  .nvNav{ display:none; }
+  .nvBurger{ display:flex; }
+  .nvMobile{ display:grid; }
+  .nvLeft{ max-width: 70%; } /* ✅ mobilde biraz daha alan */
+}

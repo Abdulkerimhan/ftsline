@@ -1,0 +1,78 @@
+.fqPage{
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #0b1224, #05070f 70%);
+  color: rgba(245,248,255,.92);
+}
+
+.fqContainer{
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 16px;
+}
+
+.fqHead{
+  margin-bottom: 14px;
+}
+
+.fqTitle{
+  font-size: 30px;
+  font-weight: 900;
+  margin: 0 0 6px;
+}
+
+.fqSub{
+  color: rgba(245,248,255,.65);
+  margin: 0;
+}
+
+.fqList{
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.fqItem{
+  text-align: left;
+  padding: 14px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+  color: inherit;
+  cursor: pointer;
+}
+
+.fqItem:hover{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.16);
+}
+
+.fqItem.active{
+  border-color: rgba(60,120,255,.28);
+  background: rgba(60,120,255,.10);
+}
+
+.fqQ{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 800;
+}
+
+.fqIcon{
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.fqA{
+  margin-top: 10px;
+  color: rgba(245,248,255,.72);
+  font-weight: 500;
+  line-height: 1.5;
+}

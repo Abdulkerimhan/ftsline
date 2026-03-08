@@ -1,0 +1,145 @@
+.checkoutPage{
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #0b1224, #05070f 70%);
+  color: rgba(245,248,255,.92);
+}
+
+.checkoutShell{
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 14px 80px;
+}
+
+.checkoutHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.checkoutTitle{
+  margin:0;
+}
+
+.checkoutBackBtn{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  color: rgba(245,248,255,.92);
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.checkoutGrid{
+  display:grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap:16px;
+}
+
+.checkoutList{
+  display:grid;
+  gap:12px;
+}
+
+.checkoutItem,
+.checkoutSummary,
+.checkoutEmpty{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.checkoutItem{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+
+.checkoutItemLeft{
+  min-width:0;
+}
+
+.checkoutName{
+  font-weight:800;
+}
+
+.checkoutMeta{
+  margin-top:6px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  color: rgba(245,248,255,.62);
+}
+
+.dot{
+  opacity:.7;
+}
+
+.checkoutItemRight{
+  text-align:right;
+}
+
+.checkoutUnitPrice{
+  color: rgba(245,248,255,.62);
+  font-size:14px;
+}
+
+.checkoutPrice{
+  font-weight:800;
+  margin-top:4px;
+}
+
+.checkoutSummary{
+  display:grid;
+  gap:12px;
+  height:fit-content;
+}
+
+.checkoutRow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.checkoutTotal{
+  padding-top:8px;
+  border-top:1px solid rgba(255,255,255,.10);
+  font-size:18px;
+}
+
+.checkoutBtn{
+  border:none;
+  border-radius:14px;
+  padding:12px;
+  font-weight:700;
+  cursor:pointer;
+  background: linear-gradient(135deg, rgba(60,120,255,.95), rgba(26,60,255,.95));
+  color:#fff;
+}
+
+.checkoutEmpty h3{
+  margin-top:0;
+}
+
+@media (max-width: 860px){
+  .checkoutGrid{
+    grid-template-columns:1fr;
+  }
+
+  .checkoutHead{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .checkoutItem{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .checkoutItemRight{
+    text-align:left;
+  }
+}
