@@ -1,1230 +1,1314 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import Navbar from "../components/Navbar.jsx";
-import { useAuth } from "../context/AuthContext.jsx";
-import { apiGet, apiPut } from "../api/http.js";
+import { useEffect, useMemo, useState } from "react";
+import { getMe } from "../api.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 import "./Dashboard.css";
 
-import { Country, State, City } from "country-state-city";
-import { getCountryCallingCode } from "libphonenumber-js";
-
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
-
-/* =========================
-   HELPERS
-========================= */
-function fmtTry(n) {
-  const v = Number(n || 0);
-  if (!Number.isFinite(v)) return "—";
-  return v.toLocaleString("tr-TR") + "₺";
-}
-
-function shortId(x) {
-  const s = String(x || "");
-  if (s.length <= 10) return s;
-  return s.slice(0, 6) + "…" + s.slice(-4);
-}
-
-function safeDate(x) {
-  if (!x) return "—";
-  try {
-    const d = new Date(x);
-    if (Number.isNaN(d.getTime())) return String(x);
-    return d.toLocaleDateString("tr-TR");
-  } catch {
-    return String(x);
-  }
-}
-
-async function copyText(txt) {
-  try {
-    await navigator.clipboard.writeText(txt);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function buildLevelsFromGraph(graph) {
-  const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
-  if (!nodes.length) return [];
-
-  const grouped = new Map();
-
-  for (const node of nodes) {
-    const lv = Number(node?.level ?? 0);
-    if (!grouped.has(lv)) grouped.set(lv, []);
-    grouped.get(lv).push(node);
-  }
-
-  return [...grouped.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([level, items]) => ({
-      level,
-      items,
-    }));
-}
-
-function buildMatrixTree(graph) {
-  const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
-  const edges = Array.isArray(graph?.edges) ? graph.edges : [];
-  const rootUserId = String(graph?.rootUserId || "");
-
-  if (!nodes.length) return null;
-
-  const map = new Map();
-
-  for (const n of nodes) {
-    map.set(String(n.id), {
-      ...n,
-      children: [],
-      left: null,
-      right: null,
-    });
-  }
-
-  for (const e of edges) {
-    const from = map.get(String(e.from));
-    const to = map.get(String(e.to));
-    if (!from || !to) continue;
-
-    if (e.slot === 1) from.left = to;
-    else if (e.slot === 2) from.right = to;
-
-    from.children.push(to);
-  }
-
-  const root =
-    map.get(rootUserId) ||
-    nodes.find((x) => Number(x.level) === 0 && map.get(String(x.id))) ||
-    map.get(String(nodes[0].id));
-
-  return root || null;
-}
-
-function countLevelItems(levels, targetLevel) {
-  const found = levels.find((x) => x.level === targetLevel);
-  return found ? found.items.length : 0;
-}
-
-/* =========================
-   TABS
-========================= */
-const TABS = [
-  { key: "overview", label: "Özet", icon: "📌" },
-  { key: "earn", label: "Kazanç", icon: "📈" },
-  { key: "license", label: "Lisans", icon: "🎫" },
-  { key: "team", label: "Ekip / Ağaç", icon: "🧩" },
-  { key: "profile", label: "Profil", icon: "👤" },
-];
+const API = import.meta.env.VITE_API_URL || "/api";
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const toastTimerRef = useRef(null);
+  const i18n = useI18n() || {};
+  const t = i18n.t || {};
+  const language = i18n.language || "tr";
 
-  const initialTab = useMemo(() => {
-    const sp = new URLSearchParams(window.location.search);
-    const q = sp.get("tab") || "overview";
-    return TABS.some((t) => t.key === q) ? q : "overview";
-  }, []);
+  const dashboardT = t?.dashboard || {};
+  const earningsT = dashboardT?.earnings || {};
+  const ordersT = dashboardT?.orders || {};
+  const profileT = dashboardT?.profile || {};
+  const matrixT = dashboardT?.matrix || {};
+  const unilevelT = dashboardT?.unilevel || {};
+  const statsT = dashboardT?.stats || {};
+  const settingsT = dashboardT?.settings || {};
+  const sidebarT = dashboardT?.sidebar || {};
+  const sectionsT = dashboardT?.sections || {};
 
-  const [tab, setTab] = useState(initialTab);
-  const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState({ show: false, type: "ok", msg: "" });
+  const safeText = (value, fallback) =>
+    value !== undefined && value !== null && value !== "" ? value : fallback;
 
-  const [summary, setSummary] = useState({
-    balance: null,
-    totalEarning: null,
-    monthEarning: null,
-    teamCount: null,
-    licenseStatus: null,
-    licenseEndsAt: null,
+  const formatMoney = (value) =>
+    Number(value || 0).toLocaleString(language === "tr" ? "tr-TR" : "en-US");
+
+  const formatCareer = (career) => {
+    if (!career) return "Başlangıç";
+
+    if (typeof career === "object") {
+      return career.level || career.name || career.title || "Başlangıç";
+    }
+
+    return career;
+  };
+
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
   });
 
-  const [earnSeries, setEarnSeries] = useState([]);
-  const [unilevel, setUnilevel] = useState({ raw: null, levels: [] });
-  const [matrix, setMatrix] = useState({ raw: null, tree: null, levels: [] });
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeSection, setActiveSection] = useState("overview");
 
-  const [pform, setPform] = useState({
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  const [summary, setSummary] = useState({
+    balance: 24850,
+    monthEarning: 6850,
+    totalEarning: 92400,
+    teamCount: 27,
+    directReferrals: 8,
+    career: "Silver",
+    licenseStatus: safeText(dashboardT?.active, "Aktif"),
+    licenseEndsAt: "2026-12-31",
+  });
+
+  const earningsChart = useMemo(
+    () => [
+      { label: language === "tr" ? "Ocak" : "January", value: 3200 },
+      { label: language === "tr" ? "Şubat" : "February", value: 4100 },
+      { label: language === "tr" ? "Mart" : "March", value: 5200 },
+      { label: language === "tr" ? "Nisan" : "April", value: 6850 },
+      { label: language === "tr" ? "Mayıs" : "May", value: 6100 },
+      { label: language === "tr" ? "Haziran" : "June", value: 7900 },
+    ],
+    [language]
+  );
+
+  const [profileForm, setProfileForm] = useState({
     fullName: "",
     email: "",
     phone: "",
-
-    birthDate: "",
-
-    nationality: "TR",
-    country: "TR",
-    phoneCode: "+90",
-
-    stateCode: "",
     city: "",
-    district: "",
-
-    addressLine: "",
-    postalCode: "",
-
-    invoiceName: "",
-    invoiceTaxNo: "",
-    invoiceTaxOffice: "",
-    invoiceAddressLine: "",
-    invoiceCity: "",
-    invoiceDistrict: "",
-    invoicePostalCode: "",
-    invoiceCountry: "TR",
+    address: "",
+    password: "",
   });
 
-  const [invoiceSame, setInvoiceSame] = useState(true);
-
-  const refLink = useMemo(() => {
-    const u = user?.username || "";
-    return `${window.location.origin}/r/${encodeURIComponent(u)}`;
-  }, [user?.username]);
-
-  const showToast = useCallback((msg, type = "ok") => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-
-    setToast({ show: true, type, msg });
-
-    toastTimerRef.current = setTimeout(() => {
-      setToast({ show: false, type: "ok", msg: "" });
-      toastTimerRef.current = null;
-    }, 2200);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    const sp = new URLSearchParams(window.location.search);
-    sp.set("tab", tab);
-    const next = `${window.location.pathname}?${sp.toString()}`;
-    window.history.replaceState(null, "", next);
-  }, [tab]);
-
-  const normalizeSeries = useCallback((data) => {
-    const arr = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.items)
-      ? data.items
-      : Array.isArray(data?.series)
-      ? data.series
-      : [];
-
-    return arr
-      .map((x) => ({
-        month: x.month || x.ym || x.label || "—",
-        earning: Number(x.earning ?? x.amount ?? x.value ?? 0),
-      }))
-      .slice(-12);
-  }, []);
-
-  /* =========================
-     COUNTRY / STATE / DISTRICT
-  ========================= */
-  const countryOptions = useMemo(() => {
-    const list = Country.getAllCountries() || [];
-    list.sort((a, b) => {
-      if (a.isoCode === "TR") return -1;
-      if (b.isoCode === "TR") return 1;
-      return a.name.localeCompare(b.name);
-    });
-    return list;
-  }, []);
-
-  const stateOptions = useMemo(() => {
-    const cc = pform.country || "TR";
-    return State.getStatesOfCountry(cc) || [];
-  }, [pform.country]);
-
-  const districtOptions = useMemo(() => {
-    const cc = pform.country || "TR";
-    const sc = pform.stateCode || "";
-    if (!cc || !sc) return [];
-    return City.getCitiesOfState(cc, sc) || [];
-  }, [pform.country, pform.stateCode]);
-
-  const computePhoneCode = useCallback((countryIso2) => {
-    try {
-      const code = getCountryCallingCode(countryIso2);
-      return `+${code}`;
-    } catch {
-      return "";
-    }
-  }, []);
-
-  const onChangeCountry = useCallback(
-    (iso2) => {
-      const phoneCode = computePhoneCode(iso2) || (iso2 === "TR" ? "+90" : "");
-      setPform((p) => ({
-        ...p,
-        country: iso2,
-        nationality: iso2,
-        phoneCode,
-        stateCode: "",
-        city: "",
-        district: "",
-        invoiceCountry: iso2,
-      }));
+  const [matrixTree] = useState({
+    username: user?.username || "sen",
+    left: {
+      username: "ahmet_team",
+      left: {
+        username: "elif_network",
+        left: { username: "murat_01" },
+        right: { username: "zeynep_01" },
+      },
+      right: {
+        username: "kemal_line",
+        left: { username: "ayse_01" },
+        right: { username: "fatma_01" },
+      },
     },
-    [computePhoneCode]
+    right: {
+      username: "ali_growth",
+      left: {
+        username: "sena_team",
+        left: { username: "burak_01" },
+        right: { username: "eda_01" },
+      },
+      right: {
+        username: "kaan_plus",
+        left: { username: "emre_01" },
+        right: { username: "mine_01" },
+      },
+    },
+  });
+
+  const [unilevelTree] = useState({
+    username: user?.username || "sen",
+    children: [
+      {
+        username: "ahmet_team",
+        children: [
+          {
+            username: "elif_network",
+            children: [
+              { username: "murat_01", children: [] },
+              { username: "zeynep_01", children: [] },
+            ],
+          },
+        ],
+      },
+      {
+        username: "ali_growth",
+        children: [
+          { username: "sena_team", children: [] },
+          { username: "kaan_plus", children: [] },
+        ],
+      },
+      {
+        username: "mehmet_line",
+        children: [{ username: "burak_01", children: [] }],
+      },
+    ],
+  });
+
+  const [expandedNodes, setExpandedNodes] = useState({
+    root: true,
+    "root-L": true,
+    "root-R": true,
+  });
+
+  const [expandedUniNodes, setExpandedUniNodes] = useState({
+    uniRoot: true,
+    "uniRoot-0": true,
+    "uniRoot-1": true,
+    "uniRoot-2": true,
+  });
+
+  const earnings = useMemo(
+    () => [
+      {
+        id: 1,
+        title: safeText(
+          earningsT?.teamEarning,
+          language === "tr" ? "Takım Kazancı" : "Team Earning"
+        ),
+        source: "ahmet_team",
+        amount: 1250,
+        date: "2026-04-15",
+      },
+      {
+        id: 2,
+        title: safeText(
+          earningsT?.directBonus,
+          language === "tr" ? "Direkt Bonus" : "Direct Bonus"
+        ),
+        source: "elif_network",
+        amount: 800,
+        date: "2026-04-13",
+      },
+      {
+        id: 3,
+        title: safeText(
+          earningsT?.matrixIncome,
+          language === "tr" ? "Matrix Geliri" : "Matrix Income"
+        ),
+        source: language === "tr" ? "2. seviye dolum" : "2nd level fill",
+        amount: 2150,
+        date: "2026-04-10",
+      },
+      {
+        id: 4,
+        title: safeText(
+          earningsT?.salesProfit,
+          language === "tr" ? "Satış Kârı" : "Sales Profit"
+        ),
+        source: language === "tr" ? "fatma_01 siparişi" : "fatma_01 order",
+        amount: 640,
+        date: "2026-04-08",
+      },
+    ],
+    [earningsT, language]
   );
 
-  const onChangeState = useCallback(
-    (stateIso) => {
-      const st = stateOptions.find((x) => x.isoCode === stateIso);
-      setPform((p) => ({
-        ...p,
-        stateCode: stateIso,
-        city: st?.name || "",
-        district: "",
-      }));
-    },
-    [stateOptions]
+  const unilevelMembers = useMemo(
+    () => [
+      {
+        username: "ahmet_team",
+        level: 1,
+        joinDate: "2026-03-18",
+        contribution: 850,
+        status: safeText(dashboardT?.active, "Aktif"),
+      },
+      {
+        username: "elif_network",
+        level: 2,
+        joinDate: "2026-03-25",
+        contribution: 420,
+        status: safeText(dashboardT?.active, "Aktif"),
+      },
+      {
+        username: "ali_growth",
+        level: 1,
+        joinDate: "2026-03-29",
+        contribution: 1200,
+        status: safeText(dashboardT?.active, "Aktif"),
+      },
+      {
+        username: "kaan_plus",
+        level: 2,
+        joinDate: "2026-04-04",
+        contribution: 310,
+        status: safeText(dashboardT?.passive, "Pasif"),
+      },
+    ],
+    [dashboardT]
   );
 
-  const onChangeDistrict = useCallback((districtName) => {
-    setPform((p) => ({ ...p, district: districtName }));
-  }, []);
+  const matrixDailyEarnings = useMemo(
+    () => [
+      {
+        date: "2026-04-10",
+        amount: 2150,
+        note: language === "tr" ? "2. seviye dolumu" : "2nd level fill",
+      },
+      {
+        date: "2026-04-11",
+        amount: 480,
+        note: language === "tr" ? "Sol kol hareketi" : "Left branch movement",
+      },
+      {
+        date: "2026-04-12",
+        amount: 720,
+        note: language === "tr" ? "Sağ kol hareketi" : "Right branch movement",
+      },
+      {
+        date: "2026-04-13",
+        amount: 350,
+        note: language === "tr" ? "Alt seviye eşleşmesi" : "Lower level match",
+      },
+      {
+        date: "2026-04-14",
+        amount: 910,
+        note: language === "tr" ? "Matrix bonusu" : "Matrix bonus",
+      },
+    ],
+    [language]
+  );
 
-  const applyInvoiceSame = useCallback(() => {
-    setPform((p) => ({
-      ...p,
-      invoiceAddressLine: p.addressLine,
-      invoiceCity: p.city,
-      invoiceDistrict: p.district,
-      invoicePostalCode: p.postalCode,
-      invoiceCountry: p.country || "TR",
-      invoiceName: p.invoiceName || p.fullName || "",
-    }));
-  }, []);
-
-  useEffect(() => {
-    if (invoiceSame) applyInvoiceSame();
-  }, [
-    invoiceSame,
-    pform.addressLine,
-    pform.city,
-    pform.district,
-    pform.postalCode,
-    pform.country,
-    pform.fullName,
-    applyInvoiceSame,
-  ]);
-
-  /* =========================
-     FETCH
-  ========================= */
-  const fetchAll = useCallback(async () => {
-    setBusy(true);
-
+  async function fetchMyOrders() {
     try {
-      let s = null;
-      try {
-        s = await apiGet("/api/user/summary");
-      } catch {
-        try {
-          s = await apiGet("/api/dashboard/summary");
-        } catch {}
+      setOrdersLoading(true);
+
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        setOrders([]);
+        return;
       }
 
-      let prof = null;
-      try {
-        prof = await apiGet("/api/user/profile");
-      } catch {
-        try {
-          prof = await apiGet("/api/users/profile");
-        } catch {}
-      }
-
-      let es = null;
-      try {
-        es = await apiGet("/api/user/earnings/series");
-      } catch {
-        try {
-          es = await apiGet("/api/ledger/earnings/series");
-        } catch {}
-      }
-
-      let uni = null;
-      try {
-        uni = await apiGet("/api/network/unilevel");
-      } catch {
-        try {
-          uni = await apiGet("/api/user/team");
-        } catch {}
-      }
-
-      let mx = null;
-      try {
-        mx = await apiGet("/api/network/matrix");
-      } catch {
-        try {
-          mx = await apiGet("/api/matrix/tree");
-        } catch {}
-      }
-
-      const u = prof?.user || prof || s?.user || s;
-
-      if (u && typeof u === "object") {
-        setSummary((prev) => ({
-          ...prev,
-          balance: u.balance ?? u.wallet ?? u.available ?? prev.balance,
-          totalEarning: u.totalEarning ?? u.total ?? prev.totalEarning,
-          monthEarning: u.monthEarning ?? u.thisMonth ?? prev.monthEarning,
-          teamCount: u.teamCount ?? u.downlineCount ?? prev.teamCount,
-          licenseStatus: u.licenseStatus ?? u.license?.status ?? prev.licenseStatus,
-          licenseEndsAt: u.licenseEndsAt ?? u.license?.endsAt ?? prev.licenseEndsAt,
-        }));
-
-        const birthRaw = u.birthDate ?? u.profile?.birthDate ?? "";
-        const birthDate = birthRaw ? String(birthRaw).slice(0, 10) : "";
-
-        const country = String(u.country ?? u.profile?.country ?? "TR").toUpperCase();
-        const nationality = String(u.nationality ?? u.profile?.nationality ?? country).toUpperCase();
-
-        const phoneCode =
-          u.phoneCode ??
-          u.profile?.phoneCode ??
-          computePhoneCode(country) ??
-          (country === "TR" ? "+90" : "");
-
-        const loaded = {
-          fullName: u.fullName ?? user?.fullName ?? "",
-          email: u.email ?? user?.email ?? "",
-          phone: u.phone ?? user?.phone ?? "",
-
-          birthDate,
-          nationality,
-          country,
-          phoneCode,
-
-          addressLine: u.addressLine ?? u.profile?.addressLine ?? "",
-          postalCode: u.postalCode ?? u.profile?.postalCode ?? "",
-          stateCode: u.stateCode ?? u.profile?.stateCode ?? "",
-          city: u.city ?? u.profile?.city ?? "",
-          district: u.district ?? u.profile?.district ?? "",
-
-          invoiceName: u.invoice?.name ?? u.invoiceName ?? "",
-          invoiceTaxNo: u.invoice?.taxNo ?? u.invoiceTaxNo ?? "",
-          invoiceTaxOffice: u.invoice?.taxOffice ?? u.invoiceTaxOffice ?? "",
-          invoiceAddressLine: u.invoice?.addressLine ?? u.invoiceAddressLine ?? "",
-          invoiceCity: u.invoice?.city ?? u.invoiceCity ?? "",
-          invoiceDistrict: u.invoice?.district ?? u.invoiceDistrict ?? "",
-          invoicePostalCode: u.invoice?.postalCode ?? u.invoicePostalCode ?? "",
-          invoiceCountry: String(
-            u.invoice?.country ?? u.invoiceCountry ?? country
-          ).toUpperCase(),
-        };
-
-        setPform((prev) => ({ ...prev, ...loaded }));
-
-        const hasInvoiceAddress =
-          !!loaded.invoiceAddressLine || !!loaded.invoiceCity || !!loaded.invoiceDistrict;
-
-        if (!hasInvoiceAddress) setInvoiceSame(true);
-      } else {
-        setPform((prev) => ({
-          ...prev,
-          fullName: user?.fullName ?? "",
-          email: user?.email ?? "",
-          phone: user?.phone ?? "",
-        }));
-      }
-
-      setEarnSeries(normalizeSeries(es));
-
-      const uniLevels = buildLevelsFromGraph(uni);
-      const matrixTree = buildMatrixTree(mx);
-      const matrixLevels = buildLevelsFromGraph(mx);
-
-      setUnilevel({
-        raw: uni || null,
-        levels: uniLevels,
+      const res = await fetch(`${API}/orders/my`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      setMatrix({
-        raw: mx || null,
-        tree: matrixTree,
-        levels: matrixLevels,
-      });
-    } catch (e) {
-      showToast(e?.message || "Veri alınamadı.", "err");
-    } finally {
-      setBusy(false);
-    }
-  }, [user, showToast, computePhoneCode, normalizeSeries]);
+      const data = await res.json().catch(() => []);
 
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
-
-  async function saveProfile() {
-    setBusy(true);
-
-    try {
-      const payload = {
-        ...pform,
-        fullName: String(pform.fullName || "").trim(),
-        email: String(pform.email || "").trim().toLowerCase(),
-        phone: String(pform.phone || "").trim(),
-        addressLine: String(pform.addressLine || "").trim(),
-        postalCode: String(pform.postalCode || "").trim(),
-        city: String(pform.city || "").trim(),
-        district: String(pform.district || "").trim(),
-        invoiceName: String(pform.invoiceName || "").trim(),
-        invoiceTaxNo: String(pform.invoiceTaxNo || "").trim(),
-        invoiceTaxOffice: String(pform.invoiceTaxOffice || "").trim(),
-        invoiceAddressLine: String(pform.invoiceAddressLine || "").trim(),
-        invoiceCity: String(pform.invoiceCity || "").trim(),
-        invoiceDistrict: String(pform.invoiceDistrict || "").trim(),
-        invoicePostalCode: String(pform.invoicePostalCode || "").trim(),
-        ...(invoiceSame
-          ? {
-              invoiceAddressLine: String(pform.addressLine || "").trim(),
-              invoiceCity: String(pform.city || "").trim(),
-              invoiceDistrict: String(pform.district || "").trim(),
-              invoicePostalCode: String(pform.postalCode || "").trim(),
-              invoiceCountry: pform.country || "TR",
-              invoiceName: String(pform.invoiceName || pform.fullName || "").trim(),
-            }
-          : {}),
-      };
-
-      try {
-        await apiPut("/api/user/profile", payload);
-      } catch {
-        await apiPut("/api/users/profile", payload);
+      if (!res.ok) {
+        throw new Error(data.message || "Siparişler alınamadı");
       }
 
-      await fetchAll();
-      showToast("Profil güncellendi ✅", "ok");
-    } catch (e) {
-      showToast(e?.message || "Profil güncellenemedi.", "err");
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Siparişler alınamadı:", error);
+      setOrders([]);
     } finally {
-      setBusy(false);
+      setOrdersLoading(false);
     }
   }
 
-  const kpis = useMemo(() => {
-    return [
-      { label: "Bakiye", value: fmtTry(summary.balance), icon: "💰" },
-      { label: "Bu Ay", value: fmtTry(summary.monthEarning), icon: "📅" },
-      { label: "Toplam", value: fmtTry(summary.totalEarning), icon: "🏆" },
-      { label: "Ekip", value: summary.teamCount ?? "—", icon: "👥" },
-    ];
-  }, [summary]);
+  useEffect(() => {
+    let mounted = true;
 
-  const licenseTone = useMemo(() => {
-    const s = String(summary.licenseStatus || "").toLowerCase();
-    if (s.includes("active") || s.includes("aktif")) return "ok";
-    if (s.includes("expired") || s.includes("pasif") || s.includes("inaktif")) return "warn";
-    if (s.includes("pending")) return "info";
-    return "muted";
-  }, [summary.licenseStatus]);
+    async function fetchUser() {
+      try {
+        const data = await getMe();
+        if (!mounted) return;
 
-  return (
-    <div className="udPage">
-      <Navbar />
+        if (data) {
+          setUser(data);
 
-      <div className="udShell">
-        <div className="udHeader">
-          <div className="udHello">
-            <div className="udTitleRow">
-              <div>
-                <h1 className="udTitle">Kullanıcı Paneli</h1>
-                <div className="udSub">
-                  Hoşgeldin <b>{user?.username || "Kullanıcı"}</b> • ID:{" "}
-                  <span className="udMono">{shortId(user?._id || user?.id)}</span>
+          setProfileForm({
+            fullName: data?.fullName || "",
+            email: data?.email || "",
+            phone: data?.phone || "",
+            city: data?.city || "",
+            address: data?.address || "",
+            password: "",
+          });
+
+          setSummary((prev) => ({
+            ...prev,
+            balance: data?.balance ?? prev.balance,
+            monthEarning: data?.monthEarning ?? prev.monthEarning,
+            totalEarning: data?.totalEarning ?? prev.totalEarning,
+            teamCount: data?.teamCount ?? prev.teamCount,
+            directReferrals:
+              data?.directReferrals ?? data?.directCount ?? prev.directReferrals,
+            licenseStatus: data?.isLicensed
+              ? safeText(dashboardT?.active, "Aktif")
+              : safeText(dashboardT?.passive, "Pasif"),
+            career: data?.career ? formatCareer(data.career) : prev.career,
+            licenseEndsAt:
+              data?.licenseEndsAt ||
+              data?.licenseExpiresAt ||
+              prev.licenseEndsAt,
+          }));
+        }
+      } catch (error) {
+        console.error("Dashboard kullanıcı verisi alınamadı:", error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    fetchUser();
+    fetchMyOrders();
+
+    return () => {
+      mounted = false;
+    };
+  }, [dashboardT?.active, dashboardT?.passive]);
+
+  const referralLink = useMemo(() => {
+    const username = user?.username || "ftsline";
+    return `${window.location.origin}/register?sponsor=${username}`;
+  }, [user]);
+
+  const maxChartValue = Math.max(...earningsChart.map((item) => item.value), 1);
+
+  const copyReferral = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (error) {
+      console.error("Kopyalama hatası:", error);
+      alert(safeText(profileT?.copyError, "Kopyalama sırasında hata oluştu"));
+    }
+  };
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleProfileSave = (e) => {
+    e.preventDefault();
+    console.log("Profil kaydet:", profileForm);
+    alert(safeText(profileT?.saveAlert, "Profil bilgileri kaydedildi"));
+  };
+
+  const getStatusText = (status) => {
+    if (status === "completed") {
+      return safeText(
+        ordersT?.completed,
+        language === "tr" ? "Tamamlandı" : "Completed"
+      );
+    }
+
+    if (status === "shipped") {
+      return safeText(
+        ordersT?.shipping,
+        language === "tr" ? "Kargoda" : "Shipping"
+      );
+    }
+
+    if (status === "cancelled") {
+      return language === "tr" ? "İptal Edildi" : "Cancelled";
+    }
+
+    if (status === "pending") {
+      return language === "tr" ? "Beklemede" : "Pending";
+    }
+
+    return safeText(
+      ordersT?.preparing,
+      language === "tr" ? "Hazırlanıyor" : "Preparing"
+    );
+  };
+
+  const getStatusClass = (status) => {
+    if (
+      status === "completed" ||
+      status === safeText(ordersT?.completed, "Tamamlandı")
+    ) {
+      return "status-completed";
+    }
+
+    if (
+      status === "shipped" ||
+      status === safeText(ordersT?.shipping, "Kargoda")
+    ) {
+      return "status-shipping";
+    }
+
+    if (status === "cancelled") {
+      return "status-cancelled";
+    }
+
+    return "status-preparing";
+  };
+
+  const toggleMatrixNode = (nodeId) => {
+    setExpandedNodes((prev) => ({
+      ...prev,
+      [nodeId]: !prev[nodeId],
+    }));
+  };
+
+  const toggleUniNode = (nodeId) => {
+    setExpandedUniNodes((prev) => ({
+      ...prev,
+      [nodeId]: !prev[nodeId],
+    }));
+  };
+
+  const renderMatrixNode = (node, level = 1, maxLevel = 15, nodeId = "root") => {
+    if (!node || level > maxLevel) return null;
+
+    const hasChildren = !!(node.left || node.right);
+    const isExpanded = !!expandedNodes[nodeId];
+
+    return (
+      <div className="matrix-node-wrap" key={nodeId}>
+        <button
+          type="button"
+          className={`matrix-node ${level === 1 ? "matrix-root" : ""} ${
+            hasChildren ? "matrix-clickable" : ""
+          }`}
+          onClick={() => hasChildren && toggleMatrixNode(nodeId)}
+        >
+          <div className="matrix-node-name">{node.username}</div>
+          <div className="matrix-level">
+            {safeText(matrixT?.level, "Seviye")} {level}
+          </div>
+          {hasChildren && (
+            <div className="matrix-toggle-text">
+              {isExpanded
+                ? safeText(matrixT?.close, "Kapat")
+                : safeText(matrixT?.open, "Aç")}
+            </div>
+          )}
+        </button>
+
+        {hasChildren && isExpanded && level < maxLevel && (
+          <div className="matrix-children">
+            <div className="matrix-child-slot">
+              {node.left ? (
+                renderMatrixNode(node.left, level + 1, maxLevel, `${nodeId}-L`)
+              ) : (
+                <div className="matrix-empty">
+                  {safeText(matrixT?.emptySlot, "Boş Slot")}
                 </div>
-              </div>
-
-              <button className="udBtn" type="button" onClick={fetchAll} disabled={busy}>
-                {busy ? "Yükleniyor..." : "Yenile"}
-              </button>
+              )}
             </div>
 
-            <div className="udQuick">
-              <div className={`udPill ${licenseTone}`}>
-                <span className="udPillDot" />
-                Lisans: <b>{summary.licenseStatus ?? "—"}</b>
-                <span className="udPillSep" />
-                Bitiş: <b>{safeDate(summary.licenseEndsAt)}</b>
-              </div>
-
-              <div className="udPill">
-                Referans: <b className="udMono">{user?.username || "—"}</b>
-              </div>
+            <div className="matrix-child-slot">
+              {node.right ? (
+                renderMatrixNode(node.right, level + 1, maxLevel, `${nodeId}-R`)
+              ) : (
+                <div className="matrix-empty">
+                  {safeText(matrixT?.emptySlot, "Boş Slot")}
+                </div>
+              )}
             </div>
           </div>
+        )}
+      </div>
+    );
+  };
 
-          <div className="udTabs" role="tablist">
-            {TABS.map((t) => (
-              <button
-                key={t.key}
-                className={`udTab ${tab === t.key ? "active" : ""}`}
-                onClick={() => setTab(t.key)}
-                type="button"
-              >
-                <span className="udTabIco">{t.icon}</span>
-                {t.label}
-              </button>
+  const renderUniNode = (node, level = 1, nodeId = "uniRoot") => {
+    if (!node) return null;
+
+    const hasChildren = !!(node.children && node.children.length > 0);
+    const isExpanded = !!expandedUniNodes[nodeId];
+
+    return (
+      <div className="uni-node-wrap" key={nodeId}>
+        <button
+          type="button"
+          className={`uni-node ${level === 1 ? "uni-root" : ""} ${
+            hasChildren ? "uni-clickable" : ""
+          }`}
+          onClick={() => hasChildren && toggleUniNode(nodeId)}
+        >
+          <span className="uni-node-name">{node.username}</span>
+          {hasChildren && (
+            <span className="uni-toggle-text">
+              {isExpanded
+                ? safeText(unilevelT?.close, "Kapat")
+                : safeText(unilevelT?.open, "Aç")}
+            </span>
+          )}
+        </button>
+
+        {hasChildren && isExpanded && (
+          <div className="uni-children">
+            {node.children.map((child, index) => (
+              <div key={`${child.username}-${index}`}>
+                {renderUniNode(child, level + 1, `${nodeId}-${index}`)}
+              </div>
             ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderOverview = () => (
+    <>
+      <div className="dashboard-hero">
+        <div className="dashboard-hero-top">
+          <div>
+            <div className="dashboard-hero-badge">
+              {safeText(dashboardT?.userPanel, "Kullanıcı Paneli")}
+            </div>
+            <h1 className="dashboard-hero-title">
+              {safeText(dashboardT?.welcome, "Hoş geldin")},{" "}
+              {user?.username || user?.fullName || "Kullanıcı"}
+            </h1>
+            <p className="dashboard-hero-text">
+              {safeText(
+                dashboardT?.heroText,
+                "Paneline hoş geldin. Buradan kazançlarını, ağını ve siparişlerini takip edebilirsin."
+              )}
+            </p>
+          </div>
+
+          <div className="dashboard-career-box">
+            <div className="dashboard-career-label">
+              {safeText(dashboardT?.careerLevel, "Kariyer Seviyesi")}
+            </div>
+            <div className="dashboard-career-value">
+              {formatCareer(summary.career)}
+            </div>
+            <div className="dashboard-career-license">
+              {safeText(dashboardT?.license, "Lisans")}:{" "}
+              {summary.licenseStatus}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-stats">
+        <div className="dashboard-card dashboard-stat-card">
+          <div className="dashboard-stat-title">
+            {safeText(statsT?.balance, "Bakiye")}
+          </div>
+          <div className="dashboard-stat-value">
+            {formatMoney(summary.balance)} ₺
+          </div>
+          <div className="dashboard-stat-sub">
+            {safeText(statsT?.balanceSub, "Güncel kullanılabilir bakiyen")}
           </div>
         </div>
 
-        <div className="udGrid">
-          {tab === "overview" && (
-            <>
-              <section className="udPanel udSpan2">
-                <div className="udKpis">
-                  {kpis.map((k) => (
-                    <div key={k.label} className="udKpi">
-                      <div className="udKpiIco">{k.icon}</div>
-                      <div className="udKpiMeta">
-                        <div className="udKpiLabel">{k.label}</div>
-                        <div className="udKpiVal">{k.value}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
+        <div className="dashboard-card dashboard-stat-card">
+          <div className="dashboard-stat-title">
+            {safeText(statsT?.monthEarning, "Aylık Kazanç")}
+          </div>
+          <div className="dashboard-stat-value">
+            {formatMoney(summary.monthEarning)} ₺
+          </div>
+          <div className="dashboard-stat-sub">
+            {safeText(statsT?.monthEarningSub, "Bu ay elde edilen gelir")}
+          </div>
+        </div>
 
-              <section className="udPanel udSpan2">
-                <div className="udPanelHead">
-                  <h3 className="udH3">Referans Linkin</h3>
-                  <button
-                    className="udBtn primary"
-                    type="button"
-                    onClick={async () => {
-                      const ok = await copyText(refLink);
-                      showToast(ok ? "Kopyalandı ✅" : "Kopyalanamadı ❌", ok ? "ok" : "err");
-                    }}
-                  >
-                    Kopyala
-                  </button>
-                </div>
+        <div className="dashboard-card dashboard-stat-card">
+          <div className="dashboard-stat-title">
+            {safeText(statsT?.totalEarning, "Toplam Kazanç")}
+          </div>
+          <div className="dashboard-stat-value">
+            {formatMoney(summary.totalEarning)} ₺
+          </div>
+          <div className="dashboard-stat-sub">
+            {safeText(
+              statsT?.totalEarningSub,
+              "Tüm zamanlardaki toplam gelir"
+            )}
+          </div>
+        </div>
 
-                <div className="udRefRow">
-                  <input className="udInput" value={refLink} readOnly />
-                </div>
+        <div className="dashboard-card dashboard-stat-card">
+          <div className="dashboard-stat-title">
+            {safeText(statsT?.teamCount, "Takım Sayısı")}
+          </div>
+          <div className="dashboard-stat-value">{summary.teamCount}</div>
+          <div className="dashboard-stat-sub">
+            {summary.directReferrals}{" "}
+            {safeText(statsT?.directReferrals, "direkt referans")}
+          </div>
+        </div>
+      </div>
 
-                <div className="udHint">
-                  Not: Linkteki sponsor değeri = <span className="udMono">username</span>
-                </div>
-              </section>
+      <div className="dashboard-card" style={{ marginTop: "20px" }}>
+        <div className="dashboard-section-head">
+          <div>
+            <h2 className="dashboard-section-title">
+              {safeText(profileT?.referralTitle, "Referans Linkin")}
+            </h2>
+            <p className="dashboard-section-text">{referralLink}</p>
+          </div>
 
-              <section className="udPanel udSpan2">
-                <div className="udPanelHead">
-                  <h3 className="udH3">Hızlı Kazanç Grafiği</h3>
-                  <span className="udMuted">Son 12 dönem</span>
-                </div>
+          <button
+            type="button"
+            className="dashboard-btn-primary"
+            onClick={copyReferral}
+          >
+            {copied
+              ? safeText(profileT?.copied, "Kopyalandı")
+              : safeText(profileT?.copyLink, "Linki Kopyala")}
+          </button>
+        </div>
+      </div>
+    </>
+  );
 
-                <div className="udChart">
-                  {earnSeries.length ? (
-                    <ResponsiveContainer width="100%" height={260}>
-                      <AreaChart
-                        data={earnSeries}
-                        margin={{ top: 10, right: 18, left: 0, bottom: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Area
-                          type="monotone"
-                          dataKey="earning"
-                          name="Kazanç"
-                          strokeWidth={2}
-                          fillOpacity={0.25}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <EmptyBox title="Grafik verisi yok" hint="Endpoint: /api/user/earnings/series" />
-                  )}
-                </div>
-              </section>
-            </>
-          )}
+  const renderEarnings = () => (
+    <div className="dashboard-content-grid">
+      <div className="dashboard-card">
+        <div className="dashboard-section-head">
+          <div>
+            <h2 className="dashboard-section-title">
+              {safeText(earningsT?.chartTitle, "Kazanç Grafiği")}
+            </h2>
+            <p className="dashboard-section-text">
+              {safeText(
+                earningsT?.chartText,
+                "Son aylardaki gelir dağılımını inceleyebilirsin."
+              )}
+            </p>
+          </div>
 
-          {tab === "earn" && (
-            <>
-              <section className="udPanel udSpan2">
-                <div className="udPanelHead">
-                  <h3 className="udH3">Kazanç Analizi</h3>
-                  <span className="udMuted">{busy ? "Güncelleniyor…" : " "}</span>
-                </div>
+          <div className="dashboard-pill">
+            {safeText(earningsT?.last6Months, "Son 6 Ay")}
+          </div>
+        </div>
 
-                <div className="udChart">
-                  {earnSeries.length ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart
-                        data={earnSeries}
-                        margin={{ top: 10, right: 18, left: 0, bottom: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Area
-                          type="monotone"
-                          dataKey="earning"
-                          name="Kazanç"
-                          strokeWidth={2}
-                          fillOpacity={0.28}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <EmptyBox
-                      title="Kazanç datası yok"
-                      hint="Backend series endpointi eklenince otomatik dolacak."
-                    />
-                  )}
-                </div>
-              </section>
+        <div className="dashboard-chart-box">
+          {earningsChart.map((item) => (
+            <div key={item.label} className="dashboard-chart-item">
+              <div className="dashboard-chart-value">
+                {formatMoney(item.value)} ₺
+              </div>
 
-              <section className="udPanel">
-                <h3 className="udH3">Özet</h3>
-                <div className="udList">
-                  <div className="udRow">
-                    <span>Bu ay</span>
-                    <b>{fmtTry(summary.monthEarning)}</b>
-                  </div>
-                  <div className="udRow">
-                    <span>Toplam</span>
-                    <b>{fmtTry(summary.totalEarning)}</b>
-                  </div>
-                  <div className="udRow">
-                    <span>Bakiye</span>
-                    <b>{fmtTry(summary.balance)}</b>
-                  </div>
-                </div>
-              </section>
+              <div
+                className="dashboard-chart-bar"
+                style={{
+                  height: `${Math.max((item.value / maxChartValue) * 170, 20)}px`,
+                }}
+              />
 
-              <section className="udPanel">
-                <h3 className="udH3">İpucu</h3>
-                <div className="udHint">
-                  Bu sayfa canlı olunca “günlük/aylık” filtre, gelir türleri
-                  (komisyon/bonus/ürün) ekleyeceğiz.
-                </div>
-              </section>
-            </>
-          )}
+              <div className="dashboard-chart-label">{item.label}</div>
+            </div>
+          ))}
+        </div>
 
-          {tab === "license" && (
-            <section className="udPanel udSpan2">
-              <div className="udPanelHead">
-                <h3 className="udH3">Lisans Durumu</h3>
-                <span className={`udBadge ${licenseTone}`}>
-                  {String(summary.licenseStatus || "unknown").toUpperCase()}
+        <div className="dashboard-list">
+          {earnings.map((item) => (
+            <div key={item.id} className="dashboard-earning-row">
+              <div className="dashboard-earning-left">
+                <div className="dashboard-list-title">{item.title}</div>
+                <div className="dashboard-list-sub">
+                  {safeText(earningsT?.source, "Kaynak")}: {item.source}
+                </div>
+                <div className="dashboard-list-sub">
+                  {safeText(earningsT?.date, "Tarih")}: {item.date}
+                </div>
+              </div>
+
+              <div className="dashboard-amount-positive">
+                + {formatMoney(item.amount)} ₺
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderUnilevel = () => (
+    <div className="dashboard-content-grid">
+      <div className="dashboard-card">
+        <div className="dashboard-section-head-col">
+          <h2 className="dashboard-section-title">
+            {safeText(unilevelT?.title, "Ünilevel Ağı")}
+          </h2>
+          <p className="dashboard-section-text">
+            {safeText(
+              unilevelT?.text,
+              "Alt ekibindeki üyeleri ve katkılarını görüntüleyebilirsin."
+            )}
+          </p>
+        </div>
+
+        <div className="dashboard-unilevel-table">
+          {unilevelMembers.map((member, index) => (
+            <div
+              key={`${member.username}-${index}`}
+              className="dashboard-unilevel-row"
+            >
+              <div>
+                <div className="dashboard-list-title">{member.username}</div>
+                <div className="dashboard-list-sub">
+                  {safeText(unilevelT?.level, "Seviye")}: {member.level}
+                </div>
+                <div className="dashboard-list-sub">
+                  {safeText(unilevelT?.joinDate, "Katılım Tarihi")}:{" "}
+                  {member.joinDate}
+                </div>
+              </div>
+
+              <div className="dashboard-unilevel-mid">
+                <span
+                  className={`dashboard-mini-badge ${
+                    member.status === safeText(dashboardT?.active, "Aktif")
+                      ? "dashboard-mini-badge-active"
+                      : "dashboard-mini-badge-passive"
+                  }`}
+                >
+                  {member.status}
                 </span>
               </div>
 
-              <div className="udLicenseGrid">
-                <div className="udRow">
-                  <span>Durum</span>
-                  <b>{summary.licenseStatus ?? "—"}</b>
-                </div>
-                <div className="udRow">
-                  <span>Bitiş</span>
-                  <b>{safeDate(summary.licenseEndsAt)}</b>
-                </div>
-                <div className="udRow">
-                  <span>Ref</span>
-                  <b className="udMono">{user?.username || "—"}</b>
-                </div>
-                <div className="udRow">
-                  <span>Ekip</span>
-                  <b>{summary.teamCount ?? "—"}</b>
-                </div>
+              <div className="dashboard-amount-positive">
+                + {formatMoney(member.contribution)} ₺
               </div>
+            </div>
+          ))}
+        </div>
 
-              <div className="udHint">
-                Lisans satın alma/yenileme butonu: ledger + ödeme modülüne bağlayacağız.
-              </div>
-            </section>
-          )}
+        <div className="dashboard-card-lite">
+          <div className="dashboard-section-head-col">
+            <h3 className="dashboard-sub-title">
+              {safeText(unilevelT?.treeTitle, "Ünilevel Ağaç")}
+            </h3>
+            <p className="dashboard-section-text">
+              {safeText(
+                unilevelT?.treeText,
+                "Ağacını katmanlı şekilde görüntüle."
+              )}
+            </p>
+          </div>
 
-          {tab === "team" && (
-            <>
-              <section className="udPanel udSpan2">
-                <div className="udPanelHead">
-                  <h3 className="udH3">Network Özeti</h3>
-                  <span className="udMuted">Unilevel + Matrix görünümü</span>
-                </div>
+          <div className="uni-scroll">{renderUniNode(unilevelTree, 1, "uniRoot")}</div>
+        </div>
+      </div>
+    </div>
+  );
 
-                <div className="udNetStats">
-                  <div className="udNetStat">
-                    <div className="udNetStatLabel">Toplam Unilevel</div>
-                    <div className="udNetStatValue">{unilevel.raw?.total ?? 0}</div>
-                  </div>
+  const renderMatrix = () => (
+    <div className="dashboard-content-grid">
+      <div className="dashboard-card">
+        <div className="dashboard-section-head-col">
+          <h2 className="dashboard-section-title">
+            {safeText(matrixT?.title, "Matrix Ağı")}
+          </h2>
+          <p className="dashboard-section-text">
+            {safeText(
+              matrixT?.text,
+              "2x15 matrix yapını ve günlük gelir hareketlerini takip et."
+            )}
+          </p>
+        </div>
 
-                  <div className="udNetStat">
-                    <div className="udNetStatLabel">Toplam Matrix</div>
-                    <div className="udNetStatValue">{matrix.raw?.total ?? 0}</div>
-                  </div>
-
-                  <div className="udNetStat">
-                    <div className="udNetStatLabel">1. Seviye</div>
-                    <div className="udNetStatValue">{countLevelItems(unilevel.levels, 1)}</div>
-                  </div>
-
-                  <div className="udNetStat">
-                    <div className="udNetStatLabel">Matrix Sol + Sağ</div>
-                    <div className="udNetStatValue">
-                      {countLevelItems(matrix.levels, 1)}
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section className="udPanel">
-                <div className="udPanelHead">
-                  <h3 className="udH3">Unilevel Ekibim</h3>
-                  <span className="udMuted">
-                    {unilevel.raw?.total ? `${unilevel.raw.total} kişi` : ""}
-                  </span>
-                </div>
-
-                {unilevel.levels.length ? (
-                  <div className="udLevelWrap">
-                    {unilevel.levels.map((group) => (
-                      <div key={group.level} className="udLevelBlock">
-                        <div className="udLevelHead">
-                          <div className="udLevelTitle">Seviye {group.level}</div>
-                          <div className="udLevelCount">{group.items.length} kişi</div>
-                        </div>
-
-                        <div className="udMemberGrid">
-                          {group.items.map((m, i) => (
-                            <div key={m.id || i} className="udMemberCard">
-                              <div className="udMemberTop">
-                                <div className="udMemberAvatar">
-                                  {String(m.username || "U").slice(0, 1).toUpperCase()}
-                                </div>
-
-                                <div className="udMemberMeta">
-                                  <div className="udMemberName">
-                                    {m.fullName || m.username || "—"}
-                                  </div>
-                                  <div className="udMemberUser udMono">
-                                    @{m.username || "—"}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="udMemberBottom">
-                                <span className="udBadge info">Lv {m.level ?? 0}</span>
-                                {m.role ? (
-                                  <span className="udBadge muted">{m.role}</span>
-                                ) : null}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyBox title="Ekip verisi yok" hint="Endpoint: /api/network/unilevel" />
+        <div className="network-panel network-panel-blue">
+          <div className="network-panel-head">
+            <div>
+              <h3 className="network-panel-title">
+                {safeText(matrixT?.treeTitle, "Matrix Ağacı")}
+              </h3>
+              <p className="network-panel-text">
+                {safeText(
+                  matrixT?.treeText,
+                  "Ağ yapını katman katman inceleyebilirsin."
                 )}
-              </section>
+              </p>
+            </div>
+            <div className="dashboard-pill">
+              {safeText(matrixT?.start2, "2 ile Başlar")}
+            </div>
+          </div>
 
-              <section className="udPanel">
-                <div className="udPanelHead">
-                  <h3 className="udH3">Matrix Ağacı</h3>
-                  <span className="udMuted">2 Kollu görünüm</span>
+          <div className="matrix-scroll">
+            <div className="matrix-min-width">
+              {renderMatrixNode(matrixTree, 1, 15, "root")}
+            </div>
+          </div>
+
+          <div className="network-stats">
+            <div className="network-mini-card">
+              <div className="network-mini-label">
+                {safeText(matrixT?.maxWidth, "Maksimum Genişlik")}
+              </div>
+              <div className="network-mini-value">2</div>
+            </div>
+
+            <div className="network-mini-card">
+              <div className="network-mini-label">
+                {safeText(matrixT?.maxDepth, "Maksimum Derinlik")}
+              </div>
+              <div className="network-mini-value">15</div>
+            </div>
+
+            <div className="network-mini-card">
+              <div className="network-mini-label">
+                {safeText(matrixT?.startLevel, "Başlangıç Seviye")}
+              </div>
+              <div className="network-mini-value">2+</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboard-card-lite">
+          <div className="dashboard-section-head-col">
+            <h3 className="dashboard-sub-title">
+              {safeText(matrixT?.dailyTitle, "Günlük Matrix Geliri")}
+            </h3>
+            <p className="dashboard-section-text">
+              {safeText(
+                matrixT?.dailyText,
+                "Gün bazlı matrix kazançlarını inceleyebilirsin."
+              )}
+            </p>
+          </div>
+
+          <div className="dashboard-matrix-daily-list">
+            {matrixDailyEarnings.map((item, index) => (
+              <div
+                key={`${item.date}-${index}`}
+                className="dashboard-matrix-daily-row"
+              >
+                <div>
+                  <div className="dashboard-list-title">{item.date}</div>
+                  <div className="dashboard-list-sub">{item.note}</div>
                 </div>
 
-                {matrix.tree ? (
-                  <div className="udMatrixWrap">
-                    <MatrixCard node={matrix.tree} isRoot />
+                <div className="dashboard-amount-positive">
+                  + {formatMoney(item.amount)} ₺
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
-                    <div className="udMatrixBranch">
-                      <div className="udMatrixCol">
-                        <div className="udMatrixSlotLabel">Sol Kol</div>
-                        {matrix.tree.left ? (
-                          <MatrixCard node={matrix.tree.left} />
-                        ) : (
-                          <EmptySlot label="Sol slot boş" />
-                        )}
+  const renderOrders = () => (
+    <div className="dashboard-content-grid">
+      <div className="dashboard-card">
+        <div className="dashboard-section-head-col">
+          <h2 className="dashboard-section-title">
+            {safeText(ordersT?.title, "Siparişlerim")}
+          </h2>
+          <p className="dashboard-section-text">
+            {safeText(
+              ordersT?.text,
+              "Geçmiş ve güncel siparişlerini buradan takip et."
+            )}
+          </p>
+        </div>
 
-                        <div className="udMiniChildren">
-                          {matrix.tree.left?.left ? (
-                            <MatrixMiniCard node={matrix.tree.left.left} />
-                          ) : (
-                            <EmptySlot small label="Boş" />
-                          )}
-                          {matrix.tree.left?.right ? (
-                            <MatrixMiniCard node={matrix.tree.left.right} />
-                          ) : (
-                            <EmptySlot small label="Boş" />
-                          )}
-                        </div>
-                      </div>
+        <div className="dashboard-orders">
+          {ordersLoading ? (
+            <div className="dashboard-empty-text">
+              {language === "tr"
+                ? "Siparişler yükleniyor..."
+                : "Loading orders..."}
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="dashboard-empty-text">
+              {language === "tr"
+                ? "Henüz siparişin yok."
+                : "You do not have any orders yet."}
+            </div>
+          ) : (
+            orders.map((order) => {
+              const firstItem = order.items?.[0];
+              const productName =
+                firstItem?.name || (language === "tr" ? "Sipariş" : "Order");
 
-                      <div className="udMatrixCol">
-                        <div className="udMatrixSlotLabel">Sağ Kol</div>
-                        {matrix.tree.right ? (
-                          <MatrixCard node={matrix.tree.right} />
-                        ) : (
-                          <EmptySlot label="Sağ slot boş" />
-                        )}
+              const extraCount =
+                order.items?.length > 1 ? ` +${order.items.length - 1}` : "";
 
-                        <div className="udMiniChildren">
-                          {matrix.tree.right?.left ? (
-                            <MatrixMiniCard node={matrix.tree.right.left} />
-                          ) : (
-                            <EmptySlot small label="Boş" />
-                          )}
-                          {matrix.tree.right?.right ? (
-                            <MatrixMiniCard node={matrix.tree.right.right} />
-                          ) : (
-                            <EmptySlot small label="Boş" />
-                          )}
-                        </div>
-                      </div>
+              const statusText = getStatusText(order.status);
+
+              return (
+                <div key={order._id} className="dashboard-order-row">
+                  <div>
+                    <div className="dashboard-list-title">
+                      {productName}
+                      {extraCount}
                     </div>
-
-                    <div className="udHint">
-                      Bu görünüm ilk 3 katmanı premium şekilde gösterir. Sonraki aşamada zoomlu tam ağaç ekleriz.
+                    <div className="dashboard-list-sub">
+                      #{String(order._id).slice(-8).toUpperCase()}
                     </div>
                   </div>
-                ) : (
-                  <EmptyBox title="Matrix verisi yok" hint="Endpoint: /api/network/matrix" />
-                )}
-              </section>
-            </>
-          )}
 
-          {tab === "profile" && (
-            <section className="udPanel udSpan2">
-              <div className="udPanelHead">
-                <h3 className="udH3">Bilgilerimi Güncelle</h3>
-                <span className="udMuted">Profil</span>
-              </div>
+                  <div className="dashboard-order-price">
+                    {formatMoney(order.total)} ₺
+                  </div>
 
-              <div className="udFormGrid">
-                <div>
-                  <label className="udLabel">Ad Soyad</label>
-                  <input
-                    className="udInput"
-                    value={pform.fullName}
-                    onChange={(e) => setPform((p) => ({ ...p, fullName: e.target.value }))}
-                    placeholder="Ad Soyad"
-                  />
+                  <div className="dashboard-order-date">
+                    {order.createdAt
+                      ? new Date(order.createdAt).toLocaleDateString(
+                          language === "tr" ? "tr-TR" : "en-US"
+                        )
+                      : "-"}
+                  </div>
+
+                  <div>
+                    <span
+                      className={`dashboard-status ${getStatusClass(
+                        order.status
+                      )}`}
+                    >
+                      {statusText}
+                    </span>
+                  </div>
                 </div>
-
-                <div>
-                  <label className="udLabel">E-posta</label>
-                  <input
-                    className="udInput"
-                    value={pform.email}
-                    onChange={(e) => setPform((p) => ({ ...p, email: e.target.value }))}
-                    placeholder="mail@..."
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Telefon Ülke Kodu</label>
-                  <input className="udInput" value={pform.phoneCode} readOnly />
-                </div>
-
-                <div>
-                  <label className="udLabel">Telefon</label>
-                  <input
-                    className="udInput"
-                    value={pform.phone}
-                    onChange={(e) => setPform((p) => ({ ...p, phone: e.target.value }))}
-                    placeholder="5xx xxx xx xx"
-                  />
-                </div>
-
-                <div className="udSectionTitle">Kişisel Bilgiler</div>
-
-                <div>
-                  <label className="udLabel">Doğum Tarihi</label>
-                  <input
-                    className="udInput"
-                    type="date"
-                    value={pform.birthDate}
-                    onChange={(e) => setPform((p) => ({ ...p, birthDate: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Uyruk / Ülke</label>
-                  <select
-                    className="udInput"
-                    value={pform.country}
-                    onChange={(e) => onChangeCountry(e.target.value)}
-                  >
-                    {countryOptions.map((c) => (
-                      <option key={c.isoCode} value={c.isoCode}>
-                        {c.name} ({c.isoCode})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="udSectionTitle">Adres Bilgileri</div>
-
-                <div className="udSpan2">
-                  <label className="udLabel">Adres</label>
-                  <input
-                    className="udInput"
-                    value={pform.addressLine}
-                    onChange={(e) => setPform((p) => ({ ...p, addressLine: e.target.value }))}
-                    placeholder="Mahalle, sokak, kapı no..."
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">İl</label>
-                  <select
-                    className="udInput"
-                    value={pform.stateCode}
-                    onChange={(e) => onChangeState(e.target.value)}
-                  >
-                    <option value="">İl seç</option>
-                    {stateOptions.map((st) => (
-                      <option key={st.isoCode} value={st.isoCode}>
-                        {st.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="udLabel">İlçe</label>
-                  <select
-                    className="udInput"
-                    value={pform.district}
-                    onChange={(e) => onChangeDistrict(e.target.value)}
-                    disabled={!pform.stateCode}
-                    title={!pform.stateCode ? "Önce il seç" : ""}
-                  >
-                    <option value="">{pform.stateCode ? "İlçe seç" : "Önce il seç"}</option>
-                    {districtOptions.map((ct) => (
-                      <option key={`${ct.name}-${ct.latitude || ""}`} value={ct.name}>
-                        {ct.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="udLabel">Posta Kodu</label>
-                  <input
-                    className="udInput"
-                    value={pform.postalCode}
-                    onChange={(e) => setPform((p) => ({ ...p, postalCode: e.target.value }))}
-                    placeholder="01000"
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Ülke (ISO)</label>
-                  <input className="udInput" value={pform.country} readOnly />
-                </div>
-
-                <div className="udSectionTitle">Fatura Bilgileri</div>
-
-                <label className="udCheckRow">
-                  <input
-                    type="checkbox"
-                    checked={invoiceSame}
-                    onChange={(e) => setInvoiceSame(e.target.checked)}
-                  />
-                  <span className="udMuted">Fatura adresi, normal adres ile aynı olsun</span>
-                </label>
-
-                <div className="udSpan2">
-                  <label className="udLabel">Fatura Adı / Ünvan</label>
-                  <input
-                    className="udInput"
-                    value={pform.invoiceName}
-                    onChange={(e) => setPform((p) => ({ ...p, invoiceName: e.target.value }))}
-                    placeholder="Ad Soyad veya Şirket"
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Vergi No (opsiyonel)</label>
-                  <input
-                    className="udInput"
-                    value={pform.invoiceTaxNo}
-                    onChange={(e) => setPform((p) => ({ ...p, invoiceTaxNo: e.target.value }))}
-                    placeholder="VKN/TCKN"
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Vergi Dairesi (opsiyonel)</label>
-                  <input
-                    className="udInput"
-                    value={pform.invoiceTaxOffice}
-                    onChange={(e) => setPform((p) => ({ ...p, invoiceTaxOffice: e.target.value }))}
-                    placeholder="Seyhan VD"
-                  />
-                </div>
-
-                <div className="udSpan2">
-                  <label className="udLabel">Fatura Adresi</label>
-                  <input
-                    className="udInput"
-                    value={pform.invoiceAddressLine}
-                    onChange={(e) =>
-                      setPform((p) => ({ ...p, invoiceAddressLine: e.target.value }))
-                    }
-                    placeholder="Fatura adresi satırı..."
-                    disabled={invoiceSame}
-                    title={invoiceSame ? "Normal adres ile otomatik dolduruluyor" : ""}
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Fatura İl</label>
-                  <input
-                    className="udInput"
-                    value={pform.invoiceCity}
-                    onChange={(e) => setPform((p) => ({ ...p, invoiceCity: e.target.value }))}
-                    placeholder="Adana"
-                    disabled={invoiceSame}
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Fatura İlçe</label>
-                  <input
-                    className="udInput"
-                    value={pform.invoiceDistrict}
-                    onChange={(e) =>
-                      setPform((p) => ({ ...p, invoiceDistrict: e.target.value }))
-                    }
-                    placeholder="Seyhan"
-                    disabled={invoiceSame}
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Fatura Posta Kodu</label>
-                  <input
-                    className="udInput"
-                    value={pform.invoicePostalCode}
-                    onChange={(e) =>
-                      setPform((p) => ({ ...p, invoicePostalCode: e.target.value }))
-                    }
-                    placeholder="01000"
-                    disabled={invoiceSame}
-                  />
-                </div>
-
-                <div>
-                  <label className="udLabel">Fatura Ülke</label>
-                  <input
-                    className="udInput"
-                    value={pform.invoiceCountry}
-                    onChange={(e) =>
-                      setPform((p) => ({ ...p, invoiceCountry: e.target.value }))
-                    }
-                    placeholder="TR"
-                    disabled={invoiceSame}
-                  />
-                </div>
-              </div>
-
-              <div className="udActions">
-                <button
-                  className="udBtn primary"
-                  type="button"
-                  onClick={saveProfile}
-                  disabled={busy}
-                >
-                  {busy ? "Kaydediliyor..." : "Kaydet"}
-                </button>
-
-                {invoiceSame ? (
-                  <button
-                    className="udBtn"
-                    type="button"
-                    onClick={applyInvoiceSame}
-                    disabled={busy}
-                    title="Normal adresi fatura alanlarına tekrar kopyala"
-                  >
-                    Adresi Kopyala
-                  </button>
-                ) : null}
-              </div>
-
-              <div className="udHint">
-                Sonraki adım: şifre değiştir, profil foto, KVKK onay, 2FA.
-              </div>
-            </section>
+              );
+            })
           )}
         </div>
       </div>
-
-      {toast.show ? <div className={`udToast ${toast.type}`}>{toast.msg}</div> : null}
     </div>
   );
-}
 
-/* =========================
-   EMPTY BOX
-========================= */
-function EmptyBox({ title, hint }) {
-  return (
-    <div className="udEmpty">
-      <div className="udEmptyTitle">{title}</div>
-      {hint ? <div className="udEmptyHint">{hint}</div> : null}
-    </div>
-  );
-}
+  const renderProfile = () => (
+    <div className="dashboard-main-grid">
+      <div className="dashboard-left-col">
+        <div className="dashboard-card">
+          <h2 className="dashboard-section-title">
+            {safeText(profileT?.editTitle, "Profili Düzenle")}
+          </h2>
 
-/* =========================
-   MATRIX UI
-========================= */
-function MatrixCard({ node, isRoot = false }) {
-  return (
-    <div className={`udMxCard ${isRoot ? "root" : ""}`}>
-      <div className="udMxAvatar">
-        {String(node?.username || "U").slice(0, 1).toUpperCase()}
+          <form onSubmit={handleProfileSave} className="dashboard-form">
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.fullName, "Ad Soyad")}
+              </div>
+              <input
+                name="fullName"
+                value={profileForm.fullName}
+                onChange={handleProfileChange}
+                className="dashboard-input"
+                placeholder={safeText(profileT?.fullName, "Ad Soyad")}
+              />
+            </div>
+
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.email, "E-posta")}
+              </div>
+              <input
+                name="email"
+                value={profileForm.email}
+                onChange={handleProfileChange}
+                className="dashboard-input"
+                placeholder={safeText(profileT?.email, "E-posta")}
+              />
+            </div>
+
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.phone, "Telefon")}
+              </div>
+              <input
+                name="phone"
+                value={profileForm.phone}
+                onChange={handleProfileChange}
+                className="dashboard-input"
+                placeholder={safeText(profileT?.phone, "Telefon")}
+              />
+            </div>
+
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.city, "Şehir")}
+              </div>
+              <input
+                name="city"
+                value={profileForm.city}
+                onChange={handleProfileChange}
+                className="dashboard-input"
+                placeholder={safeText(profileT?.city, "Şehir")}
+              />
+            </div>
+
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.address, "Adres")}
+              </div>
+              <textarea
+                name="address"
+                value={profileForm.address}
+                onChange={handleProfileChange}
+                className="dashboard-input dashboard-textarea"
+                placeholder={safeText(profileT?.address, "Adres")}
+              />
+            </div>
+
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.newPassword, "Yeni Şifre")}
+              </div>
+              <input
+                name="password"
+                type="password"
+                value={profileForm.password}
+                onChange={handleProfileChange}
+                className="dashboard-input"
+                placeholder={safeText(profileT?.newPassword, "Yeni Şifre")}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="dashboard-btn-primary dashboard-btn-full"
+            >
+              {safeText(profileT?.saveProfile, "Profili Kaydet")}
+            </button>
+          </form>
+        </div>
       </div>
 
-      <div className="udMxBody">
-        <div className="udMxName">{node?.fullName || node?.username || "—"}</div>
-        <div className="udMxUser udMono">@{node?.username || "—"}</div>
-      </div>
+      <div className="dashboard-right-col">
+        <div className="dashboard-card">
+          <h2 className="dashboard-section-title">
+            {safeText(profileT?.summaryTitle, "Profil Özeti")}
+          </h2>
 
-      <div className="udMxBadges">
-        <span className="udBadge info">Lv {node?.level ?? 0}</span>
-        {node?.role ? <span className="udBadge muted">{node.role}</span> : null}
+          <div className="dashboard-profile-summary">
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.username, "Kullanıcı Adı")}
+              </div>
+              <div className="dashboard-summary-value">
+                {user?.username || "-"}
+              </div>
+            </div>
+
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.fullName, "Ad Soyad")}
+              </div>
+              <div className="dashboard-summary-value">
+                {user?.fullName || "-"}
+              </div>
+            </div>
+
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.email, "E-posta")}
+              </div>
+              <div className="dashboard-summary-value">
+                {user?.email || "-"}
+              </div>
+            </div>
+
+            <div>
+              <div className="dashboard-input-label">
+                {safeText(profileT?.role, "Rol")}
+              </div>
+              <div className="dashboard-summary-value">
+                {user?.role || "user"}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
 
-function MatrixMiniCard({ node }) {
+  const renderSettings = () => (
+    <div className="dashboard-content-grid">
+      <div className="dashboard-card">
+        <h2 className="dashboard-section-title">
+          {safeText(settingsT?.title, "Ayarlar")}
+        </h2>
+        <p className="dashboard-section-text">
+          {safeText(
+            settingsT?.text,
+            "Hesap ve panel tercihlerini buradan yönetebilirsin."
+          )}
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderSectionContent = () => {
+    switch (activeSection) {
+      case "overview":
+        return renderOverview();
+      case "earnings":
+        return renderEarnings();
+      case "unilevel":
+        return renderUnilevel();
+      case "matrix":
+        return renderMatrix();
+      case "orders":
+        return renderOrders();
+      case "profile":
+        return renderProfile();
+      case "settings":
+        return renderSettings();
+      default:
+        return renderOverview();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="dashboard-loading-wrap">
+        <div className="dashboard-loading-card">
+          {safeText(dashboardT?.loading, "Yükleniyor...")}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="udMxMini">
-      <div className="udMxMiniName">{node?.fullName || node?.username || "—"}</div>
-      <div className="udMxMiniUser udMono">@{node?.username || "—"}</div>
+    <div className="dashboard-shell">
+      <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
+        <div>
+          <div className="dashboard-sidebar-top">
+            <div className="dashboard-sidebar-logo">
+              <img
+                src="/ftsline.png"
+                alt="FTSLine Logo"
+                className="dashboard-sidebar-logo-img"
+              />
+            </div>
+
+            {sidebarOpen && (
+              <div className="dashboard-sidebar-brand">
+                <strong>FTSLine</strong>
+                <span>{safeText(sidebarT?.brandSub, "Premium Panel")}</span>
+              </div>
+            )}
+          </div>
+
+          <nav className="dashboard-sidebar-nav">
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "overview" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("overview")}
+            >
+              <span>🏠</span>
+              {sidebarOpen && (
+                <span>{safeText(sectionsT?.overview, "Genel Bakış")}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "earnings" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("earnings")}
+            >
+              <span>💰</span>
+              {sidebarOpen && (
+                <span>{safeText(sectionsT?.earnings, "Kazançlar")}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "unilevel" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("unilevel")}
+            >
+              <span>🌿</span>
+              {sidebarOpen && (
+                <span>{safeText(sectionsT?.unilevel, "Ünilevel")}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "matrix" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("matrix")}
+            >
+              <span>🧩</span>
+              {sidebarOpen && (
+                <span>{safeText(sectionsT?.matrix, "Matrix")}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "orders" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("orders")}
+            >
+              <span>🛒</span>
+              {sidebarOpen && (
+                <span>{safeText(sectionsT?.orders, "Siparişler")}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "profile" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("profile")}
+            >
+              <span>👤</span>
+              {sidebarOpen && (
+                <span>{safeText(sectionsT?.profile, "Profil")}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "settings" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("settings")}
+            >
+              <span>⚙️</span>
+              {sidebarOpen && (
+                <span>{safeText(sectionsT?.settings, "Ayarlar")}</span>
+              )}
+            </button>
+          </nav>
+        </div>
+
+        <div className="dashboard-sidebar-bottom">
+          <button
+            type="button"
+            className="dashboard-sidebar-toggle"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+          >
+            {sidebarOpen
+              ? safeText(sidebarT?.collapse, "Daralt")
+              : safeText(sidebarT?.expand, "Genişlet")}
+          </button>
+        </div>
+      </aside>
+
+      <main className="dashboard-main-area">
+        <div className="dashboard-topbar">
+          <button
+            type="button"
+            className="dashboard-mobile-menu-btn"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+          >
+            ☰
+          </button>
+
+          <div className="dashboard-topbar-title">
+            {safeText(dashboardT?.welcome, "Hoş geldin")},{" "}
+            {user?.username || "Kullanıcı"}
+          </div>
+        </div>
+
+        <div className="dashboard-page">
+          <div className="dashboard-container dashboard-container-wide">
+            {renderSectionContent()}
+          </div>
+        </div>
+      </main>
     </div>
   );
-}
-
-function EmptySlot({ label = "Boş", small = false }) {
-  return <div className={`udEmptySlot ${small ? "small" : ""}`}>{label}</div>;
 }

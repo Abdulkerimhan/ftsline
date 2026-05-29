@@ -1,59 +1,152 @@
 import mongoose from "mongoose";
 
-const OrderItemSchema = new mongoose.Schema(
+const orderItemSchema = new mongoose.Schema(
   {
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      default: null,
+    },
 
-    // snapshot
-    name: { type: String, required: true },
-    brand: { type: String, default: "" },
-    category: { type: String, default: "" },
-    image: { type: String, default: "" },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-    qty: { type: Number, default: 1, min: 1 },
+    image: {
+      type: String,
+      default: "",
+    },
 
-    unitPrice: { type: Number, required: true },
-    lineTotal: { type: Number, required: true },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    quantity: {
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
+    },
   },
   { _id: false }
 );
 
-const OrderSchema = new mongoose.Schema(
+const shippingInfoSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-
-    status: {
+    fullName: {
       type: String,
-      default: "pending",
-      enum: ["pending", "paid", "shipped", "delivered", "canceled", "refunded"],
+      required: true,
+      trim: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    city: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    district: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    address: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    note: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+  },
+  { _id: false }
+);
+
+const orderSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
       index: true,
     },
 
-    items: { type: [OrderItemSchema], default: [] },
-
-    currency: { type: String, default: "TRY" },
-
-    subTotal: { type: Number, default: 0 },
-    shippingFee: { type: Number, default: 0 },
-    grandTotal: { type: Number, default: 0 },
-
-    // kargo
-    trackingNo: { type: String, default: "" },
-    shippingCompany: { type: String, default: "" },
-
-    // adres (basit)
-    address: {
-      fullName: { type: String, default: "" },
-      phone: { type: String, default: "" },
-      city: { type: String, default: "" },
-      district: { type: String, default: "" },
-      fullAddress: { type: String, default: "" },
-      note: { type: String, default: "" },
+    items: {
+      type: [orderItemSchema],
+      required: true,
+      validate: {
+        validator: function (items) {
+          return items.length > 0;
+        },
+        message: "Sipariş en az 1 ürün içermelidir.",
+      },
     },
 
-    note: { type: String, default: "" },
+    shippingInfo: {
+      type: shippingInfoSchema,
+      required: true,
+    },
+
+    subtotal: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    shippingPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    total: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    status: {
+      type: String,
+      enum: ["pending", "preparing", "shipped", "completed", "cancelled"],
+      default: "pending",
+    },
+
+    paymentMethod: {
+      type: String,
+      enum: ["card", "cash_on_delivery", "bank_transfer"],
+      default: "card",
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed", "refunded"],
+      default: "paid",
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Order", OrderSchema);
+const Order = mongoose.model("Order", orderSchema);
+
+export default Order;

@@ -1,250 +1,302 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 import User from "../models/User.js";
-import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-const SUPERADMIN_USERNAME = "superadmin";
 const USERNAME_REGEX = /^[a-z0-9_.]{3,20}$/;
+const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
 function signToken(user) {
-  const secret = process.env.JWT_SECRET || "dev_secret_change_me";
   return jwt.sign(
-    {
-      id: String(user._id),
-      role: user.role,
-    },
-    secret,
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
 }
 
-/* =========================
-   REGISTER
-   Not:
-   Kullanıcı burada oluşturulur ama matrix'e eklenmez.
-   Matrix'e giriş lisans aktif olduğunda yapılır.
-========================= */
+const transporter = nodemailer.createTransport({
+  host: process.env.MAIL_HOST,
+  port: Number(process.env.MAIL_PORT || 587),
+  secure: false,
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+});
+
+function generateResetCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 router.post("/register", async (req, res) => {
   try {
-    let { username, fullName, email, password, sponsorCode } = req.body || {};
+    let { username, fullName, email, password, sponsor } = req.body || {};
 
     username = String(username || "").trim().toLowerCase();
     fullName = String(fullName || "").trim();
     email = String(email || "").trim().toLowerCase();
     password = String(password || "");
-    sponsorCode = String(sponsorCode || "").trim().toLowerCase();
-
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        ok: false,
-        message: "Kullanıcı adı, e-posta ve şifre zorunlu.",
-      });
-    }
+    sponsor = String(sponsor || "").trim().toLowerCase();
 
     if (!USERNAME_REGEX.test(username)) {
-      return res.status(400).json({
-        ok: false,
-        message:
-          "Kullanıcı adı sadece küçük İngilizce harf, rakam, alt çizgi (_) ve nokta (.) içerebilir. 3-20 karakter olmalı.",
-      });
+      return res.status(400).json({ message: "Geçersiz kullanıcı adı" });
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ message: "Geçerli bir email girin" });
+    }
+
+    if (!password) {
+      return res.status(400).json({ message: "Şifre zorunlu" });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({
-        ok: false,
-        message: "Şifre en az 6 karakter olmalı.",
-      });
+      return res.status(400).json({ message: "Şifre en az 6 karakter olmalı" });
     }
 
-    const existingByUsername = await User.findOne({ username }).lean();
-    if (existingByUsername) {
-      return res.status(400).json({
-        ok: false,
-        message: "Bu kullanıcı adı zaten alınmış.",
-      });
-    }
+    const exists = await User.findOne({
+      $or: [{ email }, { username }],
+    });
 
-    const existingByEmail = await User.findOne({ email }).lean();
-    if (existingByEmail) {
+    if (exists) {
       return res.status(400).json({
-        ok: false,
-        message: "Bu e-posta adresi zaten kayıtlı.",
+        message: "Email veya kullanıcı adı kullanımda",
       });
     }
 
     let sponsorUser = null;
 
-    if (sponsorCode) {
-      sponsorUser = await User.findOne({ username: sponsorCode }).lean();
+    if (sponsor) {
+      sponsorUser = await User.findOne({ username: sponsor });
     }
 
     if (!sponsorUser) {
-      sponsorUser = await User.findOne({ username: SUPERADMIN_USERNAME }).lean();
+      sponsorUser = await User.findOne({ role: "superadmin" });
+    }
+
+    if (!sponsorUser) {
+      return res.status(500).json({ message: "Superadmin bulunamadı" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
+    const user = await User.create({
       username,
       fullName,
       email,
       passwordHash,
-      sponsor: sponsorUser?._id || null,
+      role: "user",
+      sponsor: sponsorUser._id,
+      referralCode: username,
     });
 
-    if (sponsorUser?._id) {
-      try {
-        await User.updateOne(
-          { _id: sponsorUser._id },
-          { $inc: { teamCount: 1 } }
-        );
-      } catch (e) {
-        console.error("TEAMCOUNT_INC_ERR:", e?.message || e);
-      }
-    }
-
-    const token = signToken(newUser);
-
-    return res.json({
-      ok: true,
-      accessToken: token,
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        role: newUser.role,
-        permissions: newUser.permissions || [],
-        isLicensed: newUser.isLicensed,
-        isActive: newUser.isActive,
-      },
+    await User.findByIdAndUpdate(sponsorUser._id, {
+      $inc: { teamCount: 1 },
     });
-  } catch (err) {
-    console.error("REGISTER_ERR:", err);
-    return res.status(500).json({
-      ok: false,
-      message: "Sunucu hatası",
-    });
-  }
-});
-
-/* =========================
-   LOGIN
-   body: { identifier, password }
-========================= */
-router.post("/login", async (req, res) => {
-  try {
-    const identifierRaw =
-      req.body?.identifier ?? req.body?.username ?? req.body?.email;
-
-    const identifier = String(identifierRaw || "").trim().toLowerCase();
-    const password = String(req.body?.password || "");
-
-    if (!identifier || !password) {
-      return res.status(400).json({
-        ok: false,
-        message: "identifier (veya username/email) ve password zorunlu",
-      });
-    }
-
-    const user = await User.findOne({
-      $or: [{ username: identifier }, { email: identifier }],
-    }).select("+passwordHash");
-
-    if (!user) {
-      return res.status(401).json({
-        ok: false,
-        message: "Kullanıcı bulunamadı",
-      });
-    }
-
-    if (user.isActive === false) {
-      return res.status(403).json({
-        ok: false,
-        message: "Hesap pasif",
-      });
-    }
-
-    const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) {
-      return res.status(401).json({
-        ok: false,
-        message: "Şifre yanlış",
-      });
-    }
 
     const token = signToken(user);
 
-    return res.json({
-      ok: true,
-      accessToken: token,
+    return res.status(201).json({
+      message: "Kayıt başarılı",
+      token,
       user: {
         id: user._id,
         username: user.username,
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        permissions: user.permissions || [],
-        isLicensed: user.isLicensed,
         isActive: user.isActive,
+        isLicensed: user.isLicensed,
+        teamCount: user.teamCount,
+        careerLevel: user.careerLevel,
+        walletBalance: user.walletBalance,
+        totalEarning: user.totalEarning,
+        monthlyEarning: user.monthlyEarning,
+        referralCode: user.referralCode,
+        sponsor: sponsorUser
+          ? {
+              id: sponsorUser._id,
+              username: sponsorUser.username,
+              fullName: sponsorUser.fullName,
+              email: sponsorUser.email,
+            }
+          : null,
+      },
+    });
+  } catch (err) {
+    console.error("REGISTER_ERR:", err);
+    return res.status(500).json({ message: "Kayıt hatası" });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  try {
+    let { login, identifier, password } = req.body || {};
+
+    const loginValue = String(login || identifier || "")
+      .trim()
+      .toLowerCase();
+    password = String(password || "");
+
+    if (!loginValue || !password) {
+      return res.status(400).json({
+        message: "Kullanıcı adı/email ve şifre zorunlu",
+      });
+    }
+
+    const user = await User.findOne({
+      $or: [{ email: loginValue }, { username: loginValue }],
+    })
+      .select("+passwordHash")
+      .populate("sponsor", "username fullName email");
+
+    if (!user) {
+      return res.status(401).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+
+    if (!ok) {
+      return res.status(401).json({ message: "Şifre yanlış" });
+    }
+
+    const token = signToken(user);
+
+    return res.json({
+      message: "Giriş başarılı",
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        isLicensed: user.isLicensed,
+        teamCount: user.teamCount,
+        careerLevel: user.careerLevel,
+        walletBalance: user.walletBalance,
+        totalEarning: user.totalEarning,
+        monthlyEarning: user.monthlyEarning,
+        referralCode: user.referralCode,
+        sponsor: user.sponsor
+          ? {
+              id: user.sponsor._id,
+              username: user.sponsor.username,
+              fullName: user.sponsor.fullName,
+              email: user.sponsor.email,
+            }
+          : null,
       },
     });
   } catch (err) {
     console.error("LOGIN_ERR:", err);
-    return res.status(500).json({
-      ok: false,
-      message: "Sunucu hatası",
-    });
+    return res.status(500).json({ message: "Giriş hatası" });
   }
 });
 
-/* =========================
-   ME
-========================= */
-router.get("/me", auth, async (req, res) => {
+router.post("/forgot-password", async (req, res) => {
   try {
-    const id = req.user?.id || req.user?.userId || req.user?._id;
+    let { email } = req.body || {};
+    email = String(email || "").trim().toLowerCase();
 
-    if (!id) {
-      return res.status(401).json({
-        ok: false,
-        message: "Unauthenticated",
-      });
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ message: "Geçerli bir email girin" });
     }
 
-    const u = await User.findById(id)
-      .select("_id username fullName email role permissions isLicensed isActive")
-      .lean();
+    const user = await User.findOne({ email }).select(
+      "+resetCode +resetCodeExpiresAt"
+    );
 
-    if (!u) {
-      return res.status(401).json({
-        ok: false,
-        message: "User not found",
-      });
+    if (!user) {
+      return res.status(404).json({ message: "Bu email ile kullanıcı bulunamadı" });
     }
+
+    const code = generateResetCode();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    user.resetCode = code;
+    user.resetCodeExpiresAt = expiresAt;
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.MAIL_FROM || process.env.MAIL_USER,
+      to: user.email,
+      subject: "FTSLine Şifre Sıfırlama Kodu",
+      html: `
+        <div style="font-family:Arial,sans-serif;padding:20px;">
+          <h2>FTSLine Şifre Sıfırlama</h2>
+          <p>Şifre sıfırlama kodunuz:</p>
+          <div style="font-size:32px;font-weight:bold;letter-spacing:6px;color:#1d4ed8;">
+            ${code}
+          </div>
+          <p>Bu kod 5 dakika boyunca geçerlidir.</p>
+        </div>
+      `,
+    });
 
     return res.json({
-      ok: true,
-      user: {
-        id: u._id,
-        username: u.username,
-        fullName: u.fullName,
-        email: u.email,
-        role: u.role,
-        permissions: u.permissions || [],
-        isLicensed: u.isLicensed,
-        isActive: u.isActive,
-      },
+      message: "Kod gönderildi. Lütfen e-posta kutunuzu kontrol edin.",
     });
   } catch (err) {
-    console.error("ME_ERR:", err);
-    return res.status(500).json({
-      ok: false,
-      message: "Sunucu hatası",
-    });
+    console.error("FORGOT_PASSWORD_ERR:", err);
+    return res.status(500).json({ message: "Kod gönderilemedi" });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  try {
+    let { email, code, newPassword } = req.body || {};
+
+    email = String(email || "").trim().toLowerCase();
+    code = String(code || "").trim();
+    newPassword = String(newPassword || "");
+
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ message: "Geçerli bir email girin" });
+    }
+
+    if (!code || code.length !== 6) {
+      return res.status(400).json({ message: "6 haneli kod girin" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Yeni şifre en az 6 karakter olmalı" });
+    }
+
+    const user = await User.findOne({ email }).select(
+      "+passwordHash +resetCode +resetCodeExpiresAt"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    if (!user.resetCode || !user.resetCodeExpiresAt) {
+      return res.status(400).json({ message: "Önce kod istemelisiniz" });
+    }
+
+    if (user.resetCode !== code) {
+      return res.status(400).json({ message: "Kod yanlış" });
+    }
+
+    if (new Date() > new Date(user.resetCodeExpiresAt)) {
+      return res.status(400).json({ message: "Kodun süresi dolmuş" });
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.resetCode = "";
+    user.resetCodeExpiresAt = null;
+
+    await user.save();
+
+    return res.json({ message: "Şifre başarıyla güncellendi" });
+  } catch (err) {
+    console.error("RESET_PASSWORD_ERR:", err);
+    return res.status(500).json({ message: "Şifre güncellenemedi" });
   }
 });
 

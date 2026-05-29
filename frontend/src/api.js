@@ -1,0 +1,206 @@
+const API = import.meta.env.VITE_API_URL || "/api";
+
+/* ================= HELPERS ================= */
+
+function getAuthHeader() {
+  const token = localStorage.getItem("accessToken");
+
+  return token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+}
+
+async function parseResponse(res) {
+  const result = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(result.message || "Bir hata oluştu");
+  }
+
+  return result;
+}
+
+/* ================= AUTH ================= */
+
+export async function registerUser(data) {
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Register API hata:", error);
+    return { message: error.message };
+  }
+}
+
+export async function loginUser(data) {
+  try {
+    const payload = {
+      identifier: data?.identifier || data?.login || "",
+      password: data?.password || "",
+    };
+
+    const res = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await parseResponse(res);
+
+    // 🔥 TOKEN OTOMATİK KAYIT
+    if (result?.token) {
+      localStorage.setItem("accessToken", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Login API hata:", error);
+    return { message: error.message };
+  }
+}
+
+/* ================= USER ================= */
+
+export async function getMe() {
+  try {
+    const res = await fetch(`${API}/user/me`, {
+      method: "GET",
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Get me API hata:", error);
+    return null;
+  }
+}
+
+export async function getReferrals() {
+  try {
+    const res = await fetch(`${API}/user/referrals`, {
+      method: "GET",
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Referrals API hata:", error);
+    return [];
+  }
+}
+
+/* ================= PRODUCTS (PUBLIC) ================= */
+
+export async function getProducts() {
+  try {
+    const res = await fetch(`${API}/products`, {
+      method: "GET",
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Products API hata:", error);
+    return [];
+  }
+}
+
+export async function getProduct(id) {
+  try {
+    const res = await fetch(`${API}/products/${id}`, {
+      method: "GET",
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Product API hata:", error);
+    return null;
+  }
+}
+
+/* ================= ADMIN PRODUCTS ================= */
+
+// 🔥 Admin ürünleri çek
+export async function getAdminProducts() {
+  try {
+    const res = await fetch(`${API}/admin/products`, {
+      method: "GET",
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Admin products API hata:", error);
+    return [];
+  }
+}
+
+// 🔥 Ürün ekle (FormData)
+export async function createProduct(formData) {
+  try {
+    const res = await fetch(`${API}/admin/products`, {
+      method: "POST",
+      headers: {
+        ...getAuthHeader(), // ❗ Content-Type yok
+      },
+      body: formData,
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Create product API hata:", error);
+    return { message: error.message };
+  }
+}
+
+// 🔥 Ürün güncelle
+export async function updateProduct(id, formData) {
+  try {
+    const res = await fetch(`${API}/admin/products/${id}`, {
+      method: "PUT",
+      headers: {
+        ...getAuthHeader(),
+      },
+      body: formData,
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Update product API hata:", error);
+    return { message: error.message };
+  }
+}
+
+// 🔥 Ürün sil
+export async function deleteProduct(id) {
+  try {
+    const res = await fetch(`${API}/admin/products/${id}`, {
+      method: "DELETE",
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Delete product API hata:", error);
+    return { message: error.message };
+  }
+}

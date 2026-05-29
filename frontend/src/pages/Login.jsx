@@ -1,105 +1,132 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar.jsx";
-import { useAuth } from "../context/AuthContext.jsx";
-import "./AuthPages.css";
+import { useNavigate, Link } from "react-router-dom";
+import { loginUser } from "../api.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
+import logo from "../assets/ftsline.png";
+
+const text = {
+  tr: {
+    title: "Giris Yap",
+    identifier: "Kullanici adi veya e-mail adresi",
+    password: "Sifre",
+    required: "Kullanici adi/e-mail ve sifre zorunlu",
+    failed: "Giris basarisiz",
+    error: "Giris sirasinda hata olustu",
+    show: "Goster",
+    hide: "Gizle",
+    forgot: "Sifremi unuttum",
+    submit: "Giris Yap",
+    loading: "Giris yapiliyor...",
+    noAccount: "Eger daha once kaydiniz yok ise",
+    register: "Kayit Ol",
+  },
+  en: {
+    title: "Login",
+    identifier: "Username or email address",
+    password: "Password",
+    required: "Username/email and password are required",
+    failed: "Login failed",
+    error: "An error occurred during login",
+    show: "Show",
+    hide: "Hide",
+    forgot: "Forgot password",
+    submit: "Login",
+    loading: "Logging in...",
+    noAccount: "If you do not have an account yet",
+    register: "Register",
+  },
+};
 
 export default function Login() {
-  const nav = useNavigate();
-  const { login } = useAuth();
+  const navigate = useNavigate();
+  const { language } = useI18n();
+  const tt = text[language] || text.tr;
 
-  const [form, setForm] = useState({ login: "", password: "" });
-  const [err, setErr] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ identifier: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  async function onSubmit(e) {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setErr("");
 
-    if (!form.login.trim()) {
-      setErr("Kullanıcı adı veya mail zorunlu.");
+    if (!form.identifier.trim() || !form.password.trim()) {
+      setErrorMsg(tt.required);
       return;
     }
 
-    if (!form.password.trim()) {
-      setErr("Şifre zorunlu.");
-      return;
-    }
-
-    setBusy(true);
+    setLoading(true);
+    setErrorMsg("");
 
     try {
-      const result = await login(form.login, form.password);
+      const data = await loginUser({ identifier: form.identifier.trim(), password: form.password });
 
-      if (!result?.ok) {
-        setErr(result?.message || "Giriş yapılamadı.");
+      if (data?.token) {
+        localStorage.setItem("accessToken", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user || null));
+        window.dispatchEvent(new Event("authChanged"));
+        navigate("/dashboard", { replace: true });
         return;
       }
 
-      nav("/dashboard", { replace: true });
-    } catch (e) {
-      setErr(e?.message || "Giriş yapılamadı.");
+      setErrorMsg(data?.message || tt.failed);
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMsg(error?.response?.data?.message || error?.message || tt.error);
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="authPage">
-      <Navbar />
+    <div style={pageStyle}>
+      <div style={cardStyle}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "18px" }}>
+          <img src={logo} alt="FTSLine Logo" style={{ width: "180px", maxWidth: "100%", objectFit: "contain" }} />
+        </div>
 
-      <div className="authShell">
-        <div className="authCard">
-          <div className="authBrand">
-            <img src="/ftsline.png" alt="FTSLine" className="authLogo" />
-            <div className="authBrandText">
-              <div className="authBrandName">FTSLINE</div>
-              <div className="authBrandSlogan">GELECEĞE YÖN VER</div>
-            </div>
+        <h1 style={titleStyle}>{tt.title}</h1>
+
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <input name="identifier" type="text" placeholder={tt.identifier} value={form.identifier} onChange={handleChange} autoComplete="username" style={inputStyle} />
+
+          <div style={{ position: "relative" }}>
+            <input name="password" type={showPassword ? "text" : "password"} placeholder={tt.password} value={form.password} onChange={handleChange} autoComplete="current-password" style={{ ...inputStyle, width: "100%", paddingRight: "50px", boxSizing: "border-box" }} />
+            <button type="button" onClick={() => setShowPassword((prev) => !prev)} style={toggleStyle}>
+              {showPassword ? tt.hide : tt.show}
+            </button>
           </div>
 
-          <div className="authHead">
-            <h2 className="authTitle">Giriş</h2>
-            <p className="authSub">Hesabına giriş yap ve panele geç.</p>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "-4px" }}>
+            <Link to="/forgot-password" style={linkStyle}>{tt.forgot}</Link>
           </div>
 
-          <form onSubmit={onSubmit} className="authForm">
-            <label className="authLabel">Kullanıcı adı / Mail</label>
-            <input
-              className="authInput"
-              value={form.login}
-              onChange={(e) => setForm({ ...form, login: e.target.value })}
-              placeholder="kerim2 / kerim2@test.com"
-              autoComplete="username"
-            />
+          {errorMsg && <div style={errorStyle}>{errorMsg}</div>}
 
-            <label className="authLabel">Şifre</label>
-            <input
-              className="authInput"
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="••••••"
-              autoComplete="current-password"
-            />
+          <button type="submit" disabled={loading} style={{ ...submitStyle, background: loading ? "#94a3b8" : "#1d4ed8", cursor: loading ? "not-allowed" : "pointer" }}>
+            {loading ? tt.loading : tt.submit}
+          </button>
+        </form>
 
-            {err ? <div className="authErr">{err}</div> : null}
-
-            <button className="authBtn primary" type="submit" disabled={busy}>
-              {busy ? "Giriş yapılıyor..." : "Giriş Yap"}
-            </button>
-
-            <button
-              className="authBtn ghost"
-              type="button"
-              onClick={() => nav("/register")}
-              disabled={busy}
-            >
-              Hesabın yok mu? Kayıt ol
-            </button>
-          </form>
+        <div style={{ marginTop: "20px", textAlign: "center", fontSize: "14px", color: "#475569" }}>
+          {tt.noAccount} <Link to="/register" style={linkStrongStyle}>{tt.register}</Link>
         </div>
       </div>
     </div>
   );
 }
+
+const pageStyle = { minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(135deg, #0f172a, #1e3a8a)", padding: "20px" };
+const cardStyle = { width: "100%", maxWidth: "430px", background: "#ffffff", borderRadius: "22px", padding: "38px 28px", boxShadow: "0 20px 50px rgba(0,0,0,0.20)" };
+const titleStyle = { textAlign: "center", marginBottom: "24px", fontSize: "28px", fontWeight: "700", color: "#0f172a" };
+const inputStyle = { padding: "14px 15px", borderRadius: "12px", border: "1px solid #cbd5e1", fontSize: "15px", outline: "none" };
+const toggleStyle = { position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", border: "none", background: "transparent", cursor: "pointer", fontSize: "13px", fontWeight: "600", color: "#1d4ed8" };
+const linkStyle = { fontSize: "14px", color: "#1d4ed8", textDecoration: "none", fontWeight: "500" };
+const linkStrongStyle = { color: "#1d4ed8", fontWeight: "700", textDecoration: "none" };
+const errorStyle = { color: "#dc2626", fontSize: "14px", background: "#fef2f2", padding: "10px 12px", borderRadius: "10px" };
+const submitStyle = { marginTop: "4px", padding: "14px", borderRadius: "12px", border: "none", color: "#fff", fontSize: "16px", fontWeight: "700", transition: "0.2s" };

@@ -1,5 +1,61 @@
 import mongoose from "mongoose";
 
+const AddressSchema = new mongoose.Schema(
+  {
+    country: { type: String, default: "", trim: true },
+    city: { type: String, default: "", trim: true },
+    district: { type: String, default: "", trim: true },
+    zipCode: { type: String, default: "", trim: true },
+    addressLine: { type: String, default: "", trim: true },
+  },
+  { _id: false }
+);
+
+const InvoiceSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["individual", "company"],
+      default: "individual",
+    },
+    fullName: { type: String, default: "", trim: true },
+    companyName: { type: String, default: "", trim: true },
+    taxOffice: { type: String, default: "", trim: true },
+    taxNumber: { type: String, default: "", trim: true },
+    tcNo: { type: String, default: "", trim: true },
+    country: { type: String, default: "", trim: true },
+    city: { type: String, default: "", trim: true },
+    district: { type: String, default: "", trim: true },
+    zipCode: { type: String, default: "", trim: true },
+    addressLine: { type: String, default: "", trim: true },
+  },
+  { _id: false }
+);
+
+const CareerSchema = new mongoose.Schema(
+  {
+    level: {
+      type: String,
+      enum: [
+        "NONE",
+        "BRONZ",
+        "GUMUS",
+        "ALTIN",
+        "PLATIN",
+        "ELMAS",
+        "TAC_ELMAS",
+      ],
+      default: "NONE",
+      index: true,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
 const UserSchema = new mongoose.Schema(
   {
     username: {
@@ -8,20 +64,25 @@ const UserSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
+      minlength: 3,
+      maxlength: 20,
+      match: /^[a-z0-9_.]+$/,
     },
 
     fullName: {
       type: String,
       default: "",
       trim: true,
+      maxlength: 100,
     },
 
     email: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
       trim: true,
+      lowercase: true,
+      match: /^\S+@\S+\.\S+$/,
     },
 
     phone: {
@@ -36,26 +97,52 @@ const UserSchema = new mongoose.Schema(
       select: false,
     },
 
-    role: {
+    resetCode: {
       type: String,
-      default: "user",
-      enum: ["user", "admin", "superadmin"],
+      default: "",
+      select: false,
     },
 
-    permissions: {
-      type: [String],
-      default: [],
+    resetCodeExpiresAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
+    role: {
+      type: String,
+      enum: ["user", "admin", "superadmin"],
+      default: "user",
+      index: true,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
 
     sponsor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
+      index: true,
     },
 
     teamCount: {
       type: Number,
       default: 0,
+      min: 0,
+    },
+
+    career: {
+      type: CareerSchema,
+      default: () => ({}),
+    },
+
+    careerLevel: {
+      type: String,
+      enum: ["starter", "bronze", "silver", "gold", "platinum", "diamond"],
+      default: "starter",
     },
 
     isLicensed: {
@@ -63,55 +150,92 @@ const UserSchema = new mongoose.Schema(
       default: false,
     },
 
+    licenseStartedAt: {
+      type: Date,
+      default: null,
+    },
+
     licenseExpiresAt: {
       type: Date,
       default: null,
     },
 
-    profile: {
-      birthDate: { type: Date, default: null },
-      nationality: { type: String, default: "" },
+    isContractedDiamond: {
+      type: Boolean,
+      default: false,
+    },
 
-      addressLine: { type: String, default: "" },
-      city: { type: String, default: "" },
-      district: { type: String, default: "" },
-      postalCode: { type: String, default: "" },
-      country: { type: String, default: "TR" },
+    contractedDiamondSignedAt: {
+      type: Date,
+      default: null,
+    },
 
-      stateCode: { type: String, default: "" },
-      phoneCode: { type: String, default: "" },
+    usdtTrc20Address: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    walletBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    totalEarning: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    monthlyEarning: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    totalWithdrawn: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    referralCode: {
+      type: String,
+      default: "",
+      trim: true,
+      lowercase: true,
+      unique: true,
+      sparse: true,
+    },
+
+    avatar: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    address: {
+      type: AddressSchema,
+      default: () => ({}),
     },
 
     invoice: {
-      name: { type: String, default: "" },
-      taxNo: { type: String, default: "" },
-      taxOffice: { type: String, default: "" },
-
-      addressLine: { type: String, default: "" },
-      city: { type: String, default: "" },
-      district: { type: String, default: "" },
-      postalCode: { type: String, default: "" },
-      country: { type: String, default: "TR" },
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
+      type: InvoiceSchema,
+      default: () => ({}),
     },
   },
   {
     timestamps: true,
-    toJSON: {
-      transform: function (doc, ret) {
-        delete ret.passwordHash;
-        return ret;
-      },
-    },
   }
 );
 
-UserSchema.index({ sponsor: 1, createdAt: -1 });
-UserSchema.index({ role: 1 });
-UserSchema.index({ permissions: 1 });
+UserSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.passwordHash;
+  delete obj.resetCode;
+  delete obj.resetCodeExpiresAt;
+  return obj;
+};
 
-export default mongoose.models.User || mongoose.model("User", UserSchema);
+export default mongoose.model("User", UserSchema);

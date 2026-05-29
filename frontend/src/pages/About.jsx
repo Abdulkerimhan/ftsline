@@ -1,68 +1,116 @@
-import Navbar from "../components/Navbar.jsx";
+import { useI18n } from "../i18n/I18nContext.jsx";
 import "./About.css";
 
+const text = {
+  tr: {
+    badge: "DIJITAL CAGDA",
+    title: "Erken dijitallesen, yol alir.",
+    quote: "DIJITAL DUNYAYA ACILAN KAPI.",
+    desc: "FTSLine, dijital dunyada bireylerin gelir elde edebilecegi yenilikci ve adil bir network marketing platformudur. Guvene ve surdurulebilir bir sisteme dayanan modern bir deneyim sunar.",
+    whoTitle: "Biz Kimiz?",
+    whoDesc: "Teknolojiyi, insan potansiyelini ve paylasimi bir araya getirerek kazanci buyuten bir sistem kurduk. Amacimiz sadece kazanc degil, birlikte buyuyen guclu bir topluluk olusturmaktir.",
+    cards: [
+      { title: "Misyonumuz", desc: "Her bireyin dijitalde kendi ekonomisini kurmasini saglamak." },
+      { title: "Vizyonumuz", desc: "Global olcekte lider bir dijital network agi olmak." },
+      { title: "Temel Gucumuz", desc: "Teknoloji, sistem ve topluluk birlesimi." },
+    ],
+    teamTitle: "Ekibimiz",
+    team: [
+      { title: "Yazilim", desc: "Platform altyapisini gelistiren ekip" },
+      { title: "Strateji", desc: "Kazanc modelini yoneten ekip" },
+      { title: "Topluluk", desc: "Kullanici deneyimini yoneten ekip" },
+    ],
+    planTitle: "Kazanc Plani",
+    plans: [
+      { title: "Unilevel", items: ["Direkt kazanc", "Kariyer bonuslari", "Derinlik sistemi"] },
+      { title: "Matrix", items: ["2x15 sistem", "Aylik uyelik modeli", "Kazanc dagilimi"] },
+    ],
+    ctaTitle: "Gelecegi birlikte kur",
+    ctaDesc: "FTSLine sadece kazanc degil, dijital bir yasam modeli sunar.",
+  },
+  en: {
+    badge: "IN THE DIGITAL AGE",
+    title: "Those who go digital early move ahead.",
+    quote: "THE GATEWAY TO THE DIGITAL WORLD.",
+    desc: "FTSLine is an innovative and fair network marketing platform where people can build income in the digital world. It offers a modern experience based on trust and a sustainable system.",
+    whoTitle: "Who Are We?",
+    whoDesc: "We built a system that combines technology, human potential and sharing to grow value. Our goal is not only income, but a strong community that grows together.",
+    cards: [
+      { title: "Our Mission", desc: "To help every person build their own digital economy." },
+      { title: "Our Vision", desc: "To become a leading digital network platform globally." },
+      { title: "Our Core Strength", desc: "The combination of technology, system and community." },
+    ],
+    teamTitle: "Our Team",
+    team: [
+      { title: "Software", desc: "The team developing the platform infrastructure" },
+      { title: "Strategy", desc: "The team managing the earning model" },
+      { title: "Community", desc: "The team managing user experience" },
+    ],
+    planTitle: "Earning Plan",
+    plans: [
+      { title: "Unilevel", items: ["Direct earnings", "Career bonuses", "Depth system"] },
+      { title: "Matrix", items: ["2x15 system", "Monthly membership model", "Earning distribution"] },
+    ],
+    ctaTitle: "Build the future together",
+    ctaDesc: "FTSLine offers not only earnings, but a digital lifestyle model.",
+  },
+};
+
 export default function About() {
+  const { language } = useI18n();
+  const tt = text[language] || text.tr;
+
   return (
-    <div className="abPage">
-      <Navbar />
+    <div className="about-page">
+      <div className="about-container">
+        <section className="about-hero">
+          <span className="about-badge">{tt.badge}</span>
+          <h1>{tt.title}</h1>
+          <p className="about-quote">{tt.quote}</p>
+          <p className="about-desc">{tt.desc}</p>
+        </section>
 
-      <div className="abContainer">
-        <h1 className="abTitle">Hakkımızda</h1>
-
-        <p className="abText">
-          FTSLine, e-ticaret ile ağ sistemlerini birleştiren modern bir dijital platformdur.
-          Kullanıcıların hem ürün satın alabileceği hem de kendi ekiplerini kurarak
-          kazanç elde edebileceği bir yapı sunar.
-        </p>
-        <p>değişen dünya ile birlikte yenilikleri yakalamak dijital dünyanın ayrıcalıklarından faydalanabilmek ve dijitalin gücünden yararlanamak
-             için ftsline platformunda kendinize bir lisans alarak dijital yolculuğumuz başlasın.</p>
-        <p>ftsline ailesinin bir parçası olarak size sunulan eğitim indirim ve birlikte e-ticaretin tüm avantajlarından 
-            faydalabilirsiniz.</p>
-        <p>lisans alarak neler kazanacaksınız?</p>
-            <ul>1. Lisanslı fiyatlardan alışveriş yapma hakkı</ul>
-            <ul>2. Kendi ekibinizi kurarak kazanç elde etme fırsatı</ul>
-            <ul>3. Panel üzerinden kazanç ve ekip yönetimi</ul>
-            <ul>4. Özel eğitim ve destek imkanları</ul> 
-        <p>FTSLine, kullanıcılarına sadece ürün satışı değil aynı zamanda bir iş fırsatı da sunar. Lisanslı üyeler, avantajlı fiyatlardan alışveriş yaparken aynı zamanda kendi ekiplerini kurarak kazanç elde etme şansına sahip olurlar. Panel üzerinden kazançlarını ve ekiplerini kolayca yönetebilirler. Ayrıca, özel eğitim ve destek imkanlarıyla kullanıcıların başarılı olmaları için gereken tüm kaynaklar sağlanır.</p>
-        <p>FTSLine, dijital dünyanın sunduğu fırsatları en iyi şekilde değerlendirmek isteyenler için ideal bir platformdur. E-ticaretin gücünü, ağ sistemlerinin avantajlarıyla birleştiren bu platformda, kullanıcılar hem alışveriş yapabilir hem de kendi işlerini kurarak kazanç elde edebilirler. FTSLine ile geleceğe yön verin ve dijital dünyada yerinizi alın.</p>
-        <h1>unutma</h1>
-        <h1>ERKEN KALKAN DEĞİL ERKEN DİJİTALLEŞEN YOL ALIR.</h1>
-        
-        <div className="abGrid">
-          <div className="abCard">
-            <h3>🚀 Vizyon</h3>
-            <p>
-              Global ölçekte çalışan, kullanıcılarına kazanç sağlayan
-              ve sürdürülebilir bir dijital platform oluşturmak.
-            </p>
+        <section className="about-section">
+          <h2>{tt.whoTitle}</h2>
+          <p>{tt.whoDesc}</p>
+          <div className="about-grid">
+            {tt.cards.map((card) => (
+              <div className="about-card" key={card.title}>
+                <h3>{card.title}</h3>
+                <p>{card.desc}</p>
+              </div>
+            ))}
           </div>
+        </section>
 
-          <div className="abCard">
-            <h3>⚙️ Sistem</h3>
-            <p>
-              Unilevel + Matrix yapısı ile ekip kurma ve kazanç sistemi.
-              Aynı zamanda güçlü bir e-ticaret altyapısı.
-            </p>
+        <section className="about-section">
+          <h2>{tt.teamTitle}</h2>
+          <div className="about-grid">
+            {tt.team.map((card) => (
+              <div className="about-card" key={card.title}>
+                <h3>{card.title}</h3>
+                <p>{card.desc}</p>
+              </div>
+            ))}
           </div>
+        </section>
 
-          <div className="abCard">
-            <h3>🔐 Güvenlik</h3>
-            <p>
-              JWT tabanlı giriş sistemi ve güvenli veri yönetimi ile
-              kullanıcı bilgilerinin korunması.
-            </p>
+        <section className="about-section">
+          <h2>{tt.planTitle}</h2>
+          <div className="about-grid">
+            {tt.plans.map((plan) => (
+              <div className="about-gain" key={plan.title}>
+                <h3>{plan.title}</h3>
+                <ul>{plan.items.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+            ))}
           </div>
-        </div>
+        </section>
 
-        <div className="abBox">
-          <h2>Neden FTSLine?</h2>
-          <ul>
-            <li>✔️ Lisanslı ve normal fiyat sistemi</li>
-            <li>✔️ Kullanıcı paneli ve kazanç takibi</li>
-            <li>✔️ Modern ve hızlı altyapı</li>
-            <li>✔️ Geliştirilebilir modüler yapı</li>
-          </ul>
-        </div>
+        <section className="about-cta">
+          <h2>{tt.ctaTitle}</h2>
+          <p>{tt.ctaDesc}</p>
+        </section>
       </div>
     </div>
   );

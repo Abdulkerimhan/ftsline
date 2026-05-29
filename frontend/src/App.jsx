@@ -1,144 +1,113 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
-// public pages
-import Landing from "./pages/Landing.jsx";
-import Products from "./pages/Products.jsx";
+import Navbar from "./components/Navbar.jsx";
+import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
-import About from "./pages/About.jsx";
-import Faq from "./pages/Faq.jsx";
-import Contact from "./pages/Contact.jsx";
-import Cart from "./pages/Cart.jsx";
-import Checkout from "./pages/Checkout.jsx";
-
-// user dashboard
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Products from "./pages/Products.jsx";
+import ProductDetail from "./pages/ProductDetail.jsx";
+import About from "./pages/About.jsx";
+import Contact from "./pages/Contact.jsx";
+import AdminPanel from "./pages/AdminPanel.jsx";
+import Cart from "./pages/Cart.jsx";
+import Payment from "./pages/Payment.jsx";
+import SuperAdminPanel from "./pages/SuperAdminPanel.jsx";
+import LiveTranslator from "./i18n/LiveTranslator.jsx";
 
-// admin dashboard
-import AdminDashboard from "./pages/AdminDashboard.jsx";
-
-// superadmin dashboard
-import SuperadminDashboard from "./pages/SuperadminDashboard.jsx";
-import SuperadminFinance from "./pages/SuperadminFinance.jsx";
-
-// auth
-import { useAuth } from "./context/AuthContext.jsx";
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
+}
 
 function RequireAuth({ children }) {
-  const { user, loading } = useAuth();
+  const token = localStorage.getItem("accessToken");
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
 
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+function RequireAdmin({ children }) {
+  const token = localStorage.getItem("accessToken");
+  const user = getStoredUser();
+
+  if (!token) return <Navigate to="/login" replace />;
+
+  if (user?.role !== "admin" && user?.role !== "superadmin") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return children;
 }
 
-function GuestOnly({ children }) {
-  const { user, loading } = useAuth();
+function RequireSuperAdmin({ children }) {
+  const token = localStorage.getItem("accessToken");
+  const user = getStoredUser();
 
-  if (loading) return null;
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (!token) return <Navigate to="/login" replace />;
 
-  return children;
-}
-
-function RequireRole({ children, role, allowSuperadmin = true }) {
-  const { user, loading } = useAuth();
-
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
-
-  if (allowSuperadmin && user.role === "superadmin") return children;
-
-  const allowed = Array.isArray(role) ? role : [role];
-  if (!allowed.includes(user.role)) return <Navigate to="/dashboard" replace />;
+  if (user?.role !== "superadmin") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return children;
 }
 
 export default function App() {
   return (
-    <Routes>
-      {/* public */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/products" element={<Products />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/faq" element={<Faq />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/cart/*" element={<Cart />} />
+    <>
+      <Navbar />
+      <LiveTranslator />
 
-      {/* auth */}
-      <Route
-        path="/login"
-        element={
-          <GuestOnly>
-            <Login />
-          </GuestOnly>
-        }
-      />
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-      <Route
-        path="/register"
-        element={
-          <GuestOnly>
-            <Register />
-          </GuestOnly>
-        }
-      />
+        <Route path="/products" element={<Products />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
 
-      {/* referral */}
-      <Route path="/r/:username" element={<Register />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
 
-      {/* user */}
-      <Route
-        path="/dashboard"
-        element={
-          <RequireAuth>
-            <Dashboard />
-          </RequireAuth>
-        }
-      />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      <Route
-        path="/checkout"
-        element={
-          <RequireAuth>
-            <Checkout />
-          </RequireAuth>
-        }
-      />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/payment" element={<Payment />} />
 
-      {/* admin */}
-      <Route
-        path="/admin"
-        element={
-          <RequireRole role="admin">
-            <AdminDashboard />
-          </RequireRole>
-        }
-      />
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <Dashboard />
+            </RequireAuth>
+          }
+        />
 
-      {/* superadmin */}
-      <Route
-        path="/superadmin"
-        element={
-          <RequireRole role="superadmin">
-            <SuperadminDashboard />
-          </RequireRole>
-        }
-      />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminPanel />
+            </RequireAdmin>
+          }
+        />
 
-      <Route
-        path="/superadmin/finance"
-        element={
-          <RequireRole role="superadmin">
-            <SuperadminFinance />
-          </RequireRole>
-        }
-      />
+        <Route
+          path="/superadmin"
+          element={
+            <RequireSuperAdmin>
+              <SuperAdminPanel />
+            </RequireSuperAdmin>
+          }
+        />
 
-      {/* fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
+

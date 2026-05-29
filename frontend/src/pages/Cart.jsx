@@ -1,235 +1,229 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar.jsx";
+import { Link } from "react-router-dom";
+import {
+  clearCart,
+  decreaseQty,
+  getCart,
+  getCartTotal,
+  increaseQty,
+  removeFromCart,
+} from "../utils/cart.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 import "./Cart.css";
 
-const CART_KEY = "fts_cart_v1";
-
-function safeJsonParse(s) {
-  try {
-    return JSON.parse(s);
-  } catch {
-    return null;
-  }
-}
-
-function fmtTry(n) {
-  return Number(n || 0).toLocaleString("tr-TR") + "₺";
-}
-
-function getUserIsLicensed() {
-  try {
-    const raw = localStorage.getItem("user");
-    const u = raw ? safeJsonParse(raw) : null;
-    return Boolean(u?.isLicensed || u?.licensed || u?.hasLicense || u?.licenseActive);
-  } catch {
-    return false;
-  }
-}
-
-function getId(x) {
-  return String(x?._id || x?.id || "");
-}
-
-/* =========================
-   CART (utils'siz)
-========================= */
-function getCart() {
-  try {
-    const raw = localStorage.getItem(CART_KEY);
-    const items = raw ? JSON.parse(raw) : [];
-    return Array.isArray(items) ? items : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveCart(items) {
-  localStorage.setItem(CART_KEY, JSON.stringify(Array.isArray(items) ? items : []));
-  window.dispatchEvent(new Event("cart:updated"));
-}
-
-function updateCartQty(productId, qty) {
-  const id = String(productId || "");
-  if (!id) return getCart();
-
-  const q = Number(qty || 1);
-
-  if (q <= 0) return removeFromCart(id);
-
-  const items = getCart().map((x) => (getId(x) === id ? { ...x, qty: q } : x));
-  saveCart(items);
-  return items;
-}
-
-function removeFromCart(productId) {
-  const id = String(productId || "");
-  const items = getCart().filter((x) => getId(x) !== id);
-  saveCart(items);
-  return items;
-}
-
-function clearCart() {
-  localStorage.removeItem(CART_KEY);
-  window.dispatchEvent(new Event("cart:updated"));
-}
-
-function getCartItemPrice(item, isLicensed) {
-  const normal = Number(item?.priceNormal ?? item?.normalPrice ?? item?.price ?? 0);
-  const licensed = Number(item?.priceLicensed ?? item?.licensedPrice ?? 0);
-
-  if (isLicensed && licensed > 0) return licensed;
-  return normal;
-}
-
 export default function Cart() {
-  const nav = useNavigate();
-  const [items, setItems] = useState([]);
-  const [isLicensed, setIsLicensed] = useState(false);
+  const { language } = useI18n();
 
-  function refresh() {
-    setItems(getCart());
-    setIsLicensed(getUserIsLicensed());
-  }
+  const texts = useMemo(
+    () => ({
+      tr: {
+        title: "Sepetim",
+        subtitle:
+          "Sepetindeki ürünleri buradan yönetebilir, adet değiştirebilir ve toplam tutarı görebilirsin.",
+        emptyTitle: "Sepetin boş",
+        emptyText: "Henüz sepete ürün eklemedin.",
+        browseProducts: "Ürünleri İncele",
+        noImage: "Görsel Yok",
+        unitPrice: "Birim Fiyat",
+        rowTotal: "Ara Toplam",
+        totalProducts: "Toplam Ürün",
+        totalAmount: "Toplam Tutar",
+        orderSummary: "Sipariş Özeti",
+        checkout: "Siparişi Tamamla",
+        clearCart: "Sepeti Temizle",
+        remove: "Ürünü Sil",
+        backToProducts: "Alışverişe Devam Et",
+        currency: "TL",
+      },
+      en: {
+        title: "My Cart",
+        subtitle:
+          "You can manage your cart here, change quantities, and see the total amount.",
+        emptyTitle: "Your cart is empty",
+        emptyText: "You have not added any products to your cart yet.",
+        browseProducts: "Browse Products",
+        noImage: "No Image",
+        unitPrice: "Unit Price",
+        rowTotal: "Subtotal",
+        totalProducts: "Total Items",
+        totalAmount: "Total Amount",
+        orderSummary: "Order Summary",
+        checkout: "Complete Order",
+        clearCart: "Clear Cart",
+        remove: "Remove Item",
+        backToProducts: "Continue Shopping",
+        currency: "TL",
+      },
+    }),
+    []
+  );
+
+  const t = texts[language] || texts.tr;
+
+  const [cart, setCart] = useState([]);
+
+  const loadCart = () => {
+    setCart(getCart());
+  };
 
   useEffect(() => {
-    refresh();
+    loadCart();
 
-    function onCartUpdate() {
-      refresh();
-    }
+    const handleCartUpdate = () => loadCart();
+    window.addEventListener("cartUpdated", handleCartUpdate);
 
-    window.addEventListener("cart:updated", onCartUpdate);
-    return () => window.removeEventListener("cart:updated", onCartUpdate);
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+    };
   }, []);
 
-  const totalQty = useMemo(() => {
-    return items.reduce((sum, x) => sum + Number(x.qty || 0), 0);
-  }, [items]);
-
-  const total = useMemo(() => {
-    return items.reduce((sum, x) => {
-      const price = getCartItemPrice(x, isLicensed);
-      return sum + price * Number(x.qty || 0);
-    }, 0);
-  }, [items, isLicensed]);
+  const total = getCartTotal();
+  const totalQty = cart.reduce((sum, item) => {
+    return sum + Number(item.quantity || 1);
+  }, 0);
 
   return (
-    <div className="cartPage">
-      <Navbar />
-
-      <div className="cartShell">
-        <div className="cartHead">
-          <h1>Sepetim</h1>
-          <button className="cartBtn" onClick={() => nav("/products")} type="button">
-            Alışverişe Dön
-          </button>
+    <div className="cart-page">
+      <div className="cart-container">
+        <div className="cart-header">
+          <div className="cart-badge">FTSLine</div>
+          <h1 className="cart-title">{t.title}</h1>
+          <p className="cart-subtitle">{t.subtitle}</p>
         </div>
 
-        {!items.length ? (
-          <div className="cartEmpty">
-            <h3>Sepetin boş</h3>
-            <p>Henüz sepete ürün eklemedin.</p>
-            <button className="cartBtn primary" onClick={() => nav("/products")} type="button">
-              Ürünlere Git
-            </button>
+        {cart.length === 0 ? (
+          <div className="cart-empty">
+            <div className="cart-empty-icon">🛒</div>
+            <h2 className="cart-empty-title">{t.emptyTitle}</h2>
+            <p className="cart-empty-text">{t.emptyText}</p>
+
+            <Link to="/products" className="cart-empty-link">
+              {t.browseProducts}
+            </Link>
           </div>
         ) : (
-          <div className="cartGrid">
-            <div className="cartList">
-              {items.map((item) => {
-                const pid = item?._id || item?.id;
-                const unitPrice = getCartItemPrice(item, isLicensed);
-                const lineTotal = unitPrice * Number(item.qty || 0);
-                const img = item?.images?.[0] || item?.image || "/ftsline.png";
+          <div className="cart-grid">
+            <div className="cart-list">
+              {cart.map((item, index) => {
+                const unitPrice = Number(
+                  item.selectedPrice ?? item.price ?? item.priceNormal ?? 0
+                );
+                const qty = Number(item.quantity || 1);
+                const rowTotal = unitPrice * qty;
+
+                const imageSrc =
+                  item.image ||
+                  item.images?.[0] ||
+                  "https://via.placeholder.com/300x300?text=Ürün";
 
                 return (
-                  <div className="cartCard" key={String(pid)}>
-                    <img src={img} alt={item.name || "Ürün"} className="cartImg" />
+                  <div className="cart-item" key={item._id || `${item.name}-${index}`}>
+                    {item.image || item.images?.[0] ? (
+                      <img
+                        src={imageSrc}
+                        alt={item.name}
+                        className="cart-item-image"
+                      />
+                    ) : (
+                      <div className="cart-item-no-image">{t.noImage}</div>
+                    )}
 
-                    <div className="cartInfo">
-                      <div className="cartName">{item.name || "Ürün"}</div>
+                    <div className="cart-item-info">
+                      <h3 className="cart-item-name">{item.name}</h3>
 
-                      <div className="cartMeta">
-                        {item.brand ? <span>{item.brand}</span> : null}
-                        {item.brand && item.category ? <span className="dot">•</span> : null}
-                        {item.category ? <span>{item.category}</span> : null}
+                      {item.brand && (
+                        <p className="cart-item-meta">
+                          <span>{item.brand}</span>
+                        </p>
+                      )}
+
+                      <p className="cart-item-text">
+                        {t.unitPrice}:{" "}
+                        <strong>
+                          {formatPrice(unitPrice)} {t.currency}
+                        </strong>
+                      </p>
+
+                      <p className="cart-item-text">
+                        {t.rowTotal}:{" "}
+                        <strong>
+                          {formatPrice(rowTotal)} {t.currency}
+                        </strong>
+                      </p>
+                    </div>
+
+                    <div className="cart-item-actions">
+                      <div className="cart-qty-box">
+                        <button
+                          type="button"
+                          className="cart-qty-btn"
+                          onClick={() => decreaseQty(item._id)}
+                        >
+                          -
+                        </button>
+
+                        <span className="cart-qty-value">{qty}</span>
+
+                        <button
+                          type="button"
+                          className="cart-qty-btn"
+                          onClick={() => increaseQty(item._id)}
+                        >
+                          +
+                        </button>
                       </div>
 
-                      <div className="cartPrice">{fmtTry(unitPrice)}</div>
-                    </div>
-
-                    <div className="cartQty">
                       <button
                         type="button"
-                        onClick={() => {
-                          const next = Math.max(1, Number(item.qty || 1) - 1);
-                          updateCartQty(pid, next);
-                        }}
+                        className="cart-remove-btn"
+                        onClick={() => removeFromCart(item._id)}
                       >
-                        -
-                      </button>
-
-                      <span>{item.qty}</span>
-
-                      <button
-                        type="button"
-                        onClick={() => updateCartQty(pid, Number(item.qty || 1) + 1)}
-                      >
-                        +
+                        {t.remove}
                       </button>
                     </div>
-
-                    <div className="cartLineTotal">{fmtTry(lineTotal)}</div>
-
-                    <button className="cartRemove" type="button" onClick={() => removeFromCart(pid)}>
-                      Sil
-                    </button>
                   </div>
                 );
               })}
             </div>
 
-            <div className="cartSummary">
-              <h3>Sipariş Özeti</h3>
+            <aside className="cart-summary">
+              <h2 className="cart-summary-title">{t.orderSummary}</h2>
 
-              <div className="cartRow">
-                <span>Lisans Durumu</span>
-                <b>{isLicensed ? "Aktif" : "Pasif"}</b>
+              <div className="cart-summary-row">
+                <span>{t.totalProducts}</span>
+                <strong>{totalQty}</strong>
               </div>
 
-              <div className="cartRow">
-                <span>Ürün Adedi</span>
-                <b>{totalQty}</b>
+              <div className="cart-summary-row">
+                <span>{t.totalAmount}</span>
+                <strong className="cart-summary-total">
+                  {formatPrice(total)} {t.currency}
+                </strong>
               </div>
 
-              <div className="cartRow">
-                <span>Toplam</span>
-                <b>{fmtTry(total)}</b>
-              </div>
+              <Link to="/payment" className="cart-checkout-btn">
+                {t.checkout}
+              </Link>
 
               <button
-                className="cartBtn primary"
                 type="button"
-                onClick={() => nav("/checkout")}
+                onClick={clearCart}
+                className="cart-clear-btn"
               >
-                Siparişi Tamamla
+                {t.clearCart}
               </button>
 
-              <button
-                className="cartBtn danger"
-                type="button"
-                onClick={() => {
-                  clearCart();
-                  refresh();
-                }}
-              >
-                Sepeti Temizle
-              </button>
-            </div>
+              <Link to="/products" className="cart-back-link">
+                {t.backToProducts}
+              </Link>
+            </aside>
           </div>
         )}
       </div>
     </div>
   );
+}
+
+function formatPrice(value) {
+  return new Intl.NumberFormat("tr-TR").format(Number(value) || 0);
 }

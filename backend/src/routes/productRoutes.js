@@ -1,150 +1,179 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import Product from "../models/Product.js";
+import { authRequired } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-function normalizeProduct(p) {
-  const x = p?.toObject ? p.toObject() : p;
+/* ================= UPLOAD ================= */
 
-  // bazı eski datalarda field isimleri farklı
-  const priceNormal = x.priceNormal ?? x.normalPrice ?? 0;
-  const priceLicensed = x.priceLicensed ?? x.licensedPrice ?? 0;
+const uploadDir = "uploads/products";
 
-  const desc = x.desc ?? x.description ?? "";
-
-  return {
-    _id: x._id,
-    name: x.name,
-    brand: x.brand || "",
-    category: x.category || "",
-    images: Array.isArray(x.images) ? x.images : [],
-
-    // ✅ TEK FORMAT
-    priceNormal: Number(priceNormal || 0),
-    priceLicensed: Number(priceLicensed || 0),
-    desc: String(desc || ""),
-
-    // opsiyonel (eski datadan gelebilir)
-    tags: Array.isArray(x.tags) ? x.tags : [],
-    badge: x.badge || "",
-    featured: Boolean(x.featured || false),
-    stock: x.stock ?? null,
-
-    isActive: x.isActive !== false,
-    createdAt: x.createdAt,
-    updatedAt: x.updatedAt,
-  };
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-/* =========================
-   GET ALL PRODUCTS
-========================= */
-// GET /api/products
-router.get("/", async (req, res, next) => {
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename(req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + "-" + Math.random() + ext);
+  },
+});
+
+const upload = multer({ storage });
+
+function adminOrSuperadmin(req, res, next) {
+  const role = req.user?.role;
+  if (role === "admin" || role === "superadmin") return next();
+  return res.status(403).json({ message: "Yetki yok" });
+}
+
+function fileUrl(req, file) {
+  return `${req.protocol}://${req.get("host")}/uploads/products/${file.filename}`;
+}
+
+/* ================= PUBLIC ================= */
+
+router.get("/", async (req, res) => {
   try {
-    const { category, brand, search, includeInactive } = req.query;
+    const products = await Product.find({ isActive: true }).sort({
+      createdAt: -1,
+    });
+    res.json(products);
+  } catch {
+    res.status(500).json({ message: "Ürünler alınamadı" });
+  }
+});
 
-    const filter = {};
-    if (includeInactive !== "1") filter.isActive = true;
+/* ================= ADMIN ================= */
 
-    if (category) filter.category = category;
-    if (brand) filter.brand = brand;
+// TÜM ÜRÜNLER
+router.get("/admin/products", authRequired, adminOrSuperadmin, async (req, res) => {
+  const products = await Product.find().sort({ createdAt: -1 });
+  res.json(products);
+});
 
-    if (search) {
-      filter.name = { $regex: search, $options: "i" };
+/* ================= CREATE ================= */
+
+router.post(
+  "/admin/products",
+  authRequired,
+  adminOrSuperadmin,
+  upload.array("images"),
+  async (req, res) => {
+    try {
+      const uploadedImages = (req.files || []).map((f) => fileUrl(req, f));
+
+      const product = await Product.create({
+        name: req.body.name,
+        nameTr: req.body.nameTr,
+        nameEn: req.body.nameEn,
+
+        brand: req.body.brand,
+
+        category: req.body.category,
+        categoryTr: req.body.categoryTr,
+        categoryEn: req.body.categoryEn,
+
+        description: req.body.description,
+        descriptionTr: req.body.descriptionTr,
+        descriptionEn: req.body.descriptionEn,
+
+        priceNormal: Number(req.body.priceNormal),
+        priceLicensed: Number(req.body.priceLicensed),
+
+        stock: req.body.stock || "Sınırsız",
+
+        isActive: req.body.isActive === "true" || req.body.isActive === true,
+
+        images: uploadedImages,
+      });
+
+      res.json({ message: "Ürün eklendi", product });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Ürün eklenemedi" });
     }
-
-    const products = await Product.find(filter).sort({ createdAt: -1 });
-
-    res.json({ ok: true, products: products.map(normalizeProduct) });
-  } catch (e) {
-    next(e);
   }
-});
+);
 
-/* =========================
-   GET SINGLE PRODUCT
-========================= */
-// GET /api/products/:id
-router.get("/:id", async (req, res, next) => {
-  try {
-    const product = await Product.findById(req.params.id);
+/* ================= UPDATE ================= */
 
-    if (!product) {
-      return res.status(404).json({ ok: false, message: "Product not found" });
+router.put(
+  "/admin/products/:id",
+  authRequired,
+  adminOrSuperadmin,
+  upload.array("images"),
+  async (req, res) => {
+    try {
+      const existingImages = req.body.existingImages
+        ? Array.isArray(req.body.existingImages)
+          ? req.body.existingImages
+          : [req.body.existingImages]
+        : [];
+
+      const uploadedImages = (req.files || []).map((f) => fileUrl(req, f));
+
+      const updated = await Product.findByIdAndUpdate(
+        req.params.id,
+        {
+          name: req.body.name,
+          nameTr: req.body.nameTr,
+          nameEn: req.body.nameEn,
+
+          brand: req.body.brand,
+
+          category: req.body.category,
+          categoryTr: req.body.categoryTr,
+          categoryEn: req.body.categoryEn,
+
+          description: req.body.description,
+          descriptionTr: req.body.descriptionTr,
+          descriptionEn: req.body.descriptionEn,
+
+          priceNormal: Number(req.body.priceNormal),
+          priceLicensed: Number(req.body.priceLicensed),
+
+          stock: req.body.stock,
+
+          isActive: req.body.isActive === "true" || req.body.isActive === true,
+
+          images: [...existingImages, ...uploadedImages],
+        },
+        { new: true }
+      );
+
+      res.json({ message: "Güncellendi", product: updated });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Güncellenemedi" });
     }
-
-    res.json({ ok: true, product: normalizeProduct(product) });
-  } catch (e) {
-    next(e);
   }
-});
+);
 
-/* =========================
-   CREATE PRODUCT
-========================= */
-// POST /api/products
-router.post("/", async (req, res, next) => {
-  try {
-    const data = req.body || {};
+/* ================= DELETE ================= */
 
-    // ✅ eski formatla geleni de kabul et
-    const payload = {
-      ...data,
-      priceNormal: data.priceNormal ?? data.normalPrice,
-      priceLicensed: data.priceLicensed ?? data.licensedPrice,
-      desc: data.desc ?? data.description ?? "",
-    };
-
-    const product = await Product.create(payload);
-
-    res.json({ ok: true, product: normalizeProduct(product) });
-  } catch (e) {
-    next(e);
-  }
-});
-
-/* =========================
-   UPDATE PRODUCT
-========================= */
-// PUT /api/products/:id
-router.put("/:id", async (req, res, next) => {
-  try {
-    const data = req.body || {};
-
-    const patch = {
-      ...data,
-      priceNormal: data.priceNormal ?? data.normalPrice,
-      priceLicensed: data.priceLicensed ?? data.licensedPrice,
-      desc: data.desc ?? data.description,
-    };
-
-    // undefined alanları set etmesin diye temizle
-    Object.keys(patch).forEach((k) => patch[k] === undefined && delete patch[k]);
-
-    const product = await Product.findByIdAndUpdate(req.params.id, patch, { new: true });
-
-    if (!product) {
-      return res.status(404).json({ ok: false, message: "Product not found" });
-    }
-
-    res.json({ ok: true, product: normalizeProduct(product) });
-  } catch (e) {
-    next(e);
-  }
-});
-
-/* =========================
-   DELETE PRODUCT
-========================= */
-// DELETE /api/products/:id
-router.delete("/:id", async (req, res, next) => {
-  try {
+router.delete(
+  "/admin/products/:id",
+  authRequired,
+  adminOrSuperadmin,
+  async (req, res) => {
     await Product.findByIdAndDelete(req.params.id);
-    res.json({ ok: true });
-  } catch (e) {
-    next(e);
+    res.json({ message: "Silindi" });
   }
+);
+
+/* ================= SINGLE ================= */
+
+router.get("/:id", async (req, res) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) return res.status(404).json({ message: "Yok" });
+  res.json(product);
 });
 
 export default router;

@@ -1,21 +1,96 @@
 import mongoose from "mongoose";
 
-const ProductSchema = new mongoose.Schema(
+const productSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    brand: { type: String, default: "", trim: true },
-    category: { type: String, default: "", trim: true },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-    images: { type: [String], default: [] },
+    nameTr: {
+      type: String,
+      default: "",
+      trim: true,
+    },
 
-    priceNormal: { type: Number, required: true },
-    priceLicensed: { type: Number, required: true },
+    nameEn: {
+      type: String,
+      default: "",
+      trim: true,
+    },
 
-    desc: { type: String, default: "" },
-    isActive: { type: Boolean, default: true },
+    brand: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    category: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    categoryTr: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    categoryEn: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    descriptionTr: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    descriptionEn: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    images: {
+      type: [String],
+      default: [],
+    },
+
+    priceNormal: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    priceLicensed: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    stock: {
+      type: String,
+      default: "Sınırsız",
+      trim: true,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
-// 🔥 default export şart
-export default mongoose.model("Product", ProductSchema);
+export default mongoose.model("Product", productSchema);

@@ -1,134 +1,273 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import morgan from "morgan";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
-import authRoutes from "./routes/authRoutes.js";
+import User from "./models/User.js";
+
 import productRoutes from "./routes/productRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-
 import adminRoutes from "./routes/adminRoutes.js";
-import superadminRoutes from "./routes/superadminRoutes.js";
-
-import ledgerRoutes from "./routes/ledgerRoutes.js";
-import networkRoutes from "./routes/networkRoutes.js";
-import matrixRoutes from "./routes/matrixRoutes.js";
-
 import orderRoutes from "./routes/orderRoutes.js";
-import paymentRoutes from "./routes/payments.js";
-
-/* 🔥 YENİ */
-import uploadRoutes from "./routes/uploadRoutes.js";
+import superadminRoutes from "./routes/superadminRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-/* =========================
-   MIDDLEWARE
-========================= */
-const allowed = (process.env.CORS_ORIGIN || "")
+app.set("trust proxy", 1);
+
+const PORT = process.env.PORT || 5000;
+const isProduction = process.env.NODE_ENV === "production";
+const JWT_SECRET = process.env.JWT_SECRET || "ftsline_dev_secret_change_me";
+
+if (!process.env.MONGO_URI) {
+  throw new Error("MONGO_URI environment variable is required");
+}
+
+if (isProduction && !process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required in production");
+}
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+process.env.JWT_SECRET = JWT_SECRET;
+
+/* ================= MIDDLEWARE ================= */
+
+const allowedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || "http://localhost:5173")
   .split(",")
-  .map((s) => s.trim())
+  .map((origin) => origin.trim())
   .filter(Boolean);
 
 app.use(
   cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-      if (allowed.length === 0) return cb(null, true);
-      if (allowed.includes(origin)) return cb(null, true);
-      return cb(new Error("CORS blocked: " + origin));
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      if (process.env.NODE_ENV !== "production" && origin.endsWith(".trycloudflare.com")) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS origin blocked: ${origin}`));
     },
     credentials: true,
   })
 );
 
-app.options("*", cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(express.json({ limit: "2mb" }));
-app.use(morgan("dev"));
+const uploadsRoot = process.env.UPLOAD_DIR
+  ? path.dirname(path.resolve(process.env.UPLOAD_DIR))
+  : path.join(__dirname, "../uploads");
 
-/* =========================
-   STATIC FILES (UPLOADS)
-========================= */
-app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
+app.use("/uploads", express.static(uploadsRoot));
 
-/* =========================
-   HEALTH
-========================= */
-app.get("/api/ping", (req, res) => {
-  res.json({ ok: true, name: "ftsline-backend" });
+/* ================= MONGODB ================= */
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB bağlandı"))
+  .catch((err) => {
+    console.log("Mongo hata:", err);
+    if (isProduction) {
+      process.exit(1);
+    }
+  });
+
+/* ================= AUTH ================= */
+
+app.post("/api/auth/register", async (req, res) => {
+  const { username, fullName, email, password, sponsor } = req.body;
+
+  try {
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "Eksik alan" });
+    }
+
+    const normalizedUsername = username.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await User.findOne({
+      $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "Bu kullanıcı adı veya email zaten kullanılıyor",
+      });
+    }
+
+    let sponsorUser = null;
+
+    if (sponsor) {
+      sponsorUser = await User.findOne({
+        username: sponsor.trim().toLowerCase(),
+      });
+
+      if (!sponsorUser) {
+        return res.status(400).json({
+          message: "Geçersiz referans kullanıcı adı",
+        });
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      username: normalizedUsername,
+      fullName: fullName || "",
+      email: normalizedEmail,
+      passwordHash,
+      sponsor: sponsorUser ? sponsorUser._id : null,
+    });
+
+    res.json({
+      message: "Kayıt başarılı",
+      user: {
+        _id: user._id,
+        username: user.username,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        isLicensed: user.isLicensed,
+      },
+    });
+  } catch (error) {
+    console.error("Register hatası:", error);
+    res.status(500).json({ message: "Server hata" });
+  }
 });
 
-/* =========================
-   ROUTES
-========================= */
-app.use("/api/auth", authRoutes);
+app.post("/api/auth/login", async (req, res) => {
+  const { identifier, password } = req.body;
+
+  try {
+    if (!identifier || !password) {
+      return res.status(400).json({ message: "Eksik alan" });
+    }
+
+    const normalizedIdentifier = identifier.trim().toLowerCase();
+
+    const user = await User.findOne({
+      $or: [{ email: normalizedIdentifier }, { username: normalizedIdentifier }],
+    }).select("+passwordHash");
+
+    if (!user) {
+      return res.status(401).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ message: "Hesap pasif" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Şifre yanlış" });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        isLicensed: user.isLicensed,
+      },
+    });
+  } catch (error) {
+    console.error("Login hatası:", error);
+    res.status(500).json({ message: "Server hata" });
+  }
+});
+
+/* ================= USER ================= */
+
+app.get("/api/user/me", async (req, res) => {
+  const auth = req.headers.authorization;
+
+  if (!auth || !auth.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Token yok" });
+  }
+
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const user = await User.findById(decoded.id).populate(
+      "sponsor",
+      "username email fullName"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    res.json(user);
+  } catch {
+    res.status(401).json({ message: "Geçersiz token" });
+  }
+});
+
+app.get("/api/user/referrals", async (req, res) => {
+  const auth = req.headers.authorization;
+
+  if (!auth || !auth.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Token yok" });
+  }
+
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const referrals = await User.find({ sponsor: decoded.id })
+      .select("username fullName email createdAt")
+      .sort({ createdAt: -1 });
+
+    res.json(referrals);
+  } catch (error) {
+    console.error("Referrals hatası:", error);
+    res.status(401).json({ message: "Geçersiz token" });
+  }
+});
+
+/* ================= ROUTES ================= */
+
 app.use("/api/products", productRoutes);
-
-// USER
-app.use("/api/user", userRoutes);
-app.use("/api/users", userRoutes);
-
-// ORDERS
-app.use("/api/orders", orderRoutes);
-
-// PAYMENTS
-app.use("/api/payments", paymentRoutes);
-
-// ADMIN / SUPERADMIN
 app.use("/api/admin", adminRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/superadmin", superadminRoutes);
 
-// DASHBOARD
-app.use("/api/ledger", ledgerRoutes);
-app.use("/api/network", networkRoutes);
-app.use("/api/matrix", matrixRoutes);
+/* ================= TEST ================= */
 
-/* 🔥 UPLOAD ROUTE (EN KRİTİK YER) */
-app.use("/api/upload", uploadRoutes);
-
-/* =========================
-   404 (API)
-========================= */
-app.use("/api", (req, res) => {
-  res.status(404).json({
-    ok: false,
-    message: "API route not found",
-    path: req.originalUrl,
-  });
+app.get("/api/ping", (req, res) => {
+  res.json({ ok: true, message: "Server çalışıyor" });
 });
 
-/* =========================
-   ERROR HANDLER
-========================= */
-app.use((err, req, res, next) => {
-  console.error("ERR:", err);
-  res.status(err.status || 500).json({
-    ok: false,
-    message: err.message || "Server error",
-  });
-});
+/* ================= SERVER ================= */
 
-/* =========================
-   SERVER START
-========================= */
-const PORT = process.env.PORT || 5000;
-
-async function start() {
-  const uri = process.env.MONGO_URI;
-  if (!uri) throw new Error("MONGO_URI missing in .env");
-
-  await mongoose.connect(uri);
-  console.log("Mongo connected");
-
-  app.listen(PORT, () => console.log("Server running on", PORT));
-}
-
-start().catch((e) => {
-  console.error(e);
-  process.exit(1);
+app.listen(PORT, () => {
+  console.log(`Server çalışıyor: http://localhost:${PORT}`);
 });

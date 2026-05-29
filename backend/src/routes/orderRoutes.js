@@ -1,131 +1,203 @@
 import express from "express";
-import mongoose from "mongoose";
-import { auth } from "../middleware/auth.js";
-import { attachUser } from "../middleware/attachUser.js";
-
-import Product from "../models/Product.js";
+import jwt from "jsonwebtoken";
 import Order from "../models/Order.js";
-import User from "../models/User.js";
 
 const router = express.Router();
 
-function safeNum(v, def = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : def;
+/* ================= AUTH MIDDLEWARE ================= */
+
+function getJwtSecret() {
+  return process.env.JWT_SECRET || "ftsline_dev_secret_change_me";
 }
 
-/* =========================
-   POST /api/orders
-   Sipariş oluştur
-   body:
-   {
-     items: [{ productId, qty }],
-     shippingFee?,
-     currency?,
-     address?,
-     note?
-   }
-========================= */
-router.post("/", auth, attachUser, async (req, res, next) => {
+function authRequired(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Token yok" });
+  }
+
   try {
-    const userId = req.user?._id;
-    if (!userId) return res.status(401).json({ ok: false, message: "Unauthorized" });
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, getJwtSecret());
 
-    const itemsIn = Array.isArray(req.body?.items) ? req.body.items : [];
-    if (!itemsIn.length) return res.status(400).json({ ok: false, message: "Sepet boş" });
+    req.user = {
+      id: decoded.id,
+      role: decoded.role,
+    };
 
-    // lisans durumunu al
-    const u = await User.findById(userId).select("isLicensed").lean();
-    const licensed = !!u?.isLicensed;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Gecersiz token" });
+  }
+}
 
-    // id listesi
-    const ids = itemsIn
-      .map((x) => x?.productId || x?.id)
-      .filter(Boolean)
-      .map((x) => String(x));
+function adminOrSuperadmin(req, res, next) {
+  if (!["admin", "superadmin"].includes(req.user?.role)) {
+    return res.status(403).json({ message: "Admin yetkisi gerekli" });
+  }
 
-    const objIds = ids
-      .filter((id) => mongoose.Types.ObjectId.isValid(id))
-      .map((id) => new mongoose.Types.ObjectId(id));
+  next();
+}
 
-    const products = await Product.find({
-      _id: { $in: objIds },
-      isActive: { $ne: false },
-    }).lean();
+/* ================= HELPERS ================= */
 
-    if (!products.length) {
-      return res.status(400).json({ ok: false, message: "Ürün bulunamadı" });
+function normalizeOrderItems(items = []) {
+  return items.map((item) => {
+    const price = Number(
+      item.selectedPrice ?? item.price ?? item.priceNormal ?? 0
+    );
+
+    return {
+      productId: item._id || item.productId || null,
+      name: item.name,
+      image: item.image || item.images?.[0] || "",
+      price,
+      quantity: Number(item.quantity || 1),
+    };
+  });
+}
+
+/* ================= CREATE ORDER ================= */
+
+router.post("/", authRequired, async (req, res) => {
+  try {
+    const { items, shippingInfo, subtotal, shippingPrice, total, paymentMethod } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: "Sepet bos." });
     }
 
-    const map = new Map(products.map((p) => [String(p._id), p]));
-
-    const items = [];
-    let subTotal = 0;
-
-    for (const it of itemsIn) {
-      const pid = String(it?.productId || it?.id || "");
-      const p = map.get(pid);
-      if (!p) continue;
-
-      const qty = Math.max(1, safeNum(it?.qty, 1));
-      const unitPrice = licensed ? safeNum(p.priceLicensed, 0) : safeNum(p.priceNormal, 0);
-      const lineTotal = unitPrice * qty;
-
-      // fiyat güvenliği
-      if (!Number.isFinite(unitPrice) || unitPrice <= 0) continue;
-
-      items.push({
-        product: p._id,
-        name: p.name,
-        brand: p.brand || "",
-        category: p.category || "",
-        image: Array.isArray(p.images) && p.images[0] ? p.images[0] : "",
-        qty,
-        unitPrice,
-        lineTotal,
-      });
-
-      subTotal += lineTotal;
+    if (!shippingInfo) {
+      return res.status(400).json({ message: "Teslimat bilgileri eksik." });
     }
 
-    if (!items.length) return res.status(400).json({ ok: false, message: "Geçerli ürün yok" });
+    const orderItems = normalizeOrderItems(items);
 
-    const shippingFee = Math.max(0, safeNum(req.body?.shippingFee, 0));
-    const grandTotal = subTotal + shippingFee;
+    const calculatedSubtotal = orderItems.reduce((sum, item) => {
+      return sum + Number(item.price || 0) * Number(item.quantity || 1);
+    }, 0);
+
+    const finalShippingPrice = Number(shippingPrice || 0);
+    const finalTotal = calculatedSubtotal + finalShippingPrice;
 
     const order = await Order.create({
-      user: userId,
+      user: req.user.id,
+      items: orderItems,
+      shippingInfo,
+      subtotal: Number(subtotal || calculatedSubtotal),
+      shippingPrice: finalShippingPrice,
+      total: Number(total || finalTotal),
       status: "pending",
-      items,
-      currency: String(req.body?.currency || "TRY"),
-      subTotal,
-      shippingFee,
-      grandTotal,
-      address: req.body?.address || {},
-      note: String(req.body?.note || ""),
+      paymentMethod: ["bank_transfer", "cash_on_delivery", "card"].includes(paymentMethod)
+        ? paymentMethod
+        : "bank_transfer",
+      paymentStatus: "pending",
     });
 
-    res.json({ ok: true, order });
-  } catch (e) {
-    next(e);
+    return res.status(201).json({
+      message: "Siparis basariyla olusturuldu.",
+      order,
+    });
+  } catch (error) {
+    console.error("Siparis olusturma hatasi:", error);
+    return res.status(500).json({
+      message: "Siparis olusturulamadi.",
+    });
   }
 });
 
-/* =========================
-   GET /api/orders/mine
-   Kullanıcı kendi siparişleri
-========================= */
-router.get("/mine", auth, attachUser, async (req, res, next) => {
+/* ================= MY ORDERS ================= */
+
+router.get("/my", authRequired, async (req, res) => {
   try {
-    const userId = req.user?._id;
-    const items = await Order.find({ user: userId })
+    const orders = await Order.find({ user: req.user.id })
       .sort({ createdAt: -1 })
-      .limit(200)
       .lean();
 
-    res.json({ ok: true, items });
-  } catch (e) {
-    next(e);
+    return res.json(orders);
+  } catch (error) {
+    console.error("Siparislerim hatasi:", error);
+    return res.status(500).json({
+      message: "Siparisler alinamadi.",
+    });
+  }
+});
+
+/* ================= ADMIN ALL ORDERS ================= */
+
+router.get("/admin/all", authRequired, adminOrSuperadmin, async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate("user", "username fullName email role")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.json(orders);
+  } catch (error) {
+    console.error("Admin siparis listesi hatasi:", error);
+    return res.status(500).json({
+      message: "Siparisler alinamadi.",
+    });
+  }
+});
+
+/* ================= ADMIN UPDATE PAYMENT ================= */
+
+router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, res) => {
+  try {
+    const { paymentStatus, paymentMethod } = req.body;
+    const updates = {};
+
+    if (paymentStatus) {
+      if (!["pending", "paid", "failed", "refunded"].includes(paymentStatus)) {
+        return res.status(400).json({ message: "Gecersiz odeme durumu" });
+      }
+      updates.paymentStatus = paymentStatus;
+    }
+
+    if (paymentMethod) {
+      if (!["card", "cash_on_delivery", "bank_transfer"].includes(paymentMethod)) {
+        return res.status(400).json({ message: "Gecersiz odeme yontemi" });
+      }
+      updates.paymentMethod = paymentMethod;
+    }
+
+    const order = await Order.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+    })
+      .populate("user", "username fullName email role")
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Siparis bulunamadi" });
+    }
+
+    return res.json(order);
+  } catch (error) {
+    console.error("Odeme durumu guncelleme hatasi:", error);
+    return res.status(500).json({ message: "Odeme durumu guncellenemedi" });
+  }
+});
+/* ================= SINGLE ORDER ================= */
+
+router.get("/:id", authRequired, async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    }).lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Siparis bulunamadi." });
+    }
+
+    return res.json(order);
+  } catch (error) {
+    console.error("Siparis detay hatasi:", error);
+    return res.status(500).json({
+      message: "Siparis detayi alinamadi.",
+    });
   }
 });
 
