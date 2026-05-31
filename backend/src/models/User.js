@@ -202,6 +202,11 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
 
+    unilevelInitialBonusPaidAt: {
+      type: Date,
+      default: null,
+    },
+
     isContractedDiamond: {
       type: Boolean,
       default: false,

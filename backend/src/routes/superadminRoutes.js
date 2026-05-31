@@ -5,6 +5,7 @@ import { updateAllCareers } from "../services/networkCareerService.js";
 import { getCareerLabel } from "../services/careerService.js";
 import { calculateMonthlyPools } from "../services/poolService.js";
 import { distributeLicenseCareerBonus } from "../services/careerBonusService.js";
+import { distributeInitialUnilevelBonus } from "../services/unilevelBonusService.js";
 
 const router = express.Router();
 
@@ -68,6 +69,13 @@ router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) 
     }
 
     let bonusResult = null;
+    let unilevelBonusResult = null;
+
+    if (Boolean(isLicensed)) {
+      unilevelBonusResult = await distributeInitialUnilevelBonus({
+        payerUserId: user._id,
+      });
+    }
 
     if (Boolean(isLicensed) && Number(licenseFee || 0) > 0) {
       bonusResult = await distributeLicenseCareerBonus({
@@ -76,7 +84,7 @@ router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) 
       });
     }
 
-    res.json({ user, bonusResult });
+    res.json({ user, bonusResult, unilevelBonusResult });
   } catch (error) {
     res.status(500).json({ message: "Lisans gÃ¼ncellenemedi" });
   }
