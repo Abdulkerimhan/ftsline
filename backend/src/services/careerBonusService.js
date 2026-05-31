@@ -3,6 +3,7 @@ import { CAREER_LEVELS, CAREER_RULES, careerRank, isActiveMember } from "./caree
 
 export const CAREER_LICENSE_BONUS_RATE = 0.03;
 export const CAREER_LICENSE_BONUS_MAX_DEPTH = 15;
+export const MONTHLY_LICENSE_USAGE_FEE_USDT = 14.99;
 
 const CAREER_BONUS_DEPTH = {
   BRONZ: CAREER_LICENSE_BONUS_MAX_DEPTH,

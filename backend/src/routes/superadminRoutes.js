@@ -4,8 +4,14 @@ import { authRequired, superAdminOnly } from "../middleware/authMiddleware.js";
 import { updateAllCareers } from "../services/networkCareerService.js";
 import { getCareerLabel } from "../services/careerService.js";
 import { calculateMonthlyPools } from "../services/poolService.js";
-import { distributeLicenseCareerBonus } from "../services/careerBonusService.js";
-import { distributeInitialUnilevelBonus } from "../services/unilevelBonusService.js";
+import {
+  MONTHLY_LICENSE_USAGE_FEE_USDT,
+  distributeLicenseCareerBonus,
+} from "../services/careerBonusService.js";
+import {
+  INITIAL_LICENSE_BONUS_BASE_USDT,
+  distributeInitialUnilevelBonus,
+} from "../services/unilevelBonusService.js";
 
 const router = express.Router();
 
@@ -50,7 +56,7 @@ router.put("/users/:id/active", authRequired, superAdminOnly, async (req, res) =
 
 router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) => {
   try {
-    const { isLicensed, licenseFee } = req.body;
+    const { isLicensed, licenseFee, licensePaymentType } = req.body;
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
@@ -68,19 +74,30 @@ router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) 
       return res.status(404).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
     }
 
+    const numericLicenseFee = Number(licenseFee || 0);
+    const paymentType = String(licensePaymentType || "").trim().toLowerCase();
+    const isInitialLicensePayment =
+      paymentType === "initial" ||
+      (!paymentType &&
+        (!numericLicenseFee ||
+          Math.abs(numericLicenseFee - INITIAL_LICENSE_BONUS_BASE_USDT) < 0.001));
+    const isMonthlyUsagePayment =
+      paymentType === "monthly" ||
+      Math.abs(numericLicenseFee - MONTHLY_LICENSE_USAGE_FEE_USDT) < 0.001;
+
     let bonusResult = null;
     let unilevelBonusResult = null;
 
-    if (Boolean(isLicensed)) {
+    if (Boolean(isLicensed) && isInitialLicensePayment) {
       unilevelBonusResult = await distributeInitialUnilevelBonus({
         payerUserId: user._id,
       });
     }
 
-    if (Boolean(isLicensed) && Number(licenseFee || 0) > 0) {
+    if (Boolean(isLicensed) && isMonthlyUsagePayment) {
       bonusResult = await distributeLicenseCareerBonus({
         payerUserId: user._id,
-        licenseFee,
+        licenseFee: numericLicenseFee || MONTHLY_LICENSE_USAGE_FEE_USDT,
       });
     }
 
