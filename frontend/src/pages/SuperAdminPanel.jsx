@@ -15,12 +15,10 @@ const emptyProductForm = {
   brand: "",
   category: "",
   description: "",
-  imagesText: "",
-  imageFiles: [],
   priceNormal: "",
   priceLicensed: "",
   stock: "Sinirsiz",
-  isActive: true,
+  status: "Aktif",
 };
 
 export default function SuperAdminPanel() {
@@ -37,6 +35,9 @@ export default function SuperAdminPanel() {
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState(emptyProductForm);
+  const [images, setImages] = useState([]);
+  const [preview, setPreview] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
 
   const token = sessionStorage.getItem("accessToken");
 
@@ -86,6 +87,10 @@ export default function SuperAdminPanel() {
 
   useEffect(() => {
     loadAll();
+
+    return () => {
+      preview.forEach((url) => URL.revokeObjectURL(url));
+    };
   }, []);
 
   const stats = useMemo(() => {
@@ -158,6 +163,10 @@ export default function SuperAdminPanel() {
   function openAddProduct() {
     setEditingProduct(null);
     setProductForm(emptyProductForm);
+    setImages([]);
+    preview.forEach((url) => URL.revokeObjectURL(url));
+    setPreview([]);
+    setExistingImages([]);
     setProductModalOpen(true);
   }
 
@@ -169,14 +178,16 @@ export default function SuperAdminPanel() {
       brand: product.brand || "",
       category: product.category || "",
       description: product.description || "",
-      imagesText: Array.isArray(product.images) ? product.images.join("\n") : "",
-      imageFiles: [],
       priceNormal: product.priceNormal ?? "",
       priceLicensed: product.priceLicensed ?? "",
       stock: product.stock || "Sinirsiz",
-      isActive: product.isActive !== false,
+      status: product.isActive ? "Aktif" : "Pasif",
     });
 
+    setExistingImages(Array.isArray(product.images) ? product.images : []);
+    setImages([]);
+    preview.forEach((url) => URL.revokeObjectURL(url));
+    setPreview([]);
     setProductModalOpen(true);
   }
 
@@ -184,20 +195,52 @@ export default function SuperAdminPanel() {
     setProductModalOpen(false);
     setEditingProduct(null);
     setProductForm(emptyProductForm);
+    setImages([]);
+    preview.forEach((url) => URL.revokeObjectURL(url));
+    setPreview([]);
+    setExistingImages([]);
   }
 
   function handleProductChange(e) {
-    const { name, value, type, checked, files } = e.target;
+    const { name, value } = e.target;
 
     setProductForm((prev) => ({
       ...prev,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : type === "file"
-            ? Array.from(files || [])
-            : value,
+      [name]: value,
     }));
+  }
+
+  function handleImageChange(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setImages((prev) => [...prev, ...files]);
+    setPreview((prev) => [
+      ...prev,
+      ...files.map((file) => URL.createObjectURL(file)),
+    ]);
+
+    e.target.value = "";
+  }
+
+  function removeNewImage(index) {
+    const nextImages = [...images];
+    const nextPreview = [...preview];
+
+    if (nextPreview[index]) {
+      URL.revokeObjectURL(nextPreview[index]);
+    }
+
+    nextImages.splice(index, 1);
+    nextPreview.splice(index, 1);
+    setImages(nextImages);
+    setPreview(nextPreview);
+  }
+
+  function removeExistingImage(index) {
+    const next = [...existingImages];
+    next.splice(index, 1);
+    setExistingImages(next);
   }
 
   async function saveProduct(e) {
@@ -212,11 +255,6 @@ export default function SuperAdminPanel() {
       return;
     }
 
-    const existingImages = productForm.imagesText
-      .split("\n")
-      .map((img) => img.trim())
-      .filter(Boolean);
-
     const payload = new FormData();
     payload.append("name", productForm.name.trim());
     payload.append("brand", productForm.brand.trim());
@@ -225,9 +263,9 @@ export default function SuperAdminPanel() {
     payload.append("priceNormal", productForm.priceNormal);
     payload.append("priceLicensed", productForm.priceLicensed);
     payload.append("stock", productForm.stock || "Sinirsiz");
-    payload.append("isActive", String(productForm.isActive));
+    payload.append("isActive", String(productForm.status === "Aktif"));
     existingImages.forEach((imageUrl) => payload.append("existingImages", imageUrl));
-    productForm.imageFiles.forEach((file) => payload.append("images", file));
+    images.forEach((file) => payload.append("images", file));
 
     const path = editingProduct
       ? `/admin/products/${editingProduct._id}`
@@ -952,91 +990,134 @@ export default function SuperAdminPanel() {
               </div>
 
               <form className="super-product-form" onSubmit={saveProduct}>
-                <input
-                  name="name"
-                  placeholder="Urun adi"
-                  value={productForm.name}
-                  onChange={handleProductChange}
-                />
+                <div className="super-form-grid wide-form-grid">
+                  <label className="super-field">
+                    <span>Urun Adi</span>
+                    <input
+                      name="name"
+                      placeholder="Urun adi"
+                      value={productForm.name}
+                      onChange={handleProductChange}
+                    />
+                  </label>
 
-                <input
-                  name="brand"
-                  placeholder="Marka"
-                  value={productForm.brand}
-                  onChange={handleProductChange}
-                />
+                  <label className="super-field">
+                    <span>Marka</span>
+                    <input
+                      name="brand"
+                      placeholder="Marka"
+                      value={productForm.brand}
+                      onChange={handleProductChange}
+                    />
+                  </label>
 
-                <input
-                  name="category"
-                  placeholder="Kategori"
-                  value={productForm.category}
-                  onChange={handleProductChange}
-                />
+                  <label className="super-field">
+                    <span>Kategori</span>
+                    <input
+                      name="category"
+                      placeholder="Kategori"
+                      value={productForm.category}
+                      onChange={handleProductChange}
+                    />
+                  </label>
 
-                <div className="super-form-row">
-                  <input
-                    name="priceNormal"
-                    type="number"
-                    placeholder="Normal fiyat"
-                    value={productForm.priceNormal}
-                    onChange={handleProductChange}
-                  />
+                  <label className="super-field">
+                    <span>Stok</span>
+                    <input
+                      name="stock"
+                      placeholder="Stok"
+                      value={productForm.stock}
+                      onChange={handleProductChange}
+                    />
+                  </label>
 
-                  <input
-                    name="priceLicensed"
-                    type="number"
-                    placeholder="Lisansli fiyat"
-                    value={productForm.priceLicensed}
-                    onChange={handleProductChange}
-                  />
+                  <label className="super-field">
+                    <span>Normal Fiyat</span>
+                    <input
+                      name="priceNormal"
+                      type="number"
+                      placeholder="Normal fiyat"
+                      value={productForm.priceNormal}
+                      onChange={handleProductChange}
+                    />
+                  </label>
+
+                  <label className="super-field">
+                    <span>Lisansli Fiyat</span>
+                    <input
+                      name="priceLicensed"
+                      type="number"
+                      placeholder="Lisansli fiyat"
+                      value={productForm.priceLicensed}
+                      onChange={handleProductChange}
+                    />
+                  </label>
+
+                  <label className="super-field">
+                    <span>Durum</span>
+                    <select
+                      name="status"
+                      value={productForm.status}
+                      onChange={handleProductChange}
+                    >
+                      <option value="Aktif">Aktif</option>
+                      <option value="Pasif">Pasif</option>
+                    </select>
+                  </label>
                 </div>
 
-                <input
-                  name="stock"
-                  placeholder="Stok"
-                  value={productForm.stock}
-                  onChange={handleProductChange}
-                />
+                <label className="super-field">
+                  <span>Urun Aciklamasi</span>
+                  <textarea
+                    name="description"
+                    placeholder="Urun aciklamasi"
+                    value={productForm.description}
+                    onChange={handleProductChange}
+                  />
+                </label>
 
-                <textarea
-                  name="description"
-                  placeholder="Urun aciklamasi"
-                  value={productForm.description}
-                  onChange={handleProductChange}
-                />
-
-                <textarea
-                  name="imagesText"
-                  placeholder={`Mevcut gorsel URL'leri\nHer satira 1 gorsel linki yaz\nOrnek: /uploads/products/urun1.jpg`}
-                  value={productForm.imagesText}
-                  onChange={handleProductChange}
-                />
-
-                <label className="super-file-upload">
-                  <span>Bilgisayardan gorsel sec</span>
+                <label className="super-field">
+                  <span>Resim Yukle</span>
                   <input
                     type="file"
-                    name="imageFiles"
-                    accept="image/*"
                     multiple
-                    onChange={handleProductChange}
+                    accept="image/*"
+                    onChange={handleImageChange}
                   />
-                  <small>
-                    {productForm.imageFiles.length
-                      ? `${productForm.imageFiles.length} gorsel secildi`
-                      : "JPG, PNG veya WebP secilebilir"}
-                  </small>
+                  <small>Birden fazla urun fotografi secebilirsin.</small>
                 </label>
 
-                <label className="super-check">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={productForm.isActive}
-                    onChange={handleProductChange}
-                  />
-                  Urun aktif olsun
-                </label>
+                {existingImages.length > 0 && (
+                  <div className="super-upload-block">
+                    <h4>Mevcut Resimler</h4>
+                    <div className="super-image-preview">
+                      {existingImages.map((img, i) => (
+                        <div className="super-preview-box" key={`${img}-${i}`}>
+                          <img src={img} alt={`Mevcut ${i + 1}`} />
+                          <button type="button" onClick={() => removeExistingImage(i)}>
+                            x
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {preview.length > 0 && (
+                  <div className="super-upload-block">
+                    <h4>Yeni Secilen Resimler</h4>
+                    <div className="super-image-preview">
+                      {preview.map((img, i) => (
+                        <div className="super-preview-box" key={`${img}-${i}`}>
+                          <img src={img} alt={`Yeni ${i + 1}`} />
+                          <button type="button" onClick={() => removeNewImage(i)}>
+                            x
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="super-modal-actions">
                   <button
