@@ -1219,7 +1219,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("overview")}
             >
-              <span>ğŸ </span>
+              <span className="dashboard-side-icon">G</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.overview, "Genel BakÄ±ÅŸ")}</span>
               )}
@@ -1232,7 +1232,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("earnings")}
             >
-              <span>ğŸ’°</span>
+              <span className="dashboard-side-icon">K</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.earnings, "KazanÃ§lar")}</span>
               )}
@@ -1245,7 +1245,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("unilevel")}
             >
-              <span>ğŸŒ¿</span>
+              <span className="dashboard-side-icon">U</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.unilevel, "Ãœnilevel")}</span>
               )}
@@ -1258,7 +1258,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("matrix")}
             >
-              <span>ğŸ§©</span>
+              <span className="dashboard-side-icon">M</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.matrix, "Matrix")}</span>
               )}
@@ -1271,7 +1271,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("orders")}
             >
-              <span>ğŸ›’</span>
+              <span className="dashboard-side-icon">S</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.orders, "SipariÅŸler")}</span>
               )}
@@ -1284,7 +1284,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("profile")}
             >
-              <span>ğŸ‘¤</span>
+              <span className="dashboard-side-icon">P</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.profile, "Profil")}</span>
               )}
@@ -1297,7 +1297,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("settings")}
             >
-              <span>âš™ï¸</span>
+              <span className="dashboard-side-icon">A</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.settings, "Ayarlar")}</span>
               )}
@@ -1325,7 +1325,7 @@ export default function Dashboard() {
             className="dashboard-mobile-menu-btn"
             onClick={() => setSidebarOpen((prev) => !prev)}
           >
-            â˜°
+            Menu
           </button>
 
           <div className="dashboard-topbar-title">
@@ -1343,4 +1343,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
 

@@ -99,6 +99,24 @@
   white-space: nowrap;
 }
 
+
+.dashboard-side-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.dashboard-side-link.active .dashboard-side-icon {
+  background: rgba(255, 255, 255, 0.22);
+}
 .dashboard-side-link:hover {
   background: rgba(255, 255, 255, 0.08);
 }
@@ -1030,3 +1048,4 @@
   color: #3730a3;
   border: 1px solid #c7d2fe;
 }
+
