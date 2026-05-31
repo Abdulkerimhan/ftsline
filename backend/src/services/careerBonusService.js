@@ -6,12 +6,13 @@ export const CAREER_LICENSE_BONUS_MAX_DEPTH = 15;
 export const MONTHLY_LICENSE_USAGE_FEE_USDT = 14.99;
 
 const CAREER_BONUS_DEPTH = {
-  BRONZ: CAREER_LICENSE_BONUS_MAX_DEPTH,
-  GUMUS: CAREER_LICENSE_BONUS_MAX_DEPTH,
-  ALTIN: CAREER_LICENSE_BONUS_MAX_DEPTH,
-  PLATIN: CAREER_LICENSE_BONUS_MAX_DEPTH,
-  ELMAS: CAREER_LICENSE_BONUS_MAX_DEPTH,
-  TAC_ELMAS: CAREER_LICENSE_BONUS_MAX_DEPTH,
+  NONE: 12,
+  BRONZ: 13,
+  GUMUS: 13,
+  ALTIN: 14,
+  PLATIN: 14,
+  ELMAS: 15,
+  TAC_ELMAS: 15,
 };
 
 function roundMoney(value) {
@@ -19,8 +20,9 @@ function roundMoney(value) {
 }
 
 function getBonusDepth(level) {
-  if (!level || careerRank(level) < careerRank(CAREER_LEVELS.BRONZ)) return 0;
-  return CAREER_BONUS_DEPTH[level] || CAREER_LICENSE_BONUS_MAX_DEPTH;
+  const normalizedLevel = level || CAREER_LEVELS.NONE;
+  if (careerRank(normalizedLevel) < 0) return CAREER_BONUS_DEPTH.NONE;
+  return CAREER_BONUS_DEPTH[normalizedLevel] || CAREER_BONUS_DEPTH.NONE;
 }
 
 export async function distributeLicenseCareerBonus({ payerUserId, licenseFee }) {
