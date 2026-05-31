@@ -1,4 +1,6 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
+
+const adminPermissionValues = ["users", "products", "finance", "settings"];
 
 const AddressSchema = new mongoose.Schema(
   {
@@ -119,6 +121,12 @@ const UserSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    adminPermissions: {
+      type: [String],
+      enum: adminPermissionValues,
+      default: () => [...adminPermissionValues],
     },
 
     sponsor: {

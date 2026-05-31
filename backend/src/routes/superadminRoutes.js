@@ -1,10 +1,17 @@
-import express from "express";
+﻿import express from "express";
 import User from "../models/User.js";
 import { authRequired, superAdminOnly } from "../middleware/authMiddleware.js";
 import { updateAllCareers } from "../services/networkCareerService.js";
 import { getCareerLabel } from "../services/careerService.js";
 
 const router = express.Router();
+
+const ADMIN_PERMISSION_VALUES = ["users", "products", "finance", "settings"];
+
+function normalizeAdminPermissions(permissions) {
+  if (!Array.isArray(permissions)) return [];
+  return permissions.filter((permission) => ADMIN_PERMISSION_VALUES.includes(permission));
+}
 
 router.get("/users", authRequired, superAdminOnly, async (req, res) => {
   try {
@@ -14,7 +21,7 @@ router.get("/users", authRequired, superAdminOnly, async (req, res) => {
 
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: "Kullanıcılar getirilemedi" });
+    res.status(500).json({ message: "KullanÄ±cÄ±lar getirilemedi" });
   }
 });
 
@@ -29,12 +36,12 @@ router.put("/users/:id/active", authRequired, superAdminOnly, async (req, res) =
     ).select("-passwordHash");
 
     if (!user) {
-      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+      return res.status(404).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
     }
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: "Kullanıcı durumu güncellenemedi" });
+    res.status(500).json({ message: "KullanÄ±cÄ± durumu gÃ¼ncellenemedi" });
   }
 });
 
@@ -55,12 +62,12 @@ router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) 
     ).select("-passwordHash");
 
     if (!user) {
-      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+      return res.status(404).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
     }
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: "Lisans güncellenemedi" });
+    res.status(500).json({ message: "Lisans gÃ¼ncellenemedi" });
   }
 });
 
@@ -69,25 +76,58 @@ router.put("/users/:id/role", authRequired, superAdminOnly, async (req, res) => 
     const { role } = req.body;
 
     if (!["user", "admin", "superadmin"].includes(role)) {
-      return res.status(400).json({ message: "Geçersiz rol" });
+      return res.status(400).json({ message: "GeÃ§ersiz rol" });
+    }
+
+    const update = { role };
+
+    if (role === "admin") {
+      update.adminPermissions = [...ADMIN_PERMISSION_VALUES];
+    }
+
+    if (role === "user") {
+      update.adminPermissions = [];
     }
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { role },
+      update,
       { new: true }
     ).select("-passwordHash");
 
     if (!user) {
-      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+      return res.status(404).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
     }
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: "Rol güncellenemedi" });
+    res.status(500).json({ message: "Rol gÃ¼ncellenemedi" });
   }
 });
 
+router.put("/users/:id/admin-permissions", authRequired, superAdminOnly, async (req, res) => {
+  try {
+    const { adminPermissions } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanici bulunamadi" });
+    }
+
+    if (user.role !== "admin") {
+      return res.status(400).json({ message: "Sadece admin kullanicilarin alanlari kisitlanabilir" });
+    }
+
+    user.adminPermissions = normalizeAdminPermissions(adminPermissions);
+    await user.save();
+
+    const safeUser = user.toObject();
+    delete safeUser.passwordHash;
+    res.json(safeUser);
+  } catch (error) {
+    res.status(500).json({ message: "Admin alan izinleri guncellenemedi" });
+  }
+});
 router.delete("/users/:id", authRequired, superAdminOnly, async (req, res) => {
   try {
     if (String(req.user._id) === String(req.params.id)) {
@@ -110,7 +150,7 @@ router.post("/careers/update-all", authRequired, superAdminOnly, async (req, res
     const result = await updateAllCareers();
 
     res.json({
-      message: "Kariyerler güncellendi",
+      message: "Kariyerler gÃ¼ncellendi",
       totalUsers: result.totalUsers,
       changedUsers: result.changedUsers,
       results: result.results.map((r) => ({
@@ -120,8 +160,8 @@ router.post("/careers/update-all", authRequired, superAdminOnly, async (req, res
       })),
     });
   } catch (error) {
-    console.error("Kariyer güncelleme hatası:", error);
-    res.status(500).json({ message: "Kariyerler güncellenemedi" });
+    console.error("Kariyer gÃ¼ncelleme hatasÄ±:", error);
+    res.status(500).json({ message: "Kariyerler gÃ¼ncellenemedi" });
   }
 });
 

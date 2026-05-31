@@ -3,6 +3,13 @@ import "./SuperAdminPanel.css";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
+const ADMIN_PERMISSION_OPTIONS = [
+  { key: "users", label: "Kullanicilar" },
+  { key: "products", label: "Urunler" },
+  { key: "finance", label: "Finans" },
+  { key: "settings", label: "Ayarlar" },
+];
+
 const emptyProductForm = {
   name: "",
   brand: "",
@@ -311,6 +318,26 @@ export default function SuperAdminPanel() {
     await loadAll();
   }
 
+  async function updateAdminPermissions(user, permission, checked) {
+    const currentPermissions = Array.isArray(user.adminPermissions)
+      ? user.adminPermissions
+      : ADMIN_PERMISSION_OPTIONS.map((item) => item.key);
+
+    const nextPermissions = checked
+      ? Array.from(new Set([...currentPermissions, permission]))
+      : currentPermissions.filter((item) => item !== permission);
+
+    await request(
+      `/superadmin/users/${user._id}/admin-permissions`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ adminPermissions: nextPermissions }),
+      },
+      null
+    );
+
+    await loadAll();
+  }
   async function deleteUser(user) {
     const ok = window.confirm(`${user.username} kullanÄ±cÄ±sÄ± silinsin mi?`);
     if (!ok) return;
@@ -554,7 +581,8 @@ export default function SuperAdminPanel() {
                 <th>Rol</th>
                 <th>Durum</th>
                 <th>Lisans</th>
-                <th>Ä°ÅŸlem</th>
+                                <th>Admin Alanlari</th>
+<th>Ä°ÅŸlem</th>
               </tr>
             </thead>
 
@@ -601,7 +629,36 @@ export default function SuperAdminPanel() {
                         {user.isLicensed ? "LisanslÄ±" : "LisanssÄ±z"}
                       </span>
                     </td>
+                    <td>
+                      {user.role === "admin" ? (
+                        <div className="super-permission-list">
+                          {ADMIN_PERMISSION_OPTIONS.map((permission) => {
+                            const permissions = Array.isArray(user.adminPermissions)
+                              ? user.adminPermissions
+                              : ADMIN_PERMISSION_OPTIONS.map((item) => item.key);
 
+                            return (
+                              <label key={permission.key} className="super-permission-option">
+                                <input
+                                  type="checkbox"
+                                  checked={permissions.includes(permission.key)}
+                                  onChange={(e) =>
+                                    updateAdminPermissions(
+                                      user,
+                                      permission.key,
+                                      e.target.checked
+                                    )
+                                  }
+                                />
+                                <span>{permission.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <span className="super-muted">-</span>
+                      )}
+                    </td>
                     <td>
                       <div className="super-actions">
                         <button
@@ -630,7 +687,7 @@ export default function SuperAdminPanel() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="super-empty">
+                  <td colSpan="8" className="super-empty">
                     KullanÄ±cÄ± bulunamadÄ±.
                   </td>
                 </tr>
@@ -976,4 +1033,5 @@ export default function SuperAdminPanel() {
     </div>
   );
 }
+
 

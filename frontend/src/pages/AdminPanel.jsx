@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { getAdminProducts, deleteProduct } from "../api.js";
 import "./AdminPanel.css";
 
 const API = import.meta.env.VITE_API_URL || "/api";
+
+const ADMIN_SECTION_PERMISSIONS = ["users", "products", "finance", "settings"];
 
 const initialUsers = [
   {
@@ -16,7 +18,7 @@ const initialUsers = [
   {
     id: 2,
     username: "mehmet01",
-    fullName: "Mehmet Yılmaz",
+    fullName: "Mehmet YÄ±lmaz",
     email: "mehmet@mail.com",
     role: "user",
     status: "Aktif",
@@ -24,7 +26,7 @@ const initialUsers = [
   {
     id: 3,
     username: "ayse34",
-    fullName: "Ayşe Demir",
+    fullName: "AyÅŸe Demir",
     email: "ayse@mail.com",
     role: "user",
     status: "Pasif",
@@ -34,23 +36,23 @@ const initialUsers = [
 const initialFinance = [
   {
     id: 1,
-    title: "Komisyon Ödemesi",
+    title: "Komisyon Ã–demesi",
     type: "Gelir",
     amount: "1200",
-    status: "Tamamlandı",
+    status: "TamamlandÄ±",
     date: "2026-04-18",
   },
   {
     id: 2,
-    title: "Paket Satışı",
+    title: "Paket SatÄ±ÅŸÄ±",
     type: "Gelir",
     amount: "450",
-    status: "Tamamlandı",
+    status: "TamamlandÄ±",
     date: "2026-04-17",
   },
   {
     id: 3,
-    title: "İade İşlemi",
+    title: "Ä°ade Ä°ÅŸlemi",
     type: "Gider",
     amount: "90",
     status: "Bekliyor",
@@ -65,12 +67,19 @@ const emptyProductForm = {
   description: "",
   priceNormal: "",
   priceLicensed: "",
-  stock: "Sınırsız",
+  stock: "SÄ±nÄ±rsÄ±z",
   status: "Aktif",
 };
 
 export default function AdminPanel() {
   const [activeMenu, setActiveMenu] = useState("dashboard");
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  });
 
   const [users] = useState(initialUsers);
   const [products, setProducts] = useState([]);
@@ -89,6 +98,35 @@ export default function AdminPanel() {
 
   const [productForm, setProductForm] = useState(emptyProductForm);
 
+
+  function hasAdminSection(section) {
+    if (currentUser?.role === "superadmin") return true;
+    if (section === "dashboard") return true;
+    const permissions = Array.isArray(currentUser?.adminPermissions)
+      ? currentUser.adminPermissions
+      : ADMIN_SECTION_PERMISSIONS;
+    return permissions.includes(section);
+  }
+
+  async function refreshCurrentUser() {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API}/user/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data) {
+        setCurrentUser(data);
+        sessionStorage.setItem("user", JSON.stringify(data));
+      }
+    } catch (error) {
+      console.error("Admin kullanici izinleri alinamadi:", error);
+    }
+  }
+
   const [settings] = useState({
     siteName: "FTSLine",
     supportEmail: "support@ftsline.net",
@@ -97,6 +135,10 @@ export default function AdminPanel() {
   });
 
   async function loadProducts() {
+    if (!hasAdminSection("products")) {
+      setProducts([]);
+      return;
+    }
     try {
       setLoadingProducts(true);
 
@@ -110,21 +152,34 @@ export default function AdminPanel() {
         setProducts([]);
       }
     } catch (error) {
-      console.error("Admin ürünleri yüklenemedi:", error);
+      console.error("Admin Ã¼rÃ¼nleri yÃ¼klenemedi:", error);
       setProducts([]);
-      alert(error.message || "Ürünler alınamadı");
+      alert(error.message || "ÃœrÃ¼nler alÄ±namadÄ±");
     } finally {
       setLoadingProducts(false);
     }
   }
 
   useEffect(() => {
+    refreshCurrentUser();
     loadProducts();
 
     return () => {
       preview.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
+
+  useEffect(() => {
+    if (hasAdminSection("products")) {
+      loadProducts();
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (activeMenu !== "dashboard" && !hasAdminSection(activeMenu)) {
+      setActiveMenu("dashboard");
+    }
+  }, [activeMenu, currentUser]);
 
   const stats = useMemo(() => {
     const activeUsers = users.filter((u) => u.status === "Aktif").length;
@@ -144,11 +199,11 @@ export default function AdminPanel() {
       .reduce((sum, item) => sum + Number(item.amount), 0);
 
     return [
-      { title: "Toplam Kullanıcı", value: users.length },
-      { title: "Aktif Kullanıcı", value: activeUsers },
-      { title: "Toplam Ürün", value: products.length },
-      { title: "Aktif Ürün", value: activeProducts },
-      { title: "Pasif Ürün", value: passiveProducts },
+      { title: "Toplam KullanÄ±cÄ±", value: users.length },
+      { title: "Aktif KullanÄ±cÄ±", value: activeUsers },
+      { title: "Toplam ÃœrÃ¼n", value: products.length },
+      { title: "Aktif ÃœrÃ¼n", value: activeProducts },
+      { title: "Pasif ÃœrÃ¼n", value: passiveProducts },
       {
         title: "Net Bakiye",
         value: `${(totalIncome - totalExpense).toFixed(2)} TL`,
@@ -210,7 +265,7 @@ export default function AdminPanel() {
       return;
     }
 
-    alert("Bu bölümde yeni ekleme yetkisi yok. Ürün eklemek için Ürünler bölümüne geç.");
+    alert("Bu bÃ¶lÃ¼mde yeni ekleme yetkisi yok. ÃœrÃ¼n eklemek iÃ§in ÃœrÃ¼nler bÃ¶lÃ¼mÃ¼ne geÃ§.");
   }
 
   function handleImageChange(e) {
@@ -255,7 +310,7 @@ export default function AdminPanel() {
       productForm.priceNormal === "" ||
       productForm.priceLicensed === ""
     ) {
-      alert("Lütfen ürün adı, normal fiyat ve lisanslı fiyat alanlarını doldur.");
+      alert("LÃ¼tfen Ã¼rÃ¼n adÄ±, normal fiyat ve lisanslÄ± fiyat alanlarÄ±nÄ± doldur.");
       return;
     }
 
@@ -265,7 +320,7 @@ export default function AdminPanel() {
       const token = sessionStorage.getItem("accessToken");
 
       if (!token) {
-        alert("Oturum bulunamadı. Lütfen tekrar giriş yap.");
+        alert("Oturum bulunamadÄ±. LÃ¼tfen tekrar giriÅŸ yap.");
         window.location.href = "/login";
         return;
       }
@@ -278,7 +333,7 @@ export default function AdminPanel() {
       formData.append("description", productForm.description.trim());
       formData.append("priceNormal", productForm.priceNormal);
       formData.append("priceLicensed", productForm.priceLicensed);
-      formData.append("stock", productForm.stock || "Sınırsız");
+      formData.append("stock", productForm.stock || "SÄ±nÄ±rsÄ±z");
       formData.append("isActive", productForm.status === "Aktif");
 
       existingImages.forEach((img) => {
@@ -308,17 +363,17 @@ export default function AdminPanel() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.message || "Ürün kaydedilemedi");
+        throw new Error(data.message || "ÃœrÃ¼n kaydedilemedi");
       }
 
       setShowProductModal(false);
       resetProductForm();
       await loadProducts();
 
-      alert(editingProduct ? "Ürün güncellendi." : "Ürün eklendi.");
+      alert(editingProduct ? "ÃœrÃ¼n gÃ¼ncellendi." : "ÃœrÃ¼n eklendi.");
     } catch (error) {
-      console.error("Ürün kayıt hatası:", error);
-      alert(error.message || "Ürün kaydedilemedi");
+      console.error("ÃœrÃ¼n kayÄ±t hatasÄ±:", error);
+      alert(error.message || "ÃœrÃ¼n kaydedilemedi");
     } finally {
       setSaving(false);
     }
@@ -334,7 +389,7 @@ export default function AdminPanel() {
       description: product.description || "",
       priceNormal: product.priceNormal ?? "",
       priceLicensed: product.priceLicensed ?? "",
-      stock: product.stock || "Sınırsız",
+      stock: product.stock || "SÄ±nÄ±rsÄ±z",
       status: product.isActive ? "Aktif" : "Pasif",
     });
 
@@ -348,16 +403,16 @@ export default function AdminPanel() {
   }
 
   async function handleDeleteProduct(id) {
-    const ok = window.confirm("Bu ürün silinsin mi?");
+    const ok = window.confirm("Bu Ã¼rÃ¼n silinsin mi?");
     if (!ok) return;
 
     try {
       await deleteProduct(id);
       await loadProducts();
-      alert("Ürün silindi.");
+      alert("ÃœrÃ¼n silindi.");
     } catch (error) {
-      console.error("Ürün silme hatası:", error);
-      alert(error.message || "Ürün silinemedi");
+      console.error("ÃœrÃ¼n silme hatasÄ±:", error);
+      alert(error.message || "ÃœrÃ¼n silinemedi");
     }
   }
 
@@ -366,7 +421,7 @@ export default function AdminPanel() {
       const token = sessionStorage.getItem("accessToken");
 
       if (!token) {
-        alert("Oturum bulunamadı. Lütfen tekrar giriş yap.");
+        alert("Oturum bulunamadÄ±. LÃ¼tfen tekrar giriÅŸ yap.");
         window.location.href = "/login";
         return;
       }
@@ -381,7 +436,7 @@ export default function AdminPanel() {
       formData.append("description", product.description || "");
       formData.append("priceNormal", product.priceNormal ?? 0);
       formData.append("priceLicensed", product.priceLicensed ?? 0);
-      formData.append("stock", product.stock || "Sınırsız");
+      formData.append("stock", product.stock || "SÄ±nÄ±rsÄ±z");
       formData.append("isActive", !product.isActive);
 
       if (Array.isArray(product.images)) {
@@ -401,13 +456,13 @@ export default function AdminPanel() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.message || "Durum değiştirilemedi");
+        throw new Error(data.message || "Durum deÄŸiÅŸtirilemedi");
       }
 
       await loadProducts();
     } catch (error) {
-      console.error("Ürün durum hatası:", error);
-      alert(error.message || "Durum değiştirilemedi");
+      console.error("ÃœrÃ¼n durum hatasÄ±:", error);
+      alert(error.message || "Durum deÄŸiÅŸtirilemedi");
     }
   }
 
@@ -443,22 +498,22 @@ export default function AdminPanel() {
 
         <div className="admin-grid-2">
           <div className="admin-section">
-            <h2>Genel Bakış</h2>
+            <h2>Genel BakÄ±ÅŸ</h2>
             <p>
-              Admin paneline hoş geldin. Buradan kullanıcıları görüntüleyebilir,
-              ürünleri yönetebilir, finans kayıtlarını inceleyebilir ve sistem
-              ayarlarını görebilirsin.
+              Admin paneline hoÅŸ geldin. Buradan kullanÄ±cÄ±larÄ± gÃ¶rÃ¼ntÃ¼leyebilir,
+              Ã¼rÃ¼nleri yÃ¶netebilir, finans kayÄ±tlarÄ±nÄ± inceleyebilir ve sistem
+              ayarlarÄ±nÄ± gÃ¶rebilirsin.
             </p>
           </div>
 
           <div className="admin-section">
-            <h2>Hızlı Bilgi</h2>
+            <h2>HÄ±zlÄ± Bilgi</h2>
 
             <ul className="admin-list">
-              <li>Kullanıcı sayısı: {users.length}</li>
-              <li>Ürün sayısı: {products.length}</li>
-              <li>Finans kaydı: {finance.length}</li>
-              <li>Bakım modu: {settings.maintenanceMode ? "Açık" : "Kapalı"}</li>
+              <li>KullanÄ±cÄ± sayÄ±sÄ±: {users.length}</li>
+              <li>ÃœrÃ¼n sayÄ±sÄ±: {products.length}</li>
+              <li>Finans kaydÄ±: {finance.length}</li>
+              <li>BakÄ±m modu: {settings.maintenanceMode ? "AÃ§Ä±k" : "KapalÄ±"}</li>
             </ul>
           </div>
         </div>
@@ -471,14 +526,14 @@ export default function AdminPanel() {
       <div className="admin-section wide-section">
         <div className="admin-section-head">
           <div>
-            <h2>Kullanıcı Yönetimi</h2>
-            <p>Kullanıcıları görüntüle. Admin bu alanda düzenleme yapamaz.</p>
+            <h2>KullanÄ±cÄ± YÃ¶netimi</h2>
+            <p>KullanÄ±cÄ±larÄ± gÃ¶rÃ¼ntÃ¼le. Admin bu alanda dÃ¼zenleme yapamaz.</p>
           </div>
 
           <input
             className="admin-search"
             type="text"
-            placeholder="Kullanıcı ara..."
+            placeholder="KullanÄ±cÄ± ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -489,7 +544,7 @@ export default function AdminPanel() {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Kullanıcı Adı</th>
+                <th>KullanÄ±cÄ± AdÄ±</th>
                 <th>Ad Soyad</th>
                 <th>E-posta</th>
                 <th>Rol</th>
@@ -522,7 +577,7 @@ export default function AdminPanel() {
               ) : (
                 <tr>
                   <td colSpan="6" className="empty-row">
-                    Kullanıcı bulunamadı.
+                    KullanÄ±cÄ± bulunamadÄ±.
                   </td>
                 </tr>
               )}
@@ -538,36 +593,36 @@ export default function AdminPanel() {
       <div className="admin-section wide-section">
         <div className="admin-section-head">
           <div>
-            <h2>Ürün Yönetimi</h2>
-            <p>Ürün ekle, düzenle, sil, aktif-pasif yap ve çoklu görsel yönet.</p>
+            <h2>ÃœrÃ¼n YÃ¶netimi</h2>
+            <p>ÃœrÃ¼n ekle, dÃ¼zenle, sil, aktif-pasif yap ve Ã§oklu gÃ¶rsel yÃ¶net.</p>
           </div>
 
           <input
             className="admin-search"
             type="text"
-            placeholder="Ürün ara..."
+            placeholder="ÃœrÃ¼n ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         {loadingProducts ? (
-          <div className="empty-row">Ürünler yükleniyor...</div>
+          <div className="empty-row">ÃœrÃ¼nler yÃ¼kleniyor...</div>
         ) : (
           <div className="admin-table-wrapper wide-scroll">
             <table className="admin-table wide-table product-table">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Fotoğraflar</th>
-                  <th>Ürün</th>
+                  <th>FotoÄŸraflar</th>
+                  <th>ÃœrÃ¼n</th>
                   <th>Marka</th>
                   <th>Kategori</th>
                   <th>Normal</th>
-                  <th>Lisanslı</th>
+                  <th>LisanslÄ±</th>
                   <th>Stok</th>
                   <th>Durum</th>
-                  <th>İşlem</th>
+                  <th>Ä°ÅŸlem</th>
                 </tr>
               </thead>
 
@@ -588,7 +643,7 @@ export default function AdminPanel() {
                             <img
                               key={`${img}-${i}`}
                               src={img}
-                              alt="Ürün"
+                              alt="ÃœrÃ¼n"
                               className="admin-product-thumb"
                               onError={(e) => {
                                 e.currentTarget.src = "/ftsline.png";
@@ -603,7 +658,7 @@ export default function AdminPanel() {
                       <td>{product.category || "-"}</td>
                       <td>{Number(product.priceNormal || 0).toLocaleString("tr-TR")} TL</td>
                       <td>{Number(product.priceLicensed || 0).toLocaleString("tr-TR")} TL</td>
-                      <td>{product.stock || "Sınırsız"}</td>
+                      <td>{product.stock || "SÄ±nÄ±rsÄ±z"}</td>
 
                       <td>
                         <span
@@ -623,7 +678,7 @@ export default function AdminPanel() {
                             className="admin-btn small"
                             onClick={() => handleEditProduct(product)}
                           >
-                            Düzenle
+                            DÃ¼zenle
                           </button>
 
                           <button
@@ -650,7 +705,7 @@ export default function AdminPanel() {
                 ) : (
                   <tr>
                     <td colSpan="10" className="empty-row">
-                      Ürün bulunamadı.
+                      ÃœrÃ¼n bulunamadÄ±.
                     </td>
                   </tr>
                 )}
@@ -668,13 +723,13 @@ export default function AdminPanel() {
         <div className="admin-section-head">
           <div>
             <h2>Finans</h2>
-            <p>Finans kayıtlarını görüntüle. Admin bu alanda işlem yapamaz.</p>
+            <p>Finans kayÄ±tlarÄ±nÄ± gÃ¶rÃ¼ntÃ¼le. Admin bu alanda iÅŸlem yapamaz.</p>
           </div>
 
           <input
             className="admin-search"
             type="text"
-            placeholder="Finans kaydı ara..."
+            placeholder="Finans kaydÄ± ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -685,8 +740,8 @@ export default function AdminPanel() {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Başlık</th>
-                <th>Tür</th>
+                <th>BaÅŸlÄ±k</th>
+                <th>TÃ¼r</th>
                 <th>Tutar</th>
                 <th>Durum</th>
                 <th>Tarih</th>
@@ -708,7 +763,7 @@ export default function AdminPanel() {
               ) : (
                 <tr>
                   <td colSpan="6" className="empty-row">
-                    Kayıt bulunamadı.
+                    KayÄ±t bulunamadÄ±.
                   </td>
                 </tr>
               )}
@@ -724,33 +779,33 @@ export default function AdminPanel() {
       <div className="admin-section wide-section">
         <div className="admin-section-head">
           <div>
-            <h2>Sistem Ayarları</h2>
-            <p>Admin bu alanda sadece görüntüleme yapabilir.</p>
+            <h2>Sistem AyarlarÄ±</h2>
+            <p>Admin bu alanda sadece gÃ¶rÃ¼ntÃ¼leme yapabilir.</p>
           </div>
         </div>
 
         <form className="admin-form">
           <div className="admin-form-grid">
             <div className="admin-field">
-              <label>Site Adı</label>
+              <label>Site AdÄ±</label>
               <input type="text" value={settings.siteName} readOnly />
             </div>
 
             <div className="admin-field">
-              <label>Destek E-postası</label>
+              <label>Destek E-postasÄ±</label>
               <input type="email" value={settings.supportEmail} readOnly />
             </div>
 
             <div className="admin-field">
-              <label>Varsayılan Para Birimi</label>
+              <label>VarsayÄ±lan Para Birimi</label>
               <input type="text" value={settings.defaultCurrency} readOnly />
             </div>
 
             <div className="admin-field">
-              <label>Bakım Modu</label>
+              <label>BakÄ±m Modu</label>
               <input
                 type="text"
-                value={settings.maintenanceMode ? "Açık" : "Kapalı"}
+                value={settings.maintenanceMode ? "AÃ§Ä±k" : "KapalÄ±"}
                 readOnly
               />
             </div>
@@ -766,10 +821,10 @@ export default function AdminPanel() {
 
   function renderContent() {
     if (activeMenu === "dashboard") return renderDashboard();
-    if (activeMenu === "users") return renderUsers();
-    if (activeMenu === "products") return renderProducts();
-    if (activeMenu === "finance") return renderFinance();
-    if (activeMenu === "settings") return renderSettings();
+    if (activeMenu === "users" && hasAdminSection("users")) return renderUsers();
+    if (activeMenu === "products" && hasAdminSection("products")) return renderProducts();
+    if (activeMenu === "finance" && hasAdminSection("finance")) return renderFinance();
+    if (activeMenu === "settings" && hasAdminSection("settings")) return renderSettings();
 
     return renderDashboard();
   }
@@ -781,7 +836,7 @@ export default function AdminPanel() {
           <img src="/ftsline.png" alt="FTSLine" />
           <div>
             <strong>FTS Admin</strong>
-            <span>Yönetim Paneli</span>
+            <span>YÃ¶netim Paneli</span>
           </div>
         </div>
 
@@ -796,26 +851,32 @@ export default function AdminPanel() {
         </button>
 
         <button
+          hidden={!hasAdminSection("users")}
+
           className={activeMenu === "users" ? "admin-menu active" : "admin-menu"}
           onClick={() => {
             setActiveMenu("users");
             setSearchTerm("");
           }}
         >
-          Kullanıcılar
+          KullanÄ±cÄ±lar
         </button>
 
         <button
+          hidden={!hasAdminSection("products")}
+
           className={activeMenu === "products" ? "admin-menu active" : "admin-menu"}
           onClick={() => {
             setActiveMenu("products");
             setSearchTerm("");
           }}
         >
-          Ürünler
+          ÃœrÃ¼nler
         </button>
 
         <button
+          hidden={!hasAdminSection("finance")}
+
           className={activeMenu === "finance" ? "admin-menu active" : "admin-menu"}
           onClick={() => {
             setActiveMenu("finance");
@@ -826,6 +887,8 @@ export default function AdminPanel() {
         </button>
 
         <button
+          hidden={!hasAdminSection("settings")}
+
           className={activeMenu === "settings" ? "admin-menu active" : "admin-menu"}
           onClick={() => {
             setActiveMenu("settings");
@@ -836,7 +899,7 @@ export default function AdminPanel() {
         </button>
 
         <button className="admin-menu logout" onClick={handleLogout}>
-          Çıkış Yap
+          Ã‡Ä±kÄ±ÅŸ Yap
         </button>
       </aside>
 
@@ -844,12 +907,14 @@ export default function AdminPanel() {
         <div className="admin-topbar">
           <div>
             <h1>Admin Paneli</h1>
-            <p>FTSLine yönetim ekranı</p>
+            <p>FTSLine yÃ¶netim ekranÄ±</p>
           </div>
 
-          <button className="admin-btn" onClick={openNewAction}>
-            Yeni Ekle
-          </button>
+          {hasAdminSection("products") && (
+            <button className="admin-btn" onClick={openNewAction}>
+              Yeni Ekle
+            </button>
+          )}
         </div>
 
         {renderContent()}
@@ -860,10 +925,10 @@ export default function AdminPanel() {
           <div className="admin-modal wide-modal" onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-head">
               <div>
-                <h2>{editingProduct ? "Ürün Düzenle" : "Yeni Ürün"}</h2>
+                <h2>{editingProduct ? "ÃœrÃ¼n DÃ¼zenle" : "Yeni ÃœrÃ¼n"}</h2>
                 <p>
-                  Ürünü tek sefer gir. Dil değişimi sadece arayüz yazılarını etkiler.
-                  Çoklu görsel seçebilirsin.
+                  ÃœrÃ¼nÃ¼ tek sefer gir. Dil deÄŸiÅŸimi sadece arayÃ¼z yazÄ±larÄ±nÄ± etkiler.
+                  Ã‡oklu gÃ¶rsel seÃ§ebilirsin.
                 </p>
               </div>
 
@@ -872,14 +937,14 @@ export default function AdminPanel() {
                 className="admin-modal-close"
                 onClick={closeProductModal}
               >
-                ×
+                Ã—
               </button>
             </div>
 
             <form className="admin-form" onSubmit={handleProductSubmit}>
               <div className="admin-form-grid wide-form-grid">
                 <div className="admin-field">
-                  <label>Ürün Adı</label>
+                  <label>ÃœrÃ¼n AdÄ±</label>
                   <input
                     type="text"
                     value={productForm.name}
@@ -917,7 +982,7 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="admin-field">
-                  <label>Lisanslı Fiyat</label>
+                  <label>LisanslÄ± Fiyat</label>
                   <input
                     type="number"
                     value={productForm.priceLicensed}
@@ -938,7 +1003,7 @@ export default function AdminPanel() {
               </div>
 
               <div className="admin-field">
-                <label>Ürün Açıklaması</label>
+                <label>ÃœrÃ¼n AÃ§Ä±klamasÄ±</label>
                 <textarea
                   value={productForm.description}
                   onChange={(e) =>
@@ -948,7 +1013,7 @@ export default function AdminPanel() {
               </div>
 
               <div className="admin-field">
-                <label>Resim Yükle</label>
+                <label>Resim YÃ¼kle</label>
                 <input
                   type="file"
                   multiple
@@ -957,7 +1022,7 @@ export default function AdminPanel() {
                 />
 
                 <small className="admin-help-text">
-                  Birden fazla ürün fotoğrafı seçebilirsin.
+                  Birden fazla Ã¼rÃ¼n fotoÄŸrafÄ± seÃ§ebilirsin.
                 </small>
               </div>
 
@@ -974,7 +1039,7 @@ export default function AdminPanel() {
                           type="button"
                           onClick={() => removeExistingImage(i)}
                         >
-                          ×
+                          Ã—
                         </button>
                       </div>
                     ))}
@@ -984,7 +1049,7 @@ export default function AdminPanel() {
 
               {preview.length > 0 && (
                 <div className="admin-upload-block">
-                  <h4>Yeni Seçilen Resimler</h4>
+                  <h4>Yeni SeÃ§ilen Resimler</h4>
 
                   <div className="image-preview">
                     {preview.map((img, i) => (
@@ -995,7 +1060,7 @@ export default function AdminPanel() {
                           type="button"
                           onClick={() => removeNewImage(i)}
                         >
-                          ×
+                          Ã—
                         </button>
                       </div>
                     ))}
@@ -1022,7 +1087,7 @@ export default function AdminPanel() {
                   onClick={closeProductModal}
                   disabled={saving}
                 >
-                  İptal
+                  Ä°ptal
                 </button>
 
                 <button type="submit" className="admin-btn" disabled={saving}>
@@ -1036,3 +1101,6 @@ export default function AdminPanel() {
     </div>
   );
 }
+
+
+

@@ -139,6 +139,7 @@ app.post("/api/auth/register", async (req, res) => {
         role: user.role,
         isActive: user.isActive,
         isLicensed: user.isLicensed,
+        adminPermissions: user.adminPermissions || [],
       },
     });
   } catch (error) {
@@ -195,6 +196,7 @@ app.post("/api/auth/login", async (req, res) => {
         role: user.role,
         isActive: user.isActive,
         isLicensed: user.isLicensed,
+        adminPermissions: user.adminPermissions || [],
       },
     });
   } catch (error) {
@@ -286,3 +288,4 @@ app.get("/api/ping", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server Ã§alÄ±ÅŸÄ±yor: http://localhost:${PORT}`);
 });
+

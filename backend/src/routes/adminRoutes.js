@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -31,7 +31,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-/* ================= YETKİ KONTROL ================= */
+/* ================= YETKÄ° KONTROL ================= */
+
+function hasAdminPermission(req, permission) {
+  if (req.user?.role === "superadmin") return true;
+  if (req.user?.role !== "admin") return false;
+  const permissions = Array.isArray(req.user.adminPermissions)
+    ? req.user.adminPermissions
+    : ["users", "products", "finance", "settings"];
+  return permissions.includes(permission);
+}
 
 function adminOrSuperadmin(req, res, next) {
   const role = req.user?.role;
@@ -43,6 +52,16 @@ function adminOrSuperadmin(req, res, next) {
   return res.status(403).json({ message: "Yetki yok" });
 }
 
+function requireAdminPermission(permission) {
+  return (req, res, next) => {
+    if (!hasAdminPermission(req, permission)) {
+      return res.status(403).json({ message: "Bu admin alani icin yetkiniz yok" });
+    }
+
+    next();
+  };
+}
+
 function fileUrl(req, file) {
   const publicApiUrl = process.env.PUBLIC_API_URL?.replace(/\/$/, "");
   const baseUrl = publicApiUrl || `${req.protocol}://${req.get("host")}`;
@@ -50,25 +69,26 @@ function fileUrl(req, file) {
   return `${baseUrl}/uploads/products/${file.filename}`;
 }
 
-/* ================= ADMIN - TÜM ÜRÜNLER ================= */
+/* ================= ADMIN - TÃœM ÃœRÃœNLER ================= */
 
-router.get("/products", authRequired, adminOrSuperadmin, async (req, res) => {
+router.get("/products", authRequired, adminOrSuperadmin, requireAdminPermission("products"), async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
 
     res.json(products);
   } catch (error) {
-    console.error("Admin ürünler alınamadı:", error);
-    res.status(500).json({ message: "Ürünler alınamadı" });
+    console.error("Admin Ã¼rÃ¼nler alÄ±namadÄ±:", error);
+    res.status(500).json({ message: "ÃœrÃ¼nler alÄ±namadÄ±" });
   }
 });
 
-/* ================= ADMIN - ÜRÜN EKLE ================= */
+/* ================= ADMIN - ÃœRÃœN EKLE ================= */
 
 router.post(
   "/products",
   authRequired,
   adminOrSuperadmin,
+  requireAdminPermission("products"),
   upload.array("images"),
   async (req, res) => {
     try {
@@ -94,7 +114,7 @@ router.post(
         priceNormal: Number(req.body.priceNormal || 0),
         priceLicensed: Number(req.body.priceLicensed || 0),
 
-        stock: req.body.stock || "Sınırsız",
+        stock: req.body.stock || "SÄ±nÄ±rsÄ±z",
 
         isActive:
           req.body.isActive === "true" ||
@@ -106,22 +126,23 @@ router.post(
       });
 
       res.status(201).json({
-        message: "Ürün eklendi",
+        message: "ÃœrÃ¼n eklendi",
         product,
       });
     } catch (error) {
-      console.error("Ürün ekleme hatası:", error);
-      res.status(500).json({ message: "Ürün eklenemedi" });
+      console.error("ÃœrÃ¼n ekleme hatasÄ±:", error);
+      res.status(500).json({ message: "ÃœrÃ¼n eklenemedi" });
     }
   }
 );
 
-/* ================= ADMIN - ÜRÜN GÜNCELLE ================= */
+/* ================= ADMIN - ÃœRÃœN GÃœNCELLE ================= */
 
 router.put(
   "/products/:id",
   authRequired,
   adminOrSuperadmin,
+  requireAdminPermission("products"),
   upload.array("images"),
   async (req, res) => {
     try {
@@ -157,7 +178,7 @@ router.put(
           priceNormal: Number(req.body.priceNormal || 0),
           priceLicensed: Number(req.body.priceLicensed || 0),
 
-          stock: req.body.stock || "Sınırsız",
+          stock: req.body.stock || "SÄ±nÄ±rsÄ±z",
 
           isActive:
             req.body.isActive === "true" ||
@@ -171,40 +192,42 @@ router.put(
       );
 
       if (!updated) {
-        return res.status(404).json({ message: "Ürün bulunamadı" });
+        return res.status(404).json({ message: "ÃœrÃ¼n bulunamadÄ±" });
       }
 
       res.json({
-        message: "Ürün güncellendi",
+        message: "ÃœrÃ¼n gÃ¼ncellendi",
         product: updated,
       });
     } catch (error) {
-      console.error("Ürün güncelleme hatası:", error);
-      res.status(500).json({ message: "Ürün güncellenemedi" });
+      console.error("ÃœrÃ¼n gÃ¼ncelleme hatasÄ±:", error);
+      res.status(500).json({ message: "ÃœrÃ¼n gÃ¼ncellenemedi" });
     }
   }
 );
 
-/* ================= ADMIN - ÜRÜN SİL ================= */
+/* ================= ADMIN - ÃœRÃœN SÄ°L ================= */
 
 router.delete(
   "/products/:id",
   authRequired,
   adminOrSuperadmin,
+  requireAdminPermission("products"),
   async (req, res) => {
     try {
       const deleted = await Product.findByIdAndDelete(req.params.id);
 
       if (!deleted) {
-        return res.status(404).json({ message: "Ürün bulunamadı" });
+        return res.status(404).json({ message: "ÃœrÃ¼n bulunamadÄ±" });
       }
 
-      res.json({ message: "Ürün silindi" });
+      res.json({ message: "ÃœrÃ¼n silindi" });
     } catch (error) {
-      console.error("Ürün silme hatası:", error);
-      res.status(500).json({ message: "Ürün silinemedi" });
+      console.error("ÃœrÃ¼n silme hatasÄ±:", error);
+      res.status(500).json({ message: "ÃœrÃ¼n silinemedi" });
     }
   }
 );
 
 export default router;
+
