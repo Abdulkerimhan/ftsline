@@ -1323,9 +1323,12 @@ export default function Dashboard() {
           <button
             type="button"
             className="dashboard-mobile-menu-btn"
+            aria-label="Menu"
             onClick={() => setSidebarOpen((prev) => !prev)}
           >
-            Menu
+            <span></span>
+            <span></span>
+            <span></span>
           </button>
 
           <div className="dashboard-topbar-title">
@@ -1343,5 +1346,6 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 

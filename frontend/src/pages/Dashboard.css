@@ -172,16 +172,31 @@
   color: #295ee8;
   width: 42px;
   height: 42px;
+  min-width: 42px;
+  flex: 0 0 42px;
   border-radius: 12px;
-  font-size: 20px;
-  font-weight: 800;
   cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.dashboard-mobile-menu-btn span {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  display: block;
 }
 
 .dashboard-topbar-title {
+  min-width: 0;
   font-size: 18px;
   font-weight: 800;
   color: #0f172a;
+  overflow-wrap: anywhere;
 }
 
 .dashboard-page {
@@ -1048,4 +1063,5 @@
   color: #3730a3;
   border: 1px solid #c7d2fe;
 }
+
 
