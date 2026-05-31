@@ -6,6 +6,12 @@ import "./Payment.css";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
+const LICENSE_PLANS = [
+  { key: "initial", months: 1, price: 74.99 },
+  { key: "annual", months: 12, price: 210 },
+  { key: "biennial", months: 24, price: 360 },
+];
+
 export default function Payment() {
   const navigate = useNavigate();
   const { language } = useI18n();
@@ -38,6 +44,14 @@ export default function Payment() {
         usdtUnavailable: "USDT adresi henuz tanimlanmamis. Lutfen diger odeme yontemini secin.",
         paymentInfoText:
           "Bu ekranda kart bilgisi alinmaz. Siparis olustuktan sonra odeme durumu admin panelinde Odeme Bekliyor olarak gorunur ve manuel onaylanir.",
+        licensePlansTitle: "Lisans Plani",
+        licensePlanInfo: "Toplu odemede lisansin sure boyunca aktif kalir. Matrix primleri aylik sirayla islenir, hepsi ayni anda dagitilmaz.",
+        initialPlan: "Lisans Bedeli",
+        annualPlan: "1 Yillik Bedel",
+        biennialPlan: "2 Yillik Bedel",
+        licenseDuration: "Sure",
+        month: "ay",
+        licenseTotal: "Lisans Toplami",
         summaryTitle: "Siparis Ozeti",
         fullName: "Ad Soyad",
         email: "E-posta",
@@ -98,6 +112,14 @@ export default function Payment() {
         usdtUnavailable: "USDT address is not configured yet. Please choose another payment method.",
         paymentInfoText:
           "Card details are not collected on this screen. After the order is created, its payment status appears as Pending in the admin panel and can be approved manually.",
+        licensePlansTitle: "License Plan",
+        licensePlanInfo: "When you prepay, your license stays active for the selected period. Matrix bonuses are processed month by month, not all at once.",
+        initialPlan: "License Fee",
+        annualPlan: "1 Year",
+        biennialPlan: "2 Years",
+        licenseDuration: "Duration",
+        month: "month",
+        licenseTotal: "License Total",
         summaryTitle: "Order Summary",
         fullName: "Full Name",
         email: "Email",
@@ -148,6 +170,9 @@ export default function Payment() {
   const user = getCurrentUser();
   const cart = getCart();
   const isLicensed = user?.isLicensed || false;
+  const [selectedLicensePlan, setSelectedLicensePlan] = useState(cart.length ? "" : "initial");
+  const isLicenseOrder = cart.length === 0 && selectedLicensePlan;
+  const licensePlan = LICENSE_PLANS.find((plan) => plan.key === selectedLicensePlan) || null;
 
   const [form, setForm] = useState({
     fullName: user?.fullName || "",
@@ -168,7 +193,9 @@ export default function Payment() {
   const [publicConfig, setPublicConfig] = useState({ bank: { iban: "", accountName: "", bankName: "", enabled: false }, usdt: { trc20Address: "", network: "TRC20", enabled: false } });
   const [copyMsg, setCopyMsg] = useState("");
 
-  const subtotal = cart.reduce((sum, item) => {
+  const subtotal = isLicenseOrder
+    ? Number(licensePlan?.price || 0)
+    : cart.reduce((sum, item) => {
     const price = Number(
       item.selectedPrice ??
         item.price ??
@@ -182,6 +209,7 @@ export default function Payment() {
 
   const shipping = 0;
   const total = subtotal + shipping;
+  const displayCurrency = isLicenseOrder ? "USDT" : t.currency;
   useEffect(() => {
     let alive = true;
 
@@ -222,6 +250,7 @@ export default function Payment() {
   }
 
   function validateForm() {
+    if (!cart.length && !selectedLicensePlan) return t.emptyText;
     if (!form.fullName.trim()) return t.requiredName;
     if (!form.email.trim()) return t.requiredEmail;
     if (!form.phone.trim()) return t.requiredPhone;
@@ -235,6 +264,22 @@ export default function Payment() {
   }
 
   function normalizeItemsForOrder() {
+    if (isLicenseOrder && licensePlan) {
+      return [
+        {
+          _id: `license-${licensePlan.key}`,
+          productId: null,
+          name: getLicensePlanLabel(licensePlan.key),
+          image: "",
+          selectedPrice: licensePlan.price,
+          price: licensePlan.price,
+          priceNormal: licensePlan.price,
+          priceLicensed: licensePlan.price,
+          quantity: 1,
+        },
+      ];
+    }
+
     return cart.map((item) => {
       const price = Number(
         item.selectedPrice ??
@@ -256,6 +301,12 @@ export default function Payment() {
         quantity: Number(item.quantity || 1),
       };
     });
+  }
+
+  function getLicensePlanLabel(planKey) {
+    if (planKey === "annual") return t.annualPlan;
+    if (planKey === "biennial") return t.biennialPlan;
+    return t.initialPlan;
   }
 
 
@@ -299,6 +350,8 @@ export default function Payment() {
       subtotal,
       shippingPrice: shipping,
       total,
+      orderType: isLicenseOrder ? "license" : "product",
+      licensePlan: isLicenseOrder ? selectedLicensePlan : "",
       paymentMethod: form.paymentMethod,
       paymentProof: ["bank_transfer", "usdt_trc20"].includes(form.paymentMethod) ? form.paymentProof.trim() : "",
     };
@@ -326,7 +379,7 @@ export default function Payment() {
     setErrorMsg("");
     setSuccessMsg("");
 
-    if (!cart.length) {
+    if (!cart.length && !selectedLicensePlan) {
       navigate("/cart", { replace: true });
       return;
     }
@@ -356,23 +409,6 @@ export default function Payment() {
     } finally {
       setLoading(false);
     }
-  }
-
-  if (!cart.length) {
-    return (
-      <div className="payment-page">
-        <div className="payment-container">
-          <div className="payment-empty">
-            <h2>{t.emptyTitle}</h2>
-            <p>{t.emptyText}</p>
-
-            <Link to="/cart" className="payment-back-btn">
-              {t.goCart}
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -465,6 +501,35 @@ export default function Payment() {
                 />
               </div>
             </div>
+
+            {cart.length === 0 && (
+              <div className="payment-card">
+                <h2>{t.licensePlansTitle}</h2>
+                <p className="payment-license-info">{t.licensePlanInfo}</p>
+
+                <div className="payment-license-plans">
+                  {LICENSE_PLANS.map((plan) => (
+                    <label
+                      key={plan.key}
+                      className={`payment-license-plan ${selectedLicensePlan === plan.key ? "active" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="licensePlan"
+                        value={plan.key}
+                        checked={selectedLicensePlan === plan.key}
+                        onChange={(event) => setSelectedLicensePlan(event.target.value)}
+                      />
+                      <span>{getLicensePlanLabel(plan.key)}</span>
+                      <strong>{plan.price} USDT</strong>
+                      <small>
+                        {t.licenseDuration}: {plan.months} {t.month}
+                      </small>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="payment-card">
               <h2>{t.paymentTitle}</h2>
@@ -596,7 +661,7 @@ export default function Payment() {
               <h2>{t.summaryTitle}</h2>
 
               <div className="payment-summary-list">
-                {cart.map((item, index) => {
+                {(isLicenseOrder ? normalizeItemsForOrder() : cart).map((item, index) => {
                   const itemPrice = Number(
                     item.selectedPrice ??
                       item.price ??
@@ -630,7 +695,7 @@ export default function Payment() {
                       </div>
 
                       <strong>
-                        {formatPrice(itemPrice * qty)} {t.currency}
+                        {formatPrice(itemPrice * qty)} {displayCurrency}
                       </strong>
                     </div>
                   );
@@ -640,7 +705,7 @@ export default function Payment() {
               <div className="payment-summary-line">
                 <span>{t.subtotal}</span>
                 <strong>
-                  {formatPrice(subtotal)} {t.currency}
+                  {formatPrice(subtotal)} {displayCurrency}
                 </strong>
               </div>
 
@@ -652,7 +717,7 @@ export default function Payment() {
               <div className="payment-summary-line total">
                 <span>{t.total}</span>
                 <strong>
-                  {formatPrice(total)} {t.currency}
+                  {formatPrice(total)} {displayCurrency}
                 </strong>
               </div>
 

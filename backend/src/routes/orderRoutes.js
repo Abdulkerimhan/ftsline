@@ -1,6 +1,7 @@
 ﻿import express from "express";
 import jwt from "jsonwebtoken";
 import Order from "../models/Order.js";
+import { activateLicensePlanForUser, getLicensePlan } from "../services/licensePlanService.js";
 
 const router = express.Router();
 
@@ -62,9 +63,25 @@ function normalizeOrderItems(items = []) {
 
 router.post("/", authRequired, async (req, res) => {
   try {
-    const { items, shippingInfo, subtotal, shippingPrice, total, paymentMethod, paymentProof } = req.body;
+    const {
+      items,
+      shippingInfo,
+      subtotal,
+      shippingPrice,
+      total,
+      paymentMethod,
+      paymentProof,
+      orderType,
+      licensePlan,
+    } = req.body;
+    const isLicenseOrder = orderType === "license";
+    const selectedLicensePlan = isLicenseOrder ? getLicensePlan(licensePlan) : null;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    if (isLicenseOrder && !selectedLicensePlan) {
+      return res.status(400).json({ message: "Gecersiz lisans plani." });
+    }
+
+    if (!isLicenseOrder && (!items || !Array.isArray(items) || items.length === 0)) {
       return res.status(400).json({ message: "Sepet bos." });
     }
 
@@ -72,7 +89,17 @@ router.post("/", authRequired, async (req, res) => {
       return res.status(400).json({ message: "Teslimat bilgileri eksik." });
     }
 
-    const orderItems = normalizeOrderItems(items);
+    const orderItems = isLicenseOrder
+      ? [
+          {
+            productId: null,
+            name: selectedLicensePlan.label,
+            image: "",
+            price: selectedLicensePlan.priceUsdt,
+            quantity: 1,
+          },
+        ]
+      : normalizeOrderItems(items);
 
     const calculatedSubtotal = orderItems.reduce((sum, item) => {
       return sum + Number(item.price || 0) * Number(item.quantity || 1);
@@ -88,6 +115,10 @@ router.post("/", authRequired, async (req, res) => {
       subtotal: Number(subtotal || calculatedSubtotal),
       shippingPrice: finalShippingPrice,
       total: Number(total || finalTotal),
+      orderType: isLicenseOrder ? "license" : "product",
+      licensePlan: selectedLicensePlan?.key || "",
+      licenseMonths: selectedLicensePlan?.durationMonths || 0,
+      licenseAmountUsdt: selectedLicensePlan?.priceUsdt || 0,
       status: "pending",
       paymentMethod: ["bank_transfer", "cash_on_delivery", "card", "usdt_trc20"].includes(paymentMethod)
         ? paymentMethod
@@ -172,6 +203,13 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
     if (paymentProof !== undefined) {
       updates.paymentProof = String(paymentProof || "").trim();
     }
+
+    const previousOrder = await Order.findById(req.params.id);
+
+    if (!previousOrder) {
+      return res.status(404).json({ message: "Siparis bulunamadi" });
+    }
+
     const order = await Order.findByIdAndUpdate(req.params.id, updates, {
       new: true,
     })
@@ -182,7 +220,28 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
       return res.status(404).json({ message: "Siparis bulunamadi" });
     }
 
-    return res.json(order);
+    let licenseActivation = null;
+
+    if (
+      order.orderType === "license" &&
+      order.licensePlan &&
+      paymentStatus === "paid" &&
+      previousOrder.paymentStatus !== "paid" &&
+      !previousOrder.licenseActivatedAt
+    ) {
+      licenseActivation = await activateLicensePlanForUser({
+        userId: previousOrder.user,
+        planKey: order.licensePlan,
+        paidAt: new Date(),
+      });
+
+      await Order.findByIdAndUpdate(order._id, {
+        status: "completed",
+        licenseActivatedAt: new Date(),
+      });
+    }
+
+    return res.json({ ...order, licenseActivation });
   } catch (error) {
     console.error("Odeme durumu guncelleme hatasi:", error);
     return res.status(500).json({ message: "Odeme durumu guncellenemedi" });

@@ -347,6 +347,58 @@
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
+.payment-license-info {
+  margin: -6px 0 16px;
+  color: #475569;
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+.payment-license-plans {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.payment-license-plan {
+  min-height: 132px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 16px;
+  border: 1px solid #dbe3ee;
+  border-radius: 14px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.payment-license-plan input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.payment-license-plan span {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.payment-license-plan strong {
+  color: #1d4ed8;
+  font-size: 22px;
+}
+
+.payment-license-plan small {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.payment-license-plan.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
 .payment-usdt-box {
   margin-bottom: 18px;
   padding: 16px;
@@ -399,6 +451,10 @@
 
 @media (max-width: 768px) {
   .payment-methods {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-license-plans {
     grid-template-columns: 1fr;
   }
 }

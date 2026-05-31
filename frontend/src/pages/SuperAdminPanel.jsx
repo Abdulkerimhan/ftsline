@@ -750,7 +750,10 @@ export default function SuperAdminPanel() {
                         : ""}
                     </td>
 
-                    <td>{Number(order.total || 0).toLocaleString("tr-TR")} TL</td>
+                    <td>
+                      {Number(order.total || 0).toLocaleString("tr-TR")}{" "}
+                      {order.orderType === "license" ? "USDT" : "TL"}
+                    </td>
 
                     <td>
                       <span

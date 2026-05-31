@@ -207,6 +207,40 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
 
+    licensePlan: {
+      type: String,
+      enum: ["", "initial", "annual", "biennial"],
+      default: "",
+    },
+
+    licensePlanPaidAmountUsdt: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    licenseMatrixPayoutsTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    licenseMatrixPayoutsPaid: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    licenseNextMatrixPayoutAt: {
+      type: Date,
+      default: null,
+    },
+
+    licenseLastMatrixPayoutAt: {
+      type: Date,
+      default: null,
+    },
+
     isContractedDiamond: {
       type: Boolean,
       default: false,

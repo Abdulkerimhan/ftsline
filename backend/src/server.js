@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 
 import User from "./models/User.js";
 import { findNextMatrixSlot, getMatrixPlacementFields } from "./services/matrixService.js";
+import { processDueLicenseMatrixPayouts } from "./services/licensePlanService.js";
 
 import productRoutes from "./routes/productRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -297,6 +298,12 @@ app.get("/api/ping", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server Ã§alÄ±ÅŸÄ±yor: http://localhost:${PORT}`);
 });
+
+setInterval(() => {
+  processDueLicenseMatrixPayouts().catch((error) => {
+    console.error("Lisans matrix aylik odeme kontrolu hatasi:", error);
+  });
+}, 60 * 60 * 1000);
 
 
 

@@ -126,6 +126,36 @@ const orderSchema = new mongoose.Schema(
       min: 0,
     },
 
+    orderType: {
+      type: String,
+      enum: ["product", "license"],
+      default: "product",
+      index: true,
+    },
+
+    licensePlan: {
+      type: String,
+      enum: ["", "initial", "annual", "biennial"],
+      default: "",
+    },
+
+    licenseMonths: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    licenseAmountUsdt: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    licenseActivatedAt: {
+      type: Date,
+      default: null,
+    },
+
     status: {
       type: String,
       enum: ["pending", "preparing", "shipped", "completed", "cancelled"],
