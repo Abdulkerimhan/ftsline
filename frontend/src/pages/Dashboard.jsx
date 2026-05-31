@@ -606,7 +606,7 @@ export default function Dashboard() {
             {safeText(statsT?.balance, "Bakiye")}
           </div>
           <div className="dashboard-stat-value">
-            {formatMoney(summary.balance)} â‚º
+            {formatMoney(summary.balance)} TL
           </div>
           <div className="dashboard-stat-sub">
             {safeText(statsT?.balanceSub, "GÃ¼ncel kullanÄ±labilir bakiyen")}
@@ -618,7 +618,7 @@ export default function Dashboard() {
             {safeText(statsT?.monthEarning, "AylÄ±k KazanÃ§")}
           </div>
           <div className="dashboard-stat-value">
-            {formatMoney(summary.monthEarning)} â‚º
+            {formatMoney(summary.monthEarning)} TL
           </div>
           <div className="dashboard-stat-sub">
             {safeText(statsT?.monthEarningSub, "Bu ay elde edilen gelir")}
@@ -630,7 +630,7 @@ export default function Dashboard() {
             {safeText(statsT?.totalEarning, "Toplam KazanÃ§")}
           </div>
           <div className="dashboard-stat-value">
-            {formatMoney(summary.totalEarning)} â‚º
+            {formatMoney(summary.totalEarning)} TL
           </div>
           <div className="dashboard-stat-sub">
             {safeText(
@@ -700,7 +700,7 @@ export default function Dashboard() {
           {earningsChart.map((item) => (
             <div key={item.label} className="dashboard-chart-item">
               <div className="dashboard-chart-value">
-                {formatMoney(item.value)} â‚º
+                {formatMoney(item.value)} TL
               </div>
 
               <div
@@ -729,7 +729,7 @@ export default function Dashboard() {
               </div>
 
               <div className="dashboard-amount-positive">
-                + {formatMoney(item.amount)} â‚º
+                + {formatMoney(item.amount)} TL
               </div>
             </div>
           ))}
@@ -783,7 +783,7 @@ export default function Dashboard() {
               </div>
 
               <div className="dashboard-amount-positive">
-                + {formatMoney(member.contribution)} â‚º
+                + {formatMoney(member.contribution)} TL
               </div>
             </div>
           ))}
@@ -896,7 +896,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="dashboard-amount-positive">
-                  + {formatMoney(item.amount)} â‚º
+                  + {formatMoney(item.amount)} TL
                 </div>
               </div>
             ))}
@@ -960,7 +960,7 @@ export default function Dashboard() {
                   </div>
 
                   <div className="dashboard-order-price">
-                    {formatMoney(order.total)} â‚º
+                    {formatMoney(order.total)} TL
                   </div>
 
                   <div className="dashboard-order-date">
@@ -1343,3 +1343,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
