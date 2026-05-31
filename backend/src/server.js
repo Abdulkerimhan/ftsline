@@ -253,6 +253,15 @@ app.get("/api/user/referrals", async (req, res) => {
   }
 });
 
+app.get("/api/public/config", (req, res) => {
+  res.json({
+    usdt: {
+      trc20Address: process.env.USDT_TRC20_ADDRESS || "",
+      network: process.env.USDT_NETWORK || "TRC20",
+      enabled: Boolean(process.env.USDT_TRC20_ADDRESS),
+    },
+  });
+});
 /* ================= ROUTES ================= */
 
 app.use("/api/products", productRoutes);

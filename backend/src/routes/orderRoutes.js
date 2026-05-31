@@ -62,7 +62,7 @@ function normalizeOrderItems(items = []) {
 
 router.post("/", authRequired, async (req, res) => {
   try {
-    const { items, shippingInfo, subtotal, shippingPrice, total, paymentMethod } = req.body;
+    const { items, shippingInfo, subtotal, shippingPrice, total, paymentMethod, paymentProof } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: "Sepet bos." });
@@ -89,10 +89,16 @@ router.post("/", authRequired, async (req, res) => {
       shippingPrice: finalShippingPrice,
       total: Number(total || finalTotal),
       status: "pending",
-      paymentMethod: ["bank_transfer", "cash_on_delivery", "card"].includes(paymentMethod)
+      paymentMethod: ["bank_transfer", "cash_on_delivery", "card", "usdt_trc20"].includes(paymentMethod)
         ? paymentMethod
         : "bank_transfer",
       paymentStatus: "pending",
+      paymentProof: paymentMethod === "usdt_trc20" ? String(paymentProof || "").trim() : "",
+      paymentNetwork: paymentMethod === "usdt_trc20" ? "TRC20" : "",
+      paymentAddress:
+        paymentMethod === "usdt_trc20"
+          ? String(process.env.USDT_TRC20_ADDRESS || "").trim()
+          : "",
     });
 
     return res.status(201).json({
@@ -146,7 +152,7 @@ router.get("/admin/all", authRequired, adminOrSuperadmin, async (req, res) => {
 
 router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, res) => {
   try {
-    const { paymentStatus, paymentMethod } = req.body;
+    const { paymentStatus, paymentMethod, paymentProof } = req.body;
     const updates = {};
 
     if (paymentStatus) {
@@ -157,12 +163,15 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
     }
 
     if (paymentMethod) {
-      if (!["card", "cash_on_delivery", "bank_transfer"].includes(paymentMethod)) {
+      if (!["card", "cash_on_delivery", "bank_transfer", "usdt_trc20"].includes(paymentMethod)) {
         return res.status(400).json({ message: "Gecersiz odeme yontemi" });
       }
       updates.paymentMethod = paymentMethod;
     }
 
+    if (paymentProof !== undefined) {
+      updates.paymentProof = String(paymentProof || "").trim();
+    }
     const order = await Order.findByIdAndUpdate(req.params.id, updates, {
       new: true,
     })

@@ -1,4 +1,4 @@
-.super-panel {
+﻿.super-panel {
   min-height: 100vh;
   display: flex;
   background: #f4f7fb;
@@ -579,4 +579,20 @@
   .super-topbar h1 {
     font-size: 24px;
   }
+}
+.super-proof {
+  display: inline-block;
+  max-width: 180px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 12px;
+  word-break: break-all;
+}
+.super-payment-method {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
 }

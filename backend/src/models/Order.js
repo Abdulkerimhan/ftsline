@@ -134,7 +134,7 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["card", "cash_on_delivery", "bank_transfer"],
+      enum: ["card", "cash_on_delivery", "bank_transfer", "usdt_trc20"],
       default: "card",
     },
 
@@ -142,6 +142,25 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "paid", "failed", "refunded"],
       default: "paid",
+    },
+    paymentProof: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 200,
+    },
+
+    paymentNetwork: {
+      type: String,
+      enum: ["", "TRC20"],
+      default: "",
+    },
+
+    paymentAddress: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 120,
     },
   },
   { timestamps: true }

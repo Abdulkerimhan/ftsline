@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getCart, clearCart } from "../utils/cart.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
@@ -19,6 +19,16 @@ export default function Payment() {
         shippingTitle: "Teslimat Bilgileri",
         paymentTitle: "Odeme Bilgisi",
         paymentInfoTitle: "Odeme onayi admin tarafindan yapilir",
+        paymentMethod: "Odeme Yontemi",
+        bankTransfer: "Havale / EFT",
+        usdtTrc20: "USDT TRC20",
+        usdtAddress: "USDT TRC20 Cuzdan Adresi",
+        usdtNetwork: "Ag",
+        txId: "Transfer Hash / TxID",
+        txIdPlaceholder: "Ornek: 8f3a... veya Tronscan islem hash'i",
+        copyAddress: "Adresi Kopyala",
+        copied: "Kopyalandi",
+        usdtUnavailable: "USDT adresi henuz tanimlanmamis. Lutfen diger odeme yontemini secin.",
         paymentInfoText:
           "Bu ekranda kart bilgisi alinmaz. Siparis olustuktan sonra odeme durumu admin panelinde Odeme Bekliyor olarak gorunur ve manuel onaylanir.",
         summaryTitle: "Siparis Ozeti",
@@ -51,6 +61,7 @@ export default function Payment() {
         requiredDistrict: "Ilce zorunludur.",
         requiredAddress: "Adres zorunludur.",
         agreementRequired: "Satis sozlesmesini onaylamalisiniz.",
+        txIdRequired: "USDT odemesi icin TxID zorunludur.",
         loginRequired: "Siparis olusturmak icin giris yapmalisiniz.",
         serverError: "Siparis olusturulurken bir hata olustu.",
       },
@@ -61,6 +72,16 @@ export default function Payment() {
         shippingTitle: "Shipping Information",
         paymentTitle: "Payment Information",
         paymentInfoTitle: "Payment is approved by admin",
+        paymentMethod: "Payment Method",
+        bankTransfer: "Bank Transfer",
+        usdtTrc20: "USDT TRC20",
+        usdtAddress: "USDT TRC20 Wallet Address",
+        usdtNetwork: "Network",
+        txId: "Transfer Hash / TxID",
+        txIdPlaceholder: "Example: 8f3a... or Tronscan transaction hash",
+        copyAddress: "Copy Address",
+        copied: "Copied",
+        usdtUnavailable: "USDT address is not configured yet. Please choose another payment method.",
         paymentInfoText:
           "Card details are not collected on this screen. After the order is created, its payment status appears as Pending in the admin panel and can be approved manually.",
         summaryTitle: "Order Summary",
@@ -92,6 +113,7 @@ export default function Payment() {
         requiredDistrict: "District is required.",
         requiredAddress: "Address is required.",
         agreementRequired: "You must accept the agreement.",
+        txIdRequired: "TxID is required for USDT payment.",
         loginRequired: "You must log in to create an order.",
         serverError: "An error occurred while creating the order.",
       },
@@ -122,11 +144,15 @@ export default function Payment() {
     address: "",
     note: "",
     agreement: false,
+    paymentMethod: "bank_transfer",
+    paymentProof: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [publicConfig, setPublicConfig] = useState({ usdt: { trc20Address: "", network: "TRC20", enabled: false } });
+  const [copyMsg, setCopyMsg] = useState("");
 
   const subtotal = cart.reduce((sum, item) => {
     const price = Number(
@@ -142,6 +168,29 @@ export default function Payment() {
 
   const shipping = 0;
   const total = subtotal + shipping;
+  useEffect(() => {
+    let alive = true;
+
+    async function loadPublicConfig() {
+      try {
+        const res = await fetch(`${API}/public/config`);
+        const data = await res.json().catch(() => ({}));
+        if (alive && data?.usdt) {
+          setPublicConfig(data);
+        }
+      } catch {
+        if (alive) {
+          setPublicConfig({ usdt: { trc20Address: "", network: "TRC20", enabled: false } });
+        }
+      }
+    }
+
+    loadPublicConfig();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   function formatPrice(value) {
     return new Intl.NumberFormat(language === "tr" ? "tr-TR" : "en-US").format(
@@ -165,6 +214,7 @@ export default function Payment() {
     if (!form.city.trim()) return t.requiredCity;
     if (!form.district.trim()) return t.requiredDistrict;
     if (!form.address.trim()) return t.requiredAddress;
+    if (form.paymentMethod === "usdt_trc20" && !form.paymentProof.trim()) return t.txIdRequired;
     if (!form.agreement) return t.agreementRequired;
 
     return "";
@@ -194,6 +244,19 @@ export default function Payment() {
     });
   }
 
+
+  async function copyUsdtAddress() {
+    const address = publicConfig?.usdt?.trc20Address || "";
+    if (!address) return;
+
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopyMsg(t.copied);
+      setTimeout(() => setCopyMsg(""), 1400);
+    } catch {
+      setCopyMsg(address);
+    }
+  }
   async function createOrder() {
     const token = sessionStorage.getItem("accessToken");
 
@@ -215,7 +278,8 @@ export default function Payment() {
       subtotal,
       shippingPrice: shipping,
       total,
-      paymentMethod: "bank_transfer",
+      paymentMethod: form.paymentMethod,
+      paymentProof: form.paymentMethod === "usdt_trc20" ? form.paymentProof.trim() : "",
     };
 
     const res = await fetch(`${API}/orders`, {
@@ -384,10 +448,67 @@ export default function Payment() {
             <div className="payment-card">
               <h2>{t.paymentTitle}</h2>
 
+              <div className="payment-methods">
+                <label className={`payment-method ${form.paymentMethod === "bank_transfer" ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="bank_transfer"
+                    checked={form.paymentMethod === "bank_transfer"}
+                    onChange={handleChange}
+                  />
+                  <span>{t.bankTransfer}</span>
+                </label>
+
+                <label className={`payment-method ${form.paymentMethod === "usdt_trc20" ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="usdt_trc20"
+                    checked={form.paymentMethod === "usdt_trc20"}
+                    onChange={handleChange}
+                  />
+                  <span>{t.usdtTrc20}</span>
+                </label>
+              </div>
+
               <div className="payment-manual-box">
                 <strong>{t.paymentInfoTitle}</strong>
                 <p>{t.paymentInfoText}</p>
               </div>
+
+              {form.paymentMethod === "usdt_trc20" && (
+                <div className="payment-usdt-box">
+                  {publicConfig?.usdt?.trc20Address ? (
+                    <>
+                      <div className="payment-usdt-row">
+                        <span>{t.usdtNetwork}</span>
+                        <strong>{publicConfig.usdt.network || "TRC20"}</strong>
+                      </div>
+
+                      <div className="payment-usdt-address">
+                        <span>{t.usdtAddress}</span>
+                        <code>{publicConfig.usdt.trc20Address}</code>
+                        <button type="button" onClick={copyUsdtAddress}>{t.copyAddress}</button>
+                        {copyMsg && <small>{copyMsg}</small>}
+                      </div>
+
+                      <div className="payment-group">
+                        <label>{t.txId}</label>
+                        <input
+                          type="text"
+                          name="paymentProof"
+                          value={form.paymentProof}
+                          onChange={handleChange}
+                          placeholder={t.txIdPlaceholder}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="payment-error">{t.usdtUnavailable}</div>
+                  )}
+                </div>
+              )}
 
               <label className="payment-checkbox">
                 <input
