@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import { authRequired, superAdminOnly } from "../middleware/authMiddleware.js";
 import { updateAllCareers } from "../services/networkCareerService.js";
 import { getCareerLabel } from "../services/careerService.js";
+import { calculateMonthlyPools } from "../services/poolService.js";
 
 const router = express.Router();
 
@@ -165,4 +166,17 @@ router.post("/careers/update-all", authRequired, superAdminOnly, async (req, res
   }
 });
 
+
+router.post("/pools/calculate", authRequired, superAdminOnly, async (req, res) => {
+  try {
+    const result = await calculateMonthlyPools({
+      companyProfit: req.body.companyProfit,
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Havuz hesaplanamadi" });
+  }
+});
 export default router;
+

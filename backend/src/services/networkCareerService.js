@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+﻿import User from "../models/User.js";
 import { calculateCareer, isActiveMember, CAREER_LEVELS } from "./careerService.js";
 
 async function getDirectUsers(userId) {
@@ -61,7 +61,8 @@ async function collectTreeStats(rootUserId) {
 export async function updateUserCareer(user) {
   const stats = await collectTreeStats(user._id);
 
-  const newLevel = calculateCareer(stats);
+  const careerResult = calculateCareer(stats);
+  const newLevel = careerResult.level;
   const oldLevel = user?.career?.level || CAREER_LEVELS.NONE;
 
   user.teamCount = stats.totalMembers;
@@ -78,7 +79,8 @@ export async function updateUserCareer(user) {
     oldLevel,
     newLevel,
     changed: oldLevel !== newLevel,
-    stats,
+    stats: careerResult.stats,
+    matchedRules: careerResult.matchedRules,
   };
 }
 
@@ -98,3 +100,4 @@ export async function updateAllCareers() {
     results,
   };
 }
+
