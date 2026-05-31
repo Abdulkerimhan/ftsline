@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 
 import User from "./models/User.js";
+import { findNextMatrixSlot, getMatrixPlacementFields } from "./services/matrixService.js";
 
 import productRoutes from "./routes/productRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -120,6 +121,7 @@ app.post("/api/auth/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const matrixSlot = await findNextMatrixSlot();
 
     const user = await User.create({
       username: normalizedUsername,
@@ -127,6 +129,7 @@ app.post("/api/auth/register", async (req, res) => {
       email: normalizedEmail,
       passwordHash,
       sponsor: sponsorUser ? sponsorUser._id : null,
+      ...getMatrixPlacementFields(matrixSlot),
     });
 
     res.json({
@@ -140,6 +143,9 @@ app.post("/api/auth/register", async (req, res) => {
         isActive: user.isActive,
         isLicensed: user.isLicensed,
         adminPermissions: user.adminPermissions || [],
+        matrixParent: user.matrixParent || null,
+        matrixPosition: user.matrixPosition || "",
+        matrixDepth: user.matrixDepth || 0,
       },
     });
   } catch (error) {
@@ -197,6 +203,9 @@ app.post("/api/auth/login", async (req, res) => {
         isActive: user.isActive,
         isLicensed: user.isLicensed,
         adminPermissions: user.adminPermissions || [],
+        matrixParent: user.matrixParent || null,
+        matrixPosition: user.matrixPosition || "",
+        matrixDepth: user.matrixDepth || 0,
       },
     });
   } catch (error) {
@@ -288,4 +297,7 @@ app.get("/api/ping", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server Ã§alÄ±ÅŸÄ±yor: http://localhost:${PORT}`);
 });
+
+
+
 

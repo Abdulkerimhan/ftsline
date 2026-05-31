@@ -136,6 +136,26 @@ const UserSchema = new mongoose.Schema(
       index: true,
     },
 
+    matrixParent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
+
+    matrixPosition: {
+      type: String,
+      enum: ["", "left", "right"],
+      default: "",
+    },
+
+    matrixDepth: {
+      type: Number,
+      default: 0,
+      min: 0,
+      index: true,
+    },
+
     teamCount: {
       type: Number,
       default: 0,
@@ -149,8 +169,22 @@ const UserSchema = new mongoose.Schema(
 
     careerLevel: {
       type: String,
-      enum: ["starter", "bronze", "silver", "gold", "platinum", "diamond"],
-      default: "starter",
+      enum: [
+        "NONE",
+        "BRONZ",
+        "GUMUS",
+        "ALTIN",
+        "PLATIN",
+        "ELMAS",
+        "TAC_ELMAS",
+        "starter",
+        "bronze",
+        "silver",
+        "gold",
+        "platinum",
+        "diamond",
+      ],
+      default: "NONE",
     },
 
     isLicensed: {
@@ -247,3 +281,5 @@ UserSchema.methods.toJSON = function () {
 };
 
 export default mongoose.model("User", UserSchema);
+
+

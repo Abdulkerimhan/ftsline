@@ -4,6 +4,7 @@ import { authRequired, superAdminOnly } from "../middleware/authMiddleware.js";
 import { updateAllCareers } from "../services/networkCareerService.js";
 import { getCareerLabel } from "../services/careerService.js";
 import { calculateMonthlyPools } from "../services/poolService.js";
+import { distributeLicenseCareerBonus } from "../services/careerBonusService.js";
 
 const router = express.Router();
 
@@ -48,7 +49,7 @@ router.put("/users/:id/active", authRequired, superAdminOnly, async (req, res) =
 
 router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) => {
   try {
-    const { isLicensed } = req.body;
+    const { isLicensed, licenseFee } = req.body;
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
@@ -66,7 +67,16 @@ router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) 
       return res.status(404).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
     }
 
-    res.json(user);
+    let bonusResult = null;
+
+    if (Boolean(isLicensed) && Number(licenseFee || 0) > 0) {
+      bonusResult = await distributeLicenseCareerBonus({
+        payerUserId: user._id,
+        licenseFee,
+      });
+    }
+
+    res.json({ user, bonusResult });
   } catch (error) {
     res.status(500).json({ message: "Lisans gÃ¼ncellenemedi" });
   }
@@ -179,4 +189,6 @@ router.post("/pools/calculate", authRequired, superAdminOnly, async (req, res) =
   }
 });
 export default router;
+
+
 
