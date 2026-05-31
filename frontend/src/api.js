@@ -3,7 +3,7 @@ const API = import.meta.env.VITE_API_URL || "/api";
 /* ================= HELPERS ================= */
 
 function getAuthHeader() {
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
 
   return token
     ? {
@@ -60,8 +60,8 @@ export async function loginUser(data) {
 
     // 🔥 TOKEN OTOMATİK KAYIT
     if (result?.token) {
-      localStorage.setItem("accessToken", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
+      sessionStorage.setItem("accessToken", result.token);
+      sessionStorage.setItem("user", JSON.stringify(result.user));
     }
 
     return result;

@@ -39,7 +39,7 @@ export default function Dashboard() {
 
   const [user, setUser] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("user") || "null");
+      return JSON.parse(sessionStorage.getItem("user") || "null");
     } catch {
       return null;
     }
@@ -272,7 +272,7 @@ export default function Dashboard() {
     try {
       setOrdersLoading(true);
 
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
 
       if (!token) {
         setOrders([]);

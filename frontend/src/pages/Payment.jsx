@@ -103,7 +103,7 @@ export default function Payment() {
 
   function getCurrentUser() {
     try {
-      return JSON.parse(localStorage.getItem("user") || "null");
+      return JSON.parse(sessionStorage.getItem("user") || "null");
     } catch {
       return null;
     }
@@ -195,7 +195,7 @@ export default function Payment() {
   }
 
   async function createOrder() {
-    const token = localStorage.getItem("accessToken");
+    const token = sessionStorage.getItem("accessToken");
 
     if (!token) {
       throw new Error(t.loginRequired);

@@ -30,7 +30,7 @@ export default function SuperAdminPanel() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState(emptyProductForm);
 
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
 
   async function request(path, options = {}, fallback = null) {
     try {
@@ -142,8 +142,8 @@ export default function SuperAdminPanel() {
   }
 
   function logout() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("user");
     window.location.href = "/login";
   }
 

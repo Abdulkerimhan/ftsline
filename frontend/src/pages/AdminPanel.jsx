@@ -262,7 +262,7 @@ export default function AdminPanel() {
     try {
       setSaving(true);
 
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
 
       if (!token) {
         alert("Oturum bulunamadı. Lütfen tekrar giriş yap.");
@@ -363,7 +363,7 @@ export default function AdminPanel() {
 
   async function handleToggleProduct(product) {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
 
       if (!token) {
         alert("Oturum bulunamadı. Lütfen tekrar giriş yap.");
@@ -412,8 +412,8 @@ export default function AdminPanel() {
   }
 
   function handleLogout() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("user");
     window.location.href = "/login";
   }
 

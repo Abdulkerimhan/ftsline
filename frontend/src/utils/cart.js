@@ -1,6 +1,6 @@
 function getCurrentUser() {
   try {
-    return JSON.parse(localStorage.getItem("user") || "null");
+    return JSON.parse(sessionStorage.getItem("user") || "null");
   } catch (error) {
     console.error("User parse hatası:", error);
     return null;

@@ -186,7 +186,7 @@ export default function Products() {
   let user = null;
 
   try {
-    user = JSON.parse(localStorage.getItem("user") || "null");
+    user = JSON.parse(sessionStorage.getItem("user") || "null");
   } catch {
     user = null;
   }

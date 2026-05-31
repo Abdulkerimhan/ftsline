@@ -10,10 +10,10 @@ export default function Navbar() {
 
   const common = t?.common || {};
 
-  const [token, setToken] = useState(localStorage.getItem("accessToken"));
+  const [token, setToken] = useState(sessionStorage.getItem("accessToken"));
   const [user, setUser] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("user") || "null");
+      return JSON.parse(sessionStorage.getItem("user") || "null");
     } catch {
       return null;
     }
@@ -23,9 +23,9 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const syncAuth = () => {
-    setToken(localStorage.getItem("accessToken"));
+    setToken(sessionStorage.getItem("accessToken"));
     try {
-      setUser(JSON.parse(localStorage.getItem("user") || "null"));
+      setUser(JSON.parse(sessionStorage.getItem("user") || "null"));
     } catch {
       setUser(null);
     }
@@ -56,8 +56,8 @@ export default function Navbar() {
   const isLoggedIn = !!token && !!user;
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("user");
     setToken(null);
     setUser(null);
     window.dispatchEvent(new Event("authChanged"));

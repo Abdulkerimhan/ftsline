@@ -67,8 +67,8 @@ export default function Login() {
       const data = await loginUser({ identifier: form.identifier.trim(), password: form.password });
 
       if (data?.token) {
-        localStorage.setItem("accessToken", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user || null));
+        sessionStorage.setItem("accessToken", data.token);
+        sessionStorage.setItem("user", JSON.stringify(data.user || null));
         window.dispatchEvent(new Event("authChanged"));
         navigate("/dashboard", { replace: true });
         return;

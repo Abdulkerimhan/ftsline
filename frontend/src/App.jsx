@@ -18,20 +18,20 @@ import LiveTranslator from "./i18n/LiveTranslator.jsx";
 
 function getStoredUser() {
   try {
-    return JSON.parse(localStorage.getItem("user") || "null");
+    return JSON.parse(sessionStorage.getItem("user") || "null");
   } catch {
     return null;
   }
 }
 
 function RequireAuth({ children }) {
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
   if (!token) return <Navigate to="/login" replace />;
   return children;
 }
 
 function RequireAdmin({ children }) {
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
   const user = getStoredUser();
 
   if (!token) return <Navigate to="/login" replace />;
@@ -44,7 +44,7 @@ function RequireAdmin({ children }) {
 }
 
 function RequireSuperAdmin({ children }) {
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
   const user = getStoredUser();
 
   if (!token) return <Navigate to="/login" replace />;
