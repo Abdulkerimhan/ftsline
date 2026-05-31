@@ -18,7 +18,7 @@ const emptyProductForm = {
   imagesText: "",
   priceNormal: "",
   priceLicensed: "",
-  stock: "SÄ±nÄ±rsÄ±z",
+  stock: "Sinirsiz",
   isActive: true,
 };
 
@@ -55,7 +55,7 @@ export default function SuperAdminPanel() {
       const data = await res.json().catch(() => fallback);
 
       if (!res.ok) {
-        throw new Error(data?.message || "Ä°ÅŸlem baÅŸarÄ±sÄ±z");
+        throw new Error(data?.message || "Islem basarisiz");
       }
 
       return data;
@@ -98,14 +98,14 @@ export default function SuperAdminPanel() {
     );
 
     return [
-      { title: "Toplam KullanÄ±cÄ±", value: users.length },
-      { title: "Aktif KullanÄ±cÄ±", value: activeUsers },
-      { title: "LisanslÄ± KullanÄ±cÄ±", value: licensedUsers },
-      { title: "Toplam ÃœrÃ¼n", value: products.length },
-      { title: "Aktif ÃœrÃ¼n", value: activeProducts },
-      { title: "Toplam SipariÅŸ", value: orders.length },
+      { title: "Toplam Kullanici", value: users.length },
+      { title: "Aktif Kullanici", value: activeUsers },
+      { title: "Lisansli Kullanici", value: licensedUsers },
+      { title: "Toplam Urun", value: products.length },
+      { title: "Aktif Urun", value: activeProducts },
+      { title: "Toplam Siparis", value: orders.length },
       {
-        title: "SipariÅŸ Cirosu",
+        title: "Siparis Cirosu",
         value: `${totalOrderAmount.toLocaleString("tr-TR")} TL`,
       },
     ];
@@ -171,7 +171,7 @@ export default function SuperAdminPanel() {
       imagesText: Array.isArray(product.images) ? product.images.join("\n") : "",
       priceNormal: product.priceNormal ?? "",
       priceLicensed: product.priceLicensed ?? "",
-      stock: product.stock || "SÄ±nÄ±rsÄ±z",
+      stock: product.stock || "Sinirsiz",
       isActive: product.isActive !== false,
     });
 
@@ -201,7 +201,7 @@ export default function SuperAdminPanel() {
       productForm.priceNormal === "" ||
       productForm.priceLicensed === ""
     ) {
-      setMessage("ÃœrÃ¼n adÄ±, normal fiyat ve lisanslÄ± fiyat zorunlu.");
+      setMessage("Urun adi, normal fiyat ve lisansli fiyat zorunlu.");
       return;
     }
 
@@ -218,7 +218,7 @@ export default function SuperAdminPanel() {
       images,
       priceNormal: Number(productForm.priceNormal),
       priceLicensed: Number(productForm.priceLicensed),
-      stock: productForm.stock || "SÄ±nÄ±rsÄ±z",
+      stock: productForm.stock || "Sinirsiz",
       isActive: productForm.isActive,
     };
 
@@ -238,7 +238,7 @@ export default function SuperAdminPanel() {
     );
 
     if (result) {
-      setMessage(editingProduct ? "ÃœrÃ¼n gÃ¼ncellendi âœ…" : "ÃœrÃ¼n eklendi âœ…");
+      setMessage(editingProduct ? "Urun guncellendi" : "Urun eklendi");
       closeProductModal();
       await loadAll();
     }
@@ -261,7 +261,7 @@ export default function SuperAdminPanel() {
   }
 
   async function removeProduct(productId) {
-    const ok = window.confirm("Bu Ã¼rÃ¼n tamamen silinsin mi?");
+    const ok = window.confirm("Bu urun tamamen silinsin mi?");
     if (!ok) return;
 
     await request(
@@ -339,7 +339,7 @@ export default function SuperAdminPanel() {
     await loadAll();
   }
   async function deleteUser(user) {
-    const ok = window.confirm(`${user.username} kullanÄ±cÄ±sÄ± silinsin mi?`);
+    const ok = window.confirm(`${user.username} kullanicisi silinsin mi?`);
     if (!ok) return;
 
     await request(
@@ -354,7 +354,7 @@ export default function SuperAdminPanel() {
   }
 
   async function updateCareers() {
-    const ok = window.confirm("TÃ¼m kullanÄ±cÄ± kariyerleri gÃ¼ncellensin mi?");
+    const ok = window.confirm("Tum kullanici kariyerleri guncellensin mi?");
     if (!ok) return;
 
     const result = await request(
@@ -366,7 +366,7 @@ export default function SuperAdminPanel() {
     );
 
     if (result) {
-      setMessage("Kariyerler gÃ¼ncellendi âœ…");
+      setMessage("Kariyerler guncellendi");
     }
 
     await loadAll();
@@ -406,10 +406,10 @@ export default function SuperAdminPanel() {
         <div className="super-hero">
           <div>
             <span>FTSLine</span>
-            <h1>SÃ¼per Admin Merkezi</h1>
+            <h1>Super Admin Merkezi</h1>
             <p>
-              KullanÄ±cÄ±, Ã¼rÃ¼n, sipariÅŸ, lisans, rol ve finans kontrolÃ¼nÃ¼ tek
-              merkezden yÃ¶net.
+              Kullanici, urun, siparis, lisans, rol ve finans kontrolunu tek
+              merkezden yonet.
             </p>
           </div>
 
@@ -419,7 +419,7 @@ export default function SuperAdminPanel() {
             </button>
 
             <button onClick={updateCareers} className="super-btn success">
-              Kariyerleri GÃ¼ncelle
+              Kariyerleri Guncelle
             </button>
           </div>
         </div>
@@ -441,20 +441,20 @@ export default function SuperAdminPanel() {
       <section className="super-card">
         <div className="super-section-head">
           <div>
-            <h2>ÃœrÃ¼n YÃ¶netimi</h2>
-            <p>ÃœrÃ¼n ekle, dÃ¼zenle, aktif/pasif yap veya sil.</p>
+            <h2>Urun Yonetimi</h2>
+            <p>Urun ekle, duzenle, aktif/pasif yap veya sil.</p>
           </div>
 
           <div className="super-product-tools">
             <input
               className="super-search"
-              placeholder="ÃœrÃ¼n ara..."
+              placeholder="Urun ara..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
 
             <button className="super-btn success" onClick={openAddProduct}>
-              + ÃœrÃ¼n Ekle
+              + Urun Ekle
             </button>
           </div>
         </div>
@@ -464,14 +464,14 @@ export default function SuperAdminPanel() {
             <thead>
               <tr>
                 <th>Foto</th>
-                <th>ÃœrÃ¼n</th>
+                <th>Urun</th>
                 <th>Marka</th>
                 <th>Kategori</th>
                 <th>Normal</th>
-                <th>LisanslÄ±</th>
+                <th>Lisansli</th>
                 <th>Stok</th>
                 <th>Durum</th>
-                <th>Ä°ÅŸlem</th>
+                <th>Islem</th>
               </tr>
             </thead>
 
@@ -500,7 +500,7 @@ export default function SuperAdminPanel() {
                     <td>{product.category || "-"}</td>
                     <td>{Number(product.priceNormal || 0).toLocaleString("tr-TR")} TL</td>
                     <td>{Number(product.priceLicensed || 0).toLocaleString("tr-TR")} TL</td>
-                    <td>{product.stock || "SÄ±nÄ±rsÄ±z"}</td>
+                    <td>{product.stock || "Sinirsiz"}</td>
 
                     <td>
                       <span
@@ -520,14 +520,14 @@ export default function SuperAdminPanel() {
                           className="super-btn small"
                           onClick={() => openEditProduct(product)}
                         >
-                          DÃ¼zenle
+                          Duzenle
                         </button>
 
                         <button
                           className="super-btn small"
                           onClick={() => toggleProduct(product)}
                         >
-                          {product.isActive ? "PasifleÅŸtir" : "AktifleÅŸtir"}
+                          {product.isActive ? "Pasiflestir" : "Aktiflestir"}
                         </button>
 
                         <button
@@ -543,7 +543,7 @@ export default function SuperAdminPanel() {
               ) : (
                 <tr>
                   <td colSpan="9" className="super-empty">
-                    ÃœrÃ¼n bulunamadÄ±.
+                    Urun bulunamadi.
                   </td>
                 </tr>
               )}
@@ -559,13 +559,13 @@ export default function SuperAdminPanel() {
       <section className="super-card">
         <div className="super-section-head">
           <div>
-            <h2>KullanÄ±cÄ± YÃ¶netimi</h2>
-            <p>KullanÄ±cÄ± rolÃ¼, aktiflik ve lisans yÃ¶netimi.</p>
+            <h2>Kullanici Yonetimi</h2>
+            <p>Kullanici rolu, aktiflik ve lisans yonetimi.</p>
           </div>
 
           <input
             className="super-search"
-            placeholder="KullanÄ±cÄ± ara..."
+            placeholder="Kullanici ara..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -575,14 +575,14 @@ export default function SuperAdminPanel() {
           <table className="super-table">
             <thead>
               <tr>
-                <th>KullanÄ±cÄ±</th>
+                <th>Kullanici</th>
                 <th>Ad Soyad</th>
                 <th>E-posta</th>
                 <th>Rol</th>
                 <th>Durum</th>
                 <th>Lisans</th>
                                 <th>Admin Alanlari</th>
-<th>Ä°ÅŸlem</th>
+<th>Islem</th>
               </tr>
             </thead>
 
@@ -626,7 +626,7 @@ export default function SuperAdminPanel() {
                             : "super-status passive"
                         }
                       >
-                        {user.isLicensed ? "LisanslÄ±" : "LisanssÄ±z"}
+                        {user.isLicensed ? "Lisansli" : "Lisanssiz"}
                       </span>
                     </td>
                     <td>
@@ -665,14 +665,14 @@ export default function SuperAdminPanel() {
                           className="super-btn small"
                           onClick={() => toggleUserActive(user)}
                         >
-                          {user.isActive === false ? "Aktif Et" : "PasifleÅŸtir"}
+                          {user.isActive === false ? "Aktif Et" : "Pasiflestir"}
                         </button>
 
                         <button
                           className="super-btn small"
                           onClick={() => toggleUserLicense(user)}
                         >
-                          {user.isLicensed ? "LisansÄ± KaldÄ±r" : "Lisans Ver"}
+                          {user.isLicensed ? "Lisansi Kaldir" : "Lisans Ver"}
                         </button>
 
                         <button
@@ -688,7 +688,7 @@ export default function SuperAdminPanel() {
               ) : (
                 <tr>
                   <td colSpan="8" className="super-empty">
-                    KullanÄ±cÄ± bulunamadÄ±.
+                    Kullanici bulunamadi.
                   </td>
                 </tr>
               )}
@@ -704,13 +704,13 @@ export default function SuperAdminPanel() {
       <section className="super-card">
         <div className="super-section-head">
           <div>
-            <h2>SipariÅŸ YÃ¶netimi</h2>
-            <p>TÃ¼m sipariÅŸleri gÃ¶rÃ¼ntÃ¼le.</p>
+            <h2>Siparis Yonetimi</h2>
+            <p>Tum siparisleri goruntule.</p>
           </div>
 
           <input
             className="super-search"
-            placeholder="SipariÅŸ ara..."
+            placeholder="Siparis ara..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -720,9 +720,9 @@ export default function SuperAdminPanel() {
           <table className="super-table">
             <thead>
               <tr>
-                <th>SipariÅŸ</th>
-                <th>MÃ¼ÅŸteri</th>
-                <th>ÃœrÃ¼n</th>
+                <th>Siparis</th>
+                <th>Musteri</th>
+                <th>Urun</th>
                 <th>Tutar</th>
                 <th>Odeme</th>
                 <th>Kanit</th>
@@ -744,7 +744,7 @@ export default function SuperAdminPanel() {
                     </td>
 
                     <td>
-                      {order.items?.[0]?.name || "SipariÅŸ"}
+                      {order.items?.[0]?.name || "Siparis"}
                       {order.items?.length > 1
                         ? ` +${order.items.length - 1}`
                         : ""}
@@ -801,7 +801,7 @@ export default function SuperAdminPanel() {
               ) : (
                 <tr>
                   <td colSpan="8" className="super-empty">
-                    SipariÅŸ bulunamadÄ±.
+                    Siparis bulunamadi.
                   </td>
                 </tr>
               )}
@@ -817,27 +817,27 @@ export default function SuperAdminPanel() {
 
     return (
       <section className="super-card">
-        <h2>Finans Ã–zeti</h2>
-        <p className="super-muted">SipariÅŸ cirosu ve sistem Ã¶zeti.</p>
+        <h2>Finans Ozeti</h2>
+        <p className="super-muted">Siparis cirosu ve sistem ozeti.</p>
 
         <div className="super-finance-grid">
           <div>
-            <span>Toplam SipariÅŸ Cirosu</span>
+            <span>Toplam Siparis Cirosu</span>
             <strong>{total.toLocaleString("tr-TR")} TL</strong>
           </div>
 
           <div>
-            <span>Toplam SipariÅŸ</span>
+            <span>Toplam Siparis</span>
             <strong>{orders.length}</strong>
           </div>
 
           <div>
-            <span>Aktif ÃœrÃ¼n</span>
+            <span>Aktif Urun</span>
             <strong>{products.filter((p) => p.isActive).length}</strong>
           </div>
 
           <div>
-            <span>LisanslÄ± KullanÄ±cÄ±</span>
+            <span>Lisansli Kullanici</span>
             <strong>{users.filter((u) => u.isLicensed).length}</strong>
           </div>
         </div>
@@ -847,7 +847,7 @@ export default function SuperAdminPanel() {
 
   function renderContent() {
     if (loading) {
-      return <div className="super-card super-empty">YÃ¼kleniyor...</div>;
+      return <div className="super-card super-empty">Yukleniyor...</div>;
     }
 
     if (activeMenu === "overview") return renderOverview();
@@ -871,28 +871,28 @@ export default function SuperAdminPanel() {
           className={activeMenu === "overview" ? "active" : ""}
           onClick={() => menuClick("overview")}
         >
-          Genel BakÄ±ÅŸ
+          Genel Bakis
         </button>
 
         <button
           className={activeMenu === "users" ? "active" : ""}
           onClick={() => menuClick("users")}
         >
-          KullanÄ±cÄ±lar
+          Kullanicilar
         </button>
 
         <button
           className={activeMenu === "products" ? "active" : ""}
           onClick={() => menuClick("products")}
         >
-          ÃœrÃ¼nler
+          Urunler
         </button>
 
         <button
           className={activeMenu === "orders" ? "active" : ""}
           onClick={() => menuClick("orders")}
         >
-          SipariÅŸler
+          Siparisler
         </button>
 
         <button
@@ -903,15 +903,15 @@ export default function SuperAdminPanel() {
         </button>
 
         <button className="logout" onClick={logout}>
-          Ã‡Ä±kÄ±ÅŸ Yap
+          Cikis Yap
         </button>
       </aside>
 
       <main className="super-main">
         <div className="super-topbar">
           <div>
-            <h1>SÃ¼per Admin Paneli</h1>
-            <p>TÃ¼m sistemi yÃ¶netebileceÄŸin ana kontrol alanÄ±.</p>
+            <h1>Super Admin Paneli</h1>
+            <p>Tum sistemi yonetebilecegin ana kontrol alani.</p>
           </div>
 
           <button className="super-btn" onClick={loadAll}>
@@ -928,8 +928,8 @@ export default function SuperAdminPanel() {
             <div className="super-modal">
               <div className="super-modal-head">
                 <div>
-                  <h2>{editingProduct ? "ÃœrÃ¼nÃ¼ DÃ¼zenle" : "Yeni ÃœrÃ¼n Ekle"}</h2>
-                  <p>ÃœrÃ¼nÃ¼ tek sefer gir. Dil deÄŸiÅŸimi sadece arayÃ¼z yazÄ±larÄ±nÄ± etkiler.</p>
+                  <h2>{editingProduct ? "Urunu Duzenle" : "Yeni Urun Ekle"}</h2>
+                  <p>Urunu tek sefer gir. Dil degisimi sadece arayuz yazilarini etkiler.</p>
                 </div>
 
                 <button
@@ -937,14 +937,14 @@ export default function SuperAdminPanel() {
                   onClick={closeProductModal}
                   type="button"
                 >
-                  Ã—
+                  x
                 </button>
               </div>
 
               <form className="super-product-form" onSubmit={saveProduct}>
                 <input
                   name="name"
-                  placeholder="ÃœrÃ¼n adÄ±"
+                  placeholder="Urun adi"
                   value={productForm.name}
                   onChange={handleProductChange}
                 />
@@ -975,7 +975,7 @@ export default function SuperAdminPanel() {
                   <input
                     name="priceLicensed"
                     type="number"
-                    placeholder="LisanslÄ± fiyat"
+                    placeholder="Lisansli fiyat"
                     value={productForm.priceLicensed}
                     onChange={handleProductChange}
                   />
@@ -990,14 +990,14 @@ export default function SuperAdminPanel() {
 
                 <textarea
                   name="description"
-                  placeholder="ÃœrÃ¼n aÃ§Ä±klamasÄ±"
+                  placeholder="Urun aciklamasi"
                   value={productForm.description}
                   onChange={handleProductChange}
                 />
 
                 <textarea
                   name="imagesText"
-                  placeholder={`GÃ¶rsel URL'leri\nHer satÄ±ra 1 gÃ¶rsel linki yaz\nÃ–rnek: /uploads/products/urun1.jpg`}
+                  placeholder={`Gorsel URL'leri\nHer satira 1 gorsel linki yaz\nOrnek: /uploads/products/urun1.jpg`}
                   value={productForm.imagesText}
                   onChange={handleProductChange}
                 />
@@ -1009,7 +1009,7 @@ export default function SuperAdminPanel() {
                     checked={productForm.isActive}
                     onChange={handleProductChange}
                   />
-                  ÃœrÃ¼n aktif olsun
+                  Urun aktif olsun
                 </label>
 
                 <div className="super-modal-actions">
@@ -1018,7 +1018,7 @@ export default function SuperAdminPanel() {
                     className="super-btn danger"
                     onClick={closeProductModal}
                   >
-                    VazgeÃ§
+                    Vazgec
                   </button>
 
                   <button type="submit" className="super-btn success">
@@ -1033,5 +1033,6 @@ export default function SuperAdminPanel() {
     </div>
   );
 }
+
 
 
