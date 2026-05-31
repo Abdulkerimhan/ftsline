@@ -1,15 +1,16 @@
 ﻿import User from "../models/User.js";
-import { CAREER_LEVELS, CAREER_RULES, careerRank } from "./careerService.js";
+import { CAREER_LEVELS, CAREER_RULES, careerRank, isActiveMember } from "./careerService.js";
 
 export const CAREER_LICENSE_BONUS_RATE = 0.03;
+export const CAREER_LICENSE_BONUS_MAX_DEPTH = 15;
 
 const CAREER_BONUS_DEPTH = {
-  BRONZ: CAREER_RULES.BRONZ.bonusDepth,
-  GUMUS: CAREER_RULES.BRONZ.bonusDepth,
-  ALTIN: CAREER_RULES.BRONZ.bonusDepth,
-  PLATIN: CAREER_RULES.BRONZ.bonusDepth,
-  ELMAS: CAREER_RULES.BRONZ.bonusDepth,
-  TAC_ELMAS: CAREER_RULES.BRONZ.bonusDepth,
+  BRONZ: CAREER_LICENSE_BONUS_MAX_DEPTH,
+  GUMUS: CAREER_LICENSE_BONUS_MAX_DEPTH,
+  ALTIN: CAREER_LICENSE_BONUS_MAX_DEPTH,
+  PLATIN: CAREER_LICENSE_BONUS_MAX_DEPTH,
+  ELMAS: CAREER_LICENSE_BONUS_MAX_DEPTH,
+  TAC_ELMAS: CAREER_LICENSE_BONUS_MAX_DEPTH,
 };
 
 function roundMoney(value) {
@@ -18,7 +19,7 @@ function roundMoney(value) {
 
 function getBonusDepth(level) {
   if (!level || careerRank(level) < careerRank(CAREER_LEVELS.BRONZ)) return 0;
-  return CAREER_BONUS_DEPTH[level] || CAREER_RULES.BRONZ.bonusDepth;
+  return CAREER_BONUS_DEPTH[level] || CAREER_LICENSE_BONUS_MAX_DEPTH;
 }
 
 export async function distributeLicenseCareerBonus({ payerUserId, licenseFee }) {
@@ -28,26 +29,28 @@ export async function distributeLicenseCareerBonus({ payerUserId, licenseFee }) 
     return { totalDistributed: 0, bonusAmount: 0, beneficiaries: [] };
   }
 
-  const payer = await User.findById(payerUserId).select("sponsor username").lean();
-  if (!payer?.sponsor) {
+  const payer = await User.findById(payerUserId).select("matrixParent username").lean();
+  if (!payer?.matrixParent) {
     return { totalDistributed: 0, bonusAmount: 0, beneficiaries: [] };
   }
 
   const bonusAmount = roundMoney(amount * CAREER_LICENSE_BONUS_RATE);
   const beneficiaries = [];
 
-  let sponsorId = payer.sponsor;
+  let matrixParentId = payer.matrixParent;
   let depth = 1;
 
-  while (sponsorId && depth <= CAREER_RULES.BRONZ.bonusDepth) {
-    const sponsor = await User.findById(sponsorId).select("username fullName email sponsor career");
-    if (!sponsor) break;
+  while (matrixParentId && depth <= CAREER_LICENSE_BONUS_MAX_DEPTH) {
+    const matrixParent = await User.findById(matrixParentId).select(
+      "username fullName email matrixParent career isActive isLicensed licenseExpiresAt"
+    );
+    if (!matrixParent) break;
 
-    const level = sponsor?.career?.level || CAREER_LEVELS.NONE;
+    const level = matrixParent?.career?.level || CAREER_LEVELS.NONE;
     const bonusDepth = getBonusDepth(level);
 
-    if (bonusDepth >= depth) {
-      await User.findByIdAndUpdate(sponsor._id, {
+    if (bonusDepth >= depth && isActiveMember(matrixParent)) {
+      await User.findByIdAndUpdate(matrixParent._id, {
         $inc: {
           walletBalance: bonusAmount,
           totalEarning: bonusAmount,
@@ -56,22 +59,24 @@ export async function distributeLicenseCareerBonus({ payerUserId, licenseFee }) 
       });
 
       beneficiaries.push({
-        userId: sponsor._id,
-        username: sponsor.username,
-        fullName: sponsor.fullName || "",
-        email: sponsor.email,
+        userId: matrixParent._id,
+        username: matrixParent.username,
+        fullName: matrixParent.fullName || "",
+        email: matrixParent.email,
         career: level,
         depth,
+        source: "matrix",
         amount: bonusAmount,
       });
     }
 
-    sponsorId = sponsor.sponsor;
+    matrixParentId = matrixParent.matrixParent;
     depth += 1;
   }
 
   return {
     rate: CAREER_LICENSE_BONUS_RATE,
+    maxDepth: CAREER_LICENSE_BONUS_MAX_DEPTH,
     licenseFee: amount,
     bonusAmount,
     totalDistributed: roundMoney(bonusAmount * beneficiaries.length),

@@ -21,7 +21,7 @@ export const CAREER_ORDER = [
 export const CAREER_RULES = {
   BRONZ: {
     personalActive: 2,
-    bonusDepth: 13,
+    bonusDepth: 15,
     monthlyIncomeCap: 245000,
   },
   GUMUS: {
