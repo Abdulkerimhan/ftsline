@@ -16,6 +16,7 @@ const emptyProductForm = {
   category: "",
   description: "",
   imagesText: "",
+  imageFiles: [],
   priceNormal: "",
   priceLicensed: "",
   stock: "Sinirsiz",
@@ -169,6 +170,7 @@ export default function SuperAdminPanel() {
       category: product.category || "",
       description: product.description || "",
       imagesText: Array.isArray(product.images) ? product.images.join("\n") : "",
+      imageFiles: [],
       priceNormal: product.priceNormal ?? "",
       priceLicensed: product.priceLicensed ?? "",
       stock: product.stock || "Sinirsiz",
@@ -185,11 +187,16 @@ export default function SuperAdminPanel() {
   }
 
   function handleProductChange(e) {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked, files } = e.target;
 
     setProductForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "file"
+            ? Array.from(files || [])
+            : value,
     }));
   }
 
@@ -205,22 +212,22 @@ export default function SuperAdminPanel() {
       return;
     }
 
-    const images = productForm.imagesText
+    const existingImages = productForm.imagesText
       .split("\n")
       .map((img) => img.trim())
       .filter(Boolean);
 
-    const payload = {
-      name: productForm.name.trim(),
-      brand: productForm.brand.trim(),
-      category: productForm.category.trim(),
-      description: productForm.description.trim(),
-      images,
-      priceNormal: Number(productForm.priceNormal),
-      priceLicensed: Number(productForm.priceLicensed),
-      stock: productForm.stock || "Sinirsiz",
-      isActive: productForm.isActive,
-    };
+    const payload = new FormData();
+    payload.append("name", productForm.name.trim());
+    payload.append("brand", productForm.brand.trim());
+    payload.append("category", productForm.category.trim());
+    payload.append("description", productForm.description.trim());
+    payload.append("priceNormal", productForm.priceNormal);
+    payload.append("priceLicensed", productForm.priceLicensed);
+    payload.append("stock", productForm.stock || "Sinirsiz");
+    payload.append("isActive", String(productForm.isActive));
+    existingImages.forEach((imageUrl) => payload.append("existingImages", imageUrl));
+    productForm.imageFiles.forEach((file) => payload.append("images", file));
 
     const path = editingProduct
       ? `/admin/products/${editingProduct._id}`
@@ -232,7 +239,7 @@ export default function SuperAdminPanel() {
       path,
       {
         method,
-        body: JSON.stringify(payload),
+        body: payload,
       },
       null
     );
@@ -1000,10 +1007,26 @@ export default function SuperAdminPanel() {
 
                 <textarea
                   name="imagesText"
-                  placeholder={`Gorsel URL'leri\nHer satira 1 gorsel linki yaz\nOrnek: /uploads/products/urun1.jpg`}
+                  placeholder={`Mevcut gorsel URL'leri\nHer satira 1 gorsel linki yaz\nOrnek: /uploads/products/urun1.jpg`}
                   value={productForm.imagesText}
                   onChange={handleProductChange}
                 />
+
+                <label className="super-file-upload">
+                  <span>Bilgisayardan gorsel sec</span>
+                  <input
+                    type="file"
+                    name="imageFiles"
+                    accept="image/*"
+                    multiple
+                    onChange={handleProductChange}
+                  />
+                  <small>
+                    {productForm.imageFiles.length
+                      ? `${productForm.imageFiles.length} gorsel secildi`
+                      : "JPG, PNG veya WebP secilebilir"}
+                  </small>
+                </label>
 
                 <label className="super-check">
                   <input
