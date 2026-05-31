@@ -345,6 +345,19 @@ export default function SuperAdminPanel() {
     await loadAll();
   }
 
+  function getPaymentStatusLabel(paymentStatus) {
+    if (paymentStatus === "paid") return "Odendi";
+    if (paymentStatus === "failed") return "Basarisiz";
+    if (paymentStatus === "refunded") return "Iade";
+    return "Odeme Bekliyor";
+  }
+
+  function getPaymentStatusClass(paymentStatus) {
+    if (paymentStatus === "paid") return "paid";
+    if (paymentStatus === "failed") return "failed";
+    if (paymentStatus === "refunded") return "refunded";
+    return "pending";
+  }
   async function updateOrderPaymentStatus(order, paymentStatus) {
     const result = await request(
       `/orders/admin/${order._id}/payment`,
@@ -683,8 +696,15 @@ export default function SuperAdminPanel() {
                     <td>{Number(order.total || 0).toLocaleString("tr-TR")} TL</td>
 
                     <td>
+                      <span
+                        className={`super-payment-badge ${getPaymentStatusClass(
+                          order.paymentStatus
+                        )}`}
+                      >
+                        {getPaymentStatusLabel(order.paymentStatus)}
+                      </span>
                       <select
-                        className="super-select"
+                        className="super-select super-payment-select"
                         value={order.paymentStatus || "pending"}
                         onChange={(e) => updateOrderPaymentStatus(order, e.target.value)}
                       >
@@ -956,3 +976,4 @@ export default function SuperAdminPanel() {
     </div>
   );
 }
+

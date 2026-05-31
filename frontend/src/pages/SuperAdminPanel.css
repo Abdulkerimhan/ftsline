@@ -596,3 +596,41 @@
   color: #64748b;
   font-size: 12px;
 }
+
+.super-payment-badge {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.super-payment-badge.pending {
+  background: #fff1c2;
+  color: #92400e;
+  border: 1px solid #facc15;
+}
+
+.super-payment-badge.paid {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.super-payment-badge.failed {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.super-payment-badge.refunded {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.super-payment-select {
+  min-width: 120px;
+}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { getMe } from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import "./Dashboard.css";
@@ -28,10 +28,10 @@ export default function Dashboard() {
     Number(value || 0).toLocaleString(language === "tr" ? "tr-TR" : "en-US");
 
   const formatCareer = (career) => {
-    if (!career) return "Başlangıç";
+    if (!career) return "BaÅŸlangÄ±Ã§";
 
     if (typeof career === "object") {
-      return career.level || career.name || career.title || "Başlangıç";
+      return career.level || career.name || career.title || "BaÅŸlangÄ±Ã§";
     }
 
     return career;
@@ -67,10 +67,10 @@ export default function Dashboard() {
   const earningsChart = useMemo(
     () => [
       { label: language === "tr" ? "Ocak" : "January", value: 3200 },
-      { label: language === "tr" ? "Şubat" : "February", value: 4100 },
+      { label: language === "tr" ? "Åubat" : "February", value: 4100 },
       { label: language === "tr" ? "Mart" : "March", value: 5200 },
       { label: language === "tr" ? "Nisan" : "April", value: 6850 },
-      { label: language === "tr" ? "Mayıs" : "May", value: 6100 },
+      { label: language === "tr" ? "MayÄ±s" : "May", value: 6100 },
       { label: language === "tr" ? "Haziran" : "June", value: 7900 },
     ],
     [language]
@@ -163,7 +163,7 @@ export default function Dashboard() {
         id: 1,
         title: safeText(
           earningsT?.teamEarning,
-          language === "tr" ? "Takım Kazancı" : "Team Earning"
+          language === "tr" ? "TakÄ±m KazancÄ±" : "Team Earning"
         ),
         source: "ahmet_team",
         amount: 1250,
@@ -193,9 +193,9 @@ export default function Dashboard() {
         id: 4,
         title: safeText(
           earningsT?.salesProfit,
-          language === "tr" ? "Satış Kârı" : "Sales Profit"
+          language === "tr" ? "SatÄ±ÅŸ KÃ¢rÄ±" : "Sales Profit"
         ),
-        source: language === "tr" ? "fatma_01 siparişi" : "fatma_01 order",
+        source: language === "tr" ? "fatma_01 sipariÅŸi" : "fatma_01 order",
         amount: 640,
         date: "2026-04-08",
       },
@@ -252,12 +252,12 @@ export default function Dashboard() {
       {
         date: "2026-04-12",
         amount: 720,
-        note: language === "tr" ? "Sağ kol hareketi" : "Right branch movement",
+        note: language === "tr" ? "SaÄŸ kol hareketi" : "Right branch movement",
       },
       {
         date: "2026-04-13",
         amount: 350,
-        note: language === "tr" ? "Alt seviye eşleşmesi" : "Lower level match",
+        note: language === "tr" ? "Alt seviye eÅŸleÅŸmesi" : "Lower level match",
       },
       {
         date: "2026-04-14",
@@ -289,12 +289,12 @@ export default function Dashboard() {
       const data = await res.json().catch(() => []);
 
       if (!res.ok) {
-        throw new Error(data.message || "Siparişler alınamadı");
+        throw new Error(data.message || "SipariÅŸler alÄ±namadÄ±");
       }
 
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Siparişler alınamadı:", error);
+      console.error("SipariÅŸler alÄ±namadÄ±:", error);
       setOrders([]);
     } finally {
       setOrdersLoading(false);
@@ -340,7 +340,7 @@ export default function Dashboard() {
           }));
         }
       } catch (error) {
-        console.error("Dashboard kullanıcı verisi alınamadı:", error);
+        console.error("Dashboard kullanÄ±cÄ± verisi alÄ±namadÄ±:", error);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -367,8 +367,8 @@ export default function Dashboard() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (error) {
-      console.error("Kopyalama hatası:", error);
-      alert(safeText(profileT?.copyError, "Kopyalama sırasında hata oluştu"));
+      console.error("Kopyalama hatasÄ±:", error);
+      alert(safeText(profileT?.copyError, "Kopyalama sÄ±rasÄ±nda hata oluÅŸtu"));
     }
   };
 
@@ -390,7 +390,7 @@ export default function Dashboard() {
     if (status === "completed") {
       return safeText(
         ordersT?.completed,
-        language === "tr" ? "Tamamlandı" : "Completed"
+        language === "tr" ? "TamamlandÄ±" : "Completed"
       );
     }
 
@@ -402,7 +402,7 @@ export default function Dashboard() {
     }
 
     if (status === "cancelled") {
-      return language === "tr" ? "İptal Edildi" : "Cancelled";
+      return language === "tr" ? "Ä°ptal Edildi" : "Cancelled";
     }
 
     if (status === "pending") {
@@ -411,14 +411,14 @@ export default function Dashboard() {
 
     return safeText(
       ordersT?.preparing,
-      language === "tr" ? "Hazırlanıyor" : "Preparing"
+      language === "tr" ? "HazÄ±rlanÄ±yor" : "Preparing"
     );
   };
 
   const getStatusClass = (status) => {
     if (
       status === "completed" ||
-      status === safeText(ordersT?.completed, "Tamamlandı")
+      status === safeText(ordersT?.completed, "TamamlandÄ±")
     ) {
       return "status-completed";
     }
@@ -437,6 +437,27 @@ export default function Dashboard() {
     return "status-preparing";
   };
 
+
+  const getPaymentStatusText = (paymentStatus) => {
+    if (paymentStatus === "paid") return language === "tr" ? "Odendi" : "Paid";
+    if (paymentStatus === "failed") return language === "tr" ? "Basarisiz" : "Failed";
+    if (paymentStatus === "refunded") return language === "tr" ? "Iade" : "Refunded";
+    return language === "tr" ? "Odeme Bekliyor" : "Payment Pending";
+  };
+
+  const getPaymentStatusClass = (paymentStatus) => {
+    if (paymentStatus === "paid") return "payment-paid";
+    if (paymentStatus === "failed") return "payment-failed";
+    if (paymentStatus === "refunded") return "payment-refunded";
+    return "payment-pending";
+  };
+
+  const getPaymentMethodText = (paymentMethod) => {
+    if (paymentMethod === "usdt_trc20") return "USDT TRC20";
+    if (paymentMethod === "bank_transfer") return language === "tr" ? "Havale / EFT" : "Bank Transfer";
+    if (paymentMethod === "cash_on_delivery") return language === "tr" ? "Kapida Odeme" : "Cash on Delivery";
+    return language === "tr" ? "Odeme" : "Payment";
+  };
   const toggleMatrixNode = (nodeId) => {
     setExpandedNodes((prev) => ({
       ...prev,
@@ -474,7 +495,7 @@ export default function Dashboard() {
             <div className="matrix-toggle-text">
               {isExpanded
                 ? safeText(matrixT?.close, "Kapat")
-                : safeText(matrixT?.open, "Aç")}
+                : safeText(matrixT?.open, "AÃ§")}
             </div>
           )}
         </button>
@@ -486,7 +507,7 @@ export default function Dashboard() {
                 renderMatrixNode(node.left, level + 1, maxLevel, `${nodeId}-L`)
               ) : (
                 <div className="matrix-empty">
-                  {safeText(matrixT?.emptySlot, "Boş Slot")}
+                  {safeText(matrixT?.emptySlot, "BoÅŸ Slot")}
                 </div>
               )}
             </div>
@@ -496,7 +517,7 @@ export default function Dashboard() {
                 renderMatrixNode(node.right, level + 1, maxLevel, `${nodeId}-R`)
               ) : (
                 <div className="matrix-empty">
-                  {safeText(matrixT?.emptySlot, "Boş Slot")}
+                  {safeText(matrixT?.emptySlot, "BoÅŸ Slot")}
                 </div>
               )}
             </div>
@@ -526,7 +547,7 @@ export default function Dashboard() {
             <span className="uni-toggle-text">
               {isExpanded
                 ? safeText(unilevelT?.close, "Kapat")
-                : safeText(unilevelT?.open, "Aç")}
+                : safeText(unilevelT?.open, "AÃ§")}
             </span>
           )}
         </button>
@@ -550,16 +571,16 @@ export default function Dashboard() {
         <div className="dashboard-hero-top">
           <div>
             <div className="dashboard-hero-badge">
-              {safeText(dashboardT?.userPanel, "Kullanıcı Paneli")}
+              {safeText(dashboardT?.userPanel, "KullanÄ±cÄ± Paneli")}
             </div>
             <h1 className="dashboard-hero-title">
-              {safeText(dashboardT?.welcome, "Hoş geldin")},{" "}
-              {user?.username || user?.fullName || "Kullanıcı"}
+              {safeText(dashboardT?.welcome, "HoÅŸ geldin")},{" "}
+              {user?.username || user?.fullName || "KullanÄ±cÄ±"}
             </h1>
             <p className="dashboard-hero-text">
               {safeText(
                 dashboardT?.heroText,
-                "Paneline hoş geldin. Buradan kazançlarını, ağını ve siparişlerini takip edebilirsin."
+                "Paneline hoÅŸ geldin. Buradan kazanÃ§larÄ±nÄ±, aÄŸÄ±nÄ± ve sipariÅŸlerini takip edebilirsin."
               )}
             </p>
           </div>
@@ -585,19 +606,19 @@ export default function Dashboard() {
             {safeText(statsT?.balance, "Bakiye")}
           </div>
           <div className="dashboard-stat-value">
-            {formatMoney(summary.balance)} ₺
+            {formatMoney(summary.balance)} â‚º
           </div>
           <div className="dashboard-stat-sub">
-            {safeText(statsT?.balanceSub, "Güncel kullanılabilir bakiyen")}
+            {safeText(statsT?.balanceSub, "GÃ¼ncel kullanÄ±labilir bakiyen")}
           </div>
         </div>
 
         <div className="dashboard-card dashboard-stat-card">
           <div className="dashboard-stat-title">
-            {safeText(statsT?.monthEarning, "Aylık Kazanç")}
+            {safeText(statsT?.monthEarning, "AylÄ±k KazanÃ§")}
           </div>
           <div className="dashboard-stat-value">
-            {formatMoney(summary.monthEarning)} ₺
+            {formatMoney(summary.monthEarning)} â‚º
           </div>
           <div className="dashboard-stat-sub">
             {safeText(statsT?.monthEarningSub, "Bu ay elde edilen gelir")}
@@ -606,22 +627,22 @@ export default function Dashboard() {
 
         <div className="dashboard-card dashboard-stat-card">
           <div className="dashboard-stat-title">
-            {safeText(statsT?.totalEarning, "Toplam Kazanç")}
+            {safeText(statsT?.totalEarning, "Toplam KazanÃ§")}
           </div>
           <div className="dashboard-stat-value">
-            {formatMoney(summary.totalEarning)} ₺
+            {formatMoney(summary.totalEarning)} â‚º
           </div>
           <div className="dashboard-stat-sub">
             {safeText(
               statsT?.totalEarningSub,
-              "Tüm zamanlardaki toplam gelir"
+              "TÃ¼m zamanlardaki toplam gelir"
             )}
           </div>
         </div>
 
         <div className="dashboard-card dashboard-stat-card">
           <div className="dashboard-stat-title">
-            {safeText(statsT?.teamCount, "Takım Sayısı")}
+            {safeText(statsT?.teamCount, "TakÄ±m SayÄ±sÄ±")}
           </div>
           <div className="dashboard-stat-value">{summary.teamCount}</div>
           <div className="dashboard-stat-sub">
@@ -646,7 +667,7 @@ export default function Dashboard() {
             onClick={copyReferral}
           >
             {copied
-              ? safeText(profileT?.copied, "Kopyalandı")
+              ? safeText(profileT?.copied, "KopyalandÄ±")
               : safeText(profileT?.copyLink, "Linki Kopyala")}
           </button>
         </div>
@@ -660,12 +681,12 @@ export default function Dashboard() {
         <div className="dashboard-section-head">
           <div>
             <h2 className="dashboard-section-title">
-              {safeText(earningsT?.chartTitle, "Kazanç Grafiği")}
+              {safeText(earningsT?.chartTitle, "KazanÃ§ GrafiÄŸi")}
             </h2>
             <p className="dashboard-section-text">
               {safeText(
                 earningsT?.chartText,
-                "Son aylardaki gelir dağılımını inceleyebilirsin."
+                "Son aylardaki gelir daÄŸÄ±lÄ±mÄ±nÄ± inceleyebilirsin."
               )}
             </p>
           </div>
@@ -679,7 +700,7 @@ export default function Dashboard() {
           {earningsChart.map((item) => (
             <div key={item.label} className="dashboard-chart-item">
               <div className="dashboard-chart-value">
-                {formatMoney(item.value)} ₺
+                {formatMoney(item.value)} â‚º
               </div>
 
               <div
@@ -708,7 +729,7 @@ export default function Dashboard() {
               </div>
 
               <div className="dashboard-amount-positive">
-                + {formatMoney(item.amount)} ₺
+                + {formatMoney(item.amount)} â‚º
               </div>
             </div>
           ))}
@@ -722,12 +743,12 @@ export default function Dashboard() {
       <div className="dashboard-card">
         <div className="dashboard-section-head-col">
           <h2 className="dashboard-section-title">
-            {safeText(unilevelT?.title, "Ünilevel Ağı")}
+            {safeText(unilevelT?.title, "Ãœnilevel AÄŸÄ±")}
           </h2>
           <p className="dashboard-section-text">
             {safeText(
               unilevelT?.text,
-              "Alt ekibindeki üyeleri ve katkılarını görüntüleyebilirsin."
+              "Alt ekibindeki Ã¼yeleri ve katkÄ±larÄ±nÄ± gÃ¶rÃ¼ntÃ¼leyebilirsin."
             )}
           </p>
         </div>
@@ -744,7 +765,7 @@ export default function Dashboard() {
                   {safeText(unilevelT?.level, "Seviye")}: {member.level}
                 </div>
                 <div className="dashboard-list-sub">
-                  {safeText(unilevelT?.joinDate, "Katılım Tarihi")}:{" "}
+                  {safeText(unilevelT?.joinDate, "KatÄ±lÄ±m Tarihi")}:{" "}
                   {member.joinDate}
                 </div>
               </div>
@@ -762,7 +783,7 @@ export default function Dashboard() {
               </div>
 
               <div className="dashboard-amount-positive">
-                + {formatMoney(member.contribution)} ₺
+                + {formatMoney(member.contribution)} â‚º
               </div>
             </div>
           ))}
@@ -771,12 +792,12 @@ export default function Dashboard() {
         <div className="dashboard-card-lite">
           <div className="dashboard-section-head-col">
             <h3 className="dashboard-sub-title">
-              {safeText(unilevelT?.treeTitle, "Ünilevel Ağaç")}
+              {safeText(unilevelT?.treeTitle, "Ãœnilevel AÄŸaÃ§")}
             </h3>
             <p className="dashboard-section-text">
               {safeText(
                 unilevelT?.treeText,
-                "Ağacını katmanlı şekilde görüntüle."
+                "AÄŸacÄ±nÄ± katmanlÄ± ÅŸekilde gÃ¶rÃ¼ntÃ¼le."
               )}
             </p>
           </div>
@@ -792,12 +813,12 @@ export default function Dashboard() {
       <div className="dashboard-card">
         <div className="dashboard-section-head-col">
           <h2 className="dashboard-section-title">
-            {safeText(matrixT?.title, "Matrix Ağı")}
+            {safeText(matrixT?.title, "Matrix AÄŸÄ±")}
           </h2>
           <p className="dashboard-section-text">
             {safeText(
               matrixT?.text,
-              "2x15 matrix yapını ve günlük gelir hareketlerini takip et."
+              "2x15 matrix yapÄ±nÄ± ve gÃ¼nlÃ¼k gelir hareketlerini takip et."
             )}
           </p>
         </div>
@@ -806,17 +827,17 @@ export default function Dashboard() {
           <div className="network-panel-head">
             <div>
               <h3 className="network-panel-title">
-                {safeText(matrixT?.treeTitle, "Matrix Ağacı")}
+                {safeText(matrixT?.treeTitle, "Matrix AÄŸacÄ±")}
               </h3>
               <p className="network-panel-text">
                 {safeText(
                   matrixT?.treeText,
-                  "Ağ yapını katman katman inceleyebilirsin."
+                  "AÄŸ yapÄ±nÄ± katman katman inceleyebilirsin."
                 )}
               </p>
             </div>
             <div className="dashboard-pill">
-              {safeText(matrixT?.start2, "2 ile Başlar")}
+              {safeText(matrixT?.start2, "2 ile BaÅŸlar")}
             </div>
           </div>
 
@@ -829,7 +850,7 @@ export default function Dashboard() {
           <div className="network-stats">
             <div className="network-mini-card">
               <div className="network-mini-label">
-                {safeText(matrixT?.maxWidth, "Maksimum Genişlik")}
+                {safeText(matrixT?.maxWidth, "Maksimum GeniÅŸlik")}
               </div>
               <div className="network-mini-value">2</div>
             </div>
@@ -843,7 +864,7 @@ export default function Dashboard() {
 
             <div className="network-mini-card">
               <div className="network-mini-label">
-                {safeText(matrixT?.startLevel, "Başlangıç Seviye")}
+                {safeText(matrixT?.startLevel, "BaÅŸlangÄ±Ã§ Seviye")}
               </div>
               <div className="network-mini-value">2+</div>
             </div>
@@ -853,12 +874,12 @@ export default function Dashboard() {
         <div className="dashboard-card-lite">
           <div className="dashboard-section-head-col">
             <h3 className="dashboard-sub-title">
-              {safeText(matrixT?.dailyTitle, "Günlük Matrix Geliri")}
+              {safeText(matrixT?.dailyTitle, "GÃ¼nlÃ¼k Matrix Geliri")}
             </h3>
             <p className="dashboard-section-text">
               {safeText(
                 matrixT?.dailyText,
-                "Gün bazlı matrix kazançlarını inceleyebilirsin."
+                "GÃ¼n bazlÄ± matrix kazanÃ§larÄ±nÄ± inceleyebilirsin."
               )}
             </p>
           </div>
@@ -875,7 +896,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="dashboard-amount-positive">
-                  + {formatMoney(item.amount)} ₺
+                  + {formatMoney(item.amount)} â‚º
                 </div>
               </div>
             ))}
@@ -890,12 +911,12 @@ export default function Dashboard() {
       <div className="dashboard-card">
         <div className="dashboard-section-head-col">
           <h2 className="dashboard-section-title">
-            {safeText(ordersT?.title, "Siparişlerim")}
+            {safeText(ordersT?.title, "SipariÅŸlerim")}
           </h2>
           <p className="dashboard-section-text">
             {safeText(
               ordersT?.text,
-              "Geçmiş ve güncel siparişlerini buradan takip et."
+              "GeÃ§miÅŸ ve gÃ¼ncel sipariÅŸlerini buradan takip et."
             )}
           </p>
         </div>
@@ -904,25 +925,27 @@ export default function Dashboard() {
           {ordersLoading ? (
             <div className="dashboard-empty-text">
               {language === "tr"
-                ? "Siparişler yükleniyor..."
+                ? "SipariÅŸler yÃ¼kleniyor..."
                 : "Loading orders..."}
             </div>
           ) : orders.length === 0 ? (
             <div className="dashboard-empty-text">
               {language === "tr"
-                ? "Henüz siparişin yok."
+                ? "HenÃ¼z sipariÅŸin yok."
                 : "You do not have any orders yet."}
             </div>
           ) : (
             orders.map((order) => {
               const firstItem = order.items?.[0];
               const productName =
-                firstItem?.name || (language === "tr" ? "Sipariş" : "Order");
+                firstItem?.name || (language === "tr" ? "SipariÅŸ" : "Order");
 
               const extraCount =
                 order.items?.length > 1 ? ` +${order.items.length - 1}` : "";
 
               const statusText = getStatusText(order.status);
+              const paymentStatusText = getPaymentStatusText(order.paymentStatus);
+              const paymentMethodText = getPaymentMethodText(order.paymentMethod);
 
               return (
                 <div key={order._id} className="dashboard-order-row">
@@ -937,7 +960,7 @@ export default function Dashboard() {
                   </div>
 
                   <div className="dashboard-order-price">
-                    {formatMoney(order.total)} ₺
+                    {formatMoney(order.total)} â‚º
                   </div>
 
                   <div className="dashboard-order-date">
@@ -948,7 +971,7 @@ export default function Dashboard() {
                       : "-"}
                   </div>
 
-                  <div>
+                  <div className="dashboard-order-statuses">
                     <span
                       className={`dashboard-status ${getStatusClass(
                         order.status
@@ -956,6 +979,14 @@ export default function Dashboard() {
                     >
                       {statusText}
                     </span>
+                    <span
+                      className={`dashboard-payment-status ${getPaymentStatusClass(
+                        order.paymentStatus
+                      )}`}
+                    >
+                      {paymentStatusText}
+                    </span>
+                    <small>{paymentMethodText}</small>
                   </div>
                 </div>
               );
@@ -971,7 +1002,7 @@ export default function Dashboard() {
       <div className="dashboard-left-col">
         <div className="dashboard-card">
           <h2 className="dashboard-section-title">
-            {safeText(profileT?.editTitle, "Profili Düzenle")}
+            {safeText(profileT?.editTitle, "Profili DÃ¼zenle")}
           </h2>
 
           <form onSubmit={handleProfileSave} className="dashboard-form">
@@ -1016,14 +1047,14 @@ export default function Dashboard() {
 
             <div>
               <div className="dashboard-input-label">
-                {safeText(profileT?.city, "Şehir")}
+                {safeText(profileT?.city, "Åehir")}
               </div>
               <input
                 name="city"
                 value={profileForm.city}
                 onChange={handleProfileChange}
                 className="dashboard-input"
-                placeholder={safeText(profileT?.city, "Şehir")}
+                placeholder={safeText(profileT?.city, "Åehir")}
               />
             </div>
 
@@ -1042,7 +1073,7 @@ export default function Dashboard() {
 
             <div>
               <div className="dashboard-input-label">
-                {safeText(profileT?.newPassword, "Yeni Şifre")}
+                {safeText(profileT?.newPassword, "Yeni Åifre")}
               </div>
               <input
                 name="password"
@@ -1050,7 +1081,7 @@ export default function Dashboard() {
                 value={profileForm.password}
                 onChange={handleProfileChange}
                 className="dashboard-input"
-                placeholder={safeText(profileT?.newPassword, "Yeni Şifre")}
+                placeholder={safeText(profileT?.newPassword, "Yeni Åifre")}
               />
             </div>
 
@@ -1067,13 +1098,13 @@ export default function Dashboard() {
       <div className="dashboard-right-col">
         <div className="dashboard-card">
           <h2 className="dashboard-section-title">
-            {safeText(profileT?.summaryTitle, "Profil Özeti")}
+            {safeText(profileT?.summaryTitle, "Profil Ã–zeti")}
           </h2>
 
           <div className="dashboard-profile-summary">
             <div>
               <div className="dashboard-input-label">
-                {safeText(profileT?.username, "Kullanıcı Adı")}
+                {safeText(profileT?.username, "KullanÄ±cÄ± AdÄ±")}
               </div>
               <div className="dashboard-summary-value">
                 {user?.username || "-"}
@@ -1121,7 +1152,7 @@ export default function Dashboard() {
         <p className="dashboard-section-text">
           {safeText(
             settingsT?.text,
-            "Hesap ve panel tercihlerini buradan yönetebilirsin."
+            "Hesap ve panel tercihlerini buradan yÃ¶netebilirsin."
           )}
         </p>
       </div>
@@ -1153,7 +1184,7 @@ export default function Dashboard() {
     return (
       <div className="dashboard-loading-wrap">
         <div className="dashboard-loading-card">
-          {safeText(dashboardT?.loading, "Yükleniyor...")}
+          {safeText(dashboardT?.loading, "YÃ¼kleniyor...")}
         </div>
       </div>
     );
@@ -1188,9 +1219,9 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("overview")}
             >
-              <span>🏠</span>
+              <span>ğŸ </span>
               {sidebarOpen && (
-                <span>{safeText(sectionsT?.overview, "Genel Bakış")}</span>
+                <span>{safeText(sectionsT?.overview, "Genel BakÄ±ÅŸ")}</span>
               )}
             </button>
 
@@ -1201,9 +1232,9 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("earnings")}
             >
-              <span>💰</span>
+              <span>ğŸ’°</span>
               {sidebarOpen && (
-                <span>{safeText(sectionsT?.earnings, "Kazançlar")}</span>
+                <span>{safeText(sectionsT?.earnings, "KazanÃ§lar")}</span>
               )}
             </button>
 
@@ -1214,9 +1245,9 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("unilevel")}
             >
-              <span>🌿</span>
+              <span>ğŸŒ¿</span>
               {sidebarOpen && (
-                <span>{safeText(sectionsT?.unilevel, "Ünilevel")}</span>
+                <span>{safeText(sectionsT?.unilevel, "Ãœnilevel")}</span>
               )}
             </button>
 
@@ -1227,7 +1258,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("matrix")}
             >
-              <span>🧩</span>
+              <span>ğŸ§©</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.matrix, "Matrix")}</span>
               )}
@@ -1240,9 +1271,9 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("orders")}
             >
-              <span>🛒</span>
+              <span>ğŸ›’</span>
               {sidebarOpen && (
-                <span>{safeText(sectionsT?.orders, "Siparişler")}</span>
+                <span>{safeText(sectionsT?.orders, "SipariÅŸler")}</span>
               )}
             </button>
 
@@ -1253,7 +1284,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("profile")}
             >
-              <span>👤</span>
+              <span>ğŸ‘¤</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.profile, "Profil")}</span>
               )}
@@ -1266,7 +1297,7 @@ export default function Dashboard() {
               }`}
               onClick={() => setActiveSection("settings")}
             >
-              <span>⚙️</span>
+              <span>âš™ï¸</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.settings, "Ayarlar")}</span>
               )}
@@ -1282,7 +1313,7 @@ export default function Dashboard() {
           >
             {sidebarOpen
               ? safeText(sidebarT?.collapse, "Daralt")
-              : safeText(sidebarT?.expand, "Genişlet")}
+              : safeText(sidebarT?.expand, "GeniÅŸlet")}
           </button>
         </div>
       </aside>
@@ -1294,12 +1325,12 @@ export default function Dashboard() {
             className="dashboard-mobile-menu-btn"
             onClick={() => setSidebarOpen((prev) => !prev)}
           >
-            ☰
+            â˜°
           </button>
 
           <div className="dashboard-topbar-title">
-            {safeText(dashboardT?.welcome, "Hoş geldin")},{" "}
-            {user?.username || "Kullanıcı"}
+            {safeText(dashboardT?.welcome, "HoÅŸ geldin")},{" "}
+            {user?.username || "KullanÄ±cÄ±"}
           </div>
         </div>
 
