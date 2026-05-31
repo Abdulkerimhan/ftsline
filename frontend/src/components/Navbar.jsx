@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+﻿import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getCartCount } from "../utils/cart.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
@@ -52,6 +52,9 @@ export default function Navbar() {
   const isAdmin = useMemo(() => {
     return user?.role === "admin" || user?.role === "superadmin";
   }, [user]);
+
+  const isSuperAdmin = user?.role === "superadmin";
+  const adminPath = isSuperAdmin ? "/superadmin" : "/admin";
 
   const isLoggedIn = !!token && !!user;
 
@@ -139,7 +142,7 @@ export default function Navbar() {
             <div>
               <strong>FTSLine</strong>
               <div style={{ fontSize: "10px" }}>
-                {common.slogan || "GELECEĞE YÖN VER"}
+                {common.slogan || "GELECEÄE YÃ–N VER"}
               </div>
             </div>
           </Link>
@@ -149,13 +152,13 @@ export default function Navbar() {
               {common.home || "Anasayfa"}
             </Link>
             <Link to="/products" style={navLinkStyle("/products")}>
-              {common.products || "Ürünler"}
+              {common.products || "ÃœrÃ¼nler"}
             </Link>
             <Link to="/about" style={navLinkStyle("/about")}>
-              {common.about || "Hakkımızda"}
+              {common.about || "HakkÄ±mÄ±zda"}
             </Link>
             <Link to="/contact" style={navLinkStyle("/contact")}>
-              {common.contact || "İletişim"}
+              {common.contact || "Ä°letiÅŸim"}
             </Link>
 
             <Link to="/cart" style={navLinkStyle("/cart")}>
@@ -163,18 +166,18 @@ export default function Navbar() {
             </Link>
 
             {isLoggedIn && isAdmin && (
-              <Link to="/admin" style={navLinkStyle("/admin")}>
-                {common.admin || "Admin"}
+              <Link to={adminPath} style={navLinkStyle(adminPath)}>
+                {isSuperAdmin ? "S\u00fcper Admin" : common.admin || "Admin"}
               </Link>
             )}
 
             {!isLoggedIn ? (
               <>
                 <Link to="/login" style={navLinkStyle("/login")}>
-                  {common.login || "Giriş"}
+                  {common.login || "GiriÅŸ"}
                 </Link>
                 <Link to="/register" style={navLinkStyle("/register")}>
-                  {common.register || "Kayıt Ol"}
+                  {common.register || "KayÄ±t Ol"}
                 </Link>
               </>
             ) : (
@@ -195,7 +198,7 @@ export default function Navbar() {
                     fontWeight: "600",
                   }}
                 >
-                  {common.logout || "Çıkış"}
+                  {common.logout || "Ã‡Ä±kÄ±ÅŸ"}
                 </button>
               </>
             )}
