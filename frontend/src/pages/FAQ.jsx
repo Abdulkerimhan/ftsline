@@ -5,7 +5,7 @@ import "./FAQ.css";
 const faqContent = {
   tr: {
     badge: "SSS",
-    title: "SSS - Sorular ve Cevaplar",
+    title: "Sorular ve Cevaplar",
     subtitle: "FTSLine hesap, lisans, siparis ve odeme surecleri hakkinda en cok merak edilenler.",
     search: "Sorularda ara...",
     empty: "Aramana uygun soru bulunamadi.",
@@ -127,4 +127,5 @@ export default function FAQ() {
     </main>
   );
 }
+
 
