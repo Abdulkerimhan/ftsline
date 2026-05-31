@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+﻿import { Routes, Route, Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar.jsx";
 import Home from "./pages/Home.jsx";
@@ -10,6 +10,7 @@ import Products from "./pages/Products.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
+import FAQ from "./pages/FAQ.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
 import Cart from "./pages/Cart.jsx";
 import Payment from "./pages/Payment.jsx";
@@ -70,6 +71,7 @@ export default function App() {
 
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<FAQ />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -110,4 +112,6 @@ export default function App() {
     </>
   );
 }
+
+
 

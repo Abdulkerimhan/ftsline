@@ -160,6 +160,9 @@ export default function Navbar() {
             <Link to="/contact" style={navLinkStyle("/contact")}>
               {common.contact || "Ä°letiÅŸim"}
             </Link>
+            <Link to="/faq" style={navLinkStyle("/faq")}>
+              {common.faq || "SSS"}
+            </Link>
 
             <Link to="/cart" style={navLinkStyle("/cart")}>
               {common.cart || "Sepet"} ({cartCount})
@@ -210,3 +213,6 @@ export default function Navbar() {
     </nav>
   );
 }
+
+
+

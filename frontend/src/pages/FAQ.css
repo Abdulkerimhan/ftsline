@@ -1,0 +1,136 @@
+﻿.faq-page {
+  min-height: calc(100vh - 80px);
+  background: #f4f7fb;
+  padding: 42px 18px 70px;
+}
+
+.faq-hero,
+.faq-shell {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.faq-hero {
+  margin-bottom: 22px;
+}
+
+.faq-hero span {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #e8eefc;
+  color: #0f3fae;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.faq-hero h1 {
+  margin: 14px 0 8px;
+  color: #0f172a;
+  font-size: 38px;
+  line-height: 1.1;
+}
+
+.faq-hero p {
+  margin: 0;
+  color: #475569;
+  font-size: 16px;
+}
+
+.faq-shell {
+  background: #ffffff;
+  border: 1px solid #e6edf6;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.faq-search {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  padding: 0 14px;
+  margin-bottom: 14px;
+  font-size: 15px;
+  outline: none;
+}
+
+.faq-search:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.faq-list {
+  display: grid;
+  gap: 10px;
+}
+
+.faq-item {
+  border: 1px solid #e6edf6;
+  border-radius: 14px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.faq-item button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.faq-item button strong {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  background: #e8eefc;
+  color: #0f3fae;
+  flex: 0 0 28px;
+}
+
+.faq-item p {
+  margin: 0;
+  padding: 0 16px 16px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.faq-item.open {
+  background: #ffffff;
+  border-color: #c7d7f4;
+}
+
+.faq-empty {
+  padding: 18px;
+  color: #64748b;
+  text-align: center;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .faq-page {
+    padding: 28px 12px 52px;
+  }
+
+  .faq-hero h1 {
+    font-size: 30px;
+  }
+
+  .faq-shell {
+    padding: 12px;
+    border-radius: 14px;
+  }
+}
