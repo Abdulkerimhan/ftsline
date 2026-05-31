@@ -1,4 +1,4 @@
-.payment-page {
+﻿.payment-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #f4f7fb 0%, #ffffff 100%);
   padding: 40px 20px;
@@ -401,4 +401,53 @@
   .payment-methods {
     grid-template-columns: 1fr;
   }
+}
+.payment-bank-box {
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.payment-bank-row,
+.payment-bank-address {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.payment-bank-row span,
+.payment-bank-address span {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.payment-bank-address code {
+  display: block;
+  padding: 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #c7d7f4;
+  color: #0f172a;
+  word-break: break-all;
+  font-size: 13px;
+}
+
+.payment-bank-address button {
+  width: fit-content;
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.payment-bank-address small {
+  color: #1d4ed8;
+  font-weight: 800;
 }

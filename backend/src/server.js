@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -74,7 +74,7 @@ app.use("/uploads", express.static(uploadsRoot));
 
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB bağlandı"))
+  .then(() => console.log("MongoDB baÄŸlandÄ±"))
   .catch((err) => {
     console.log("Mongo hata:", err);
     if (isProduction) {
@@ -101,7 +101,7 @@ app.post("/api/auth/register", async (req, res) => {
 
     if (existingUser) {
       return res.status(400).json({
-        message: "Bu kullanıcı adı veya email zaten kullanılıyor",
+        message: "Bu kullanÄ±cÄ± adÄ± veya email zaten kullanÄ±lÄ±yor",
       });
     }
 
@@ -114,7 +114,7 @@ app.post("/api/auth/register", async (req, res) => {
 
       if (!sponsorUser) {
         return res.status(400).json({
-          message: "Geçersiz referans kullanıcı adı",
+          message: "GeÃ§ersiz referans kullanÄ±cÄ± adÄ±",
         });
       }
     }
@@ -130,7 +130,7 @@ app.post("/api/auth/register", async (req, res) => {
     });
 
     res.json({
-      message: "Kayıt başarılı",
+      message: "KayÄ±t baÅŸarÄ±lÄ±",
       user: {
         _id: user._id,
         username: user.username,
@@ -142,7 +142,7 @@ app.post("/api/auth/register", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Register hatası:", error);
+    console.error("Register hatasÄ±:", error);
     res.status(500).json({ message: "Server hata" });
   }
 });
@@ -162,7 +162,7 @@ app.post("/api/auth/login", async (req, res) => {
     }).select("+passwordHash");
 
     if (!user) {
-      return res.status(401).json({ message: "Kullanıcı bulunamadı" });
+      return res.status(401).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
     }
 
     if (!user.isActive) {
@@ -172,7 +172,7 @@ app.post("/api/auth/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Şifre yanlış" });
+      return res.status(401).json({ message: "Åifre yanlÄ±ÅŸ" });
     }
 
     const token = jwt.sign(
@@ -198,7 +198,7 @@ app.post("/api/auth/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login hatası:", error);
+    console.error("Login hatasÄ±:", error);
     res.status(500).json({ message: "Server hata" });
   }
 });
@@ -222,12 +222,12 @@ app.get("/api/user/me", async (req, res) => {
     );
 
     if (!user) {
-      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+      return res.status(404).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
     }
 
     res.json(user);
   } catch {
-    res.status(401).json({ message: "Geçersiz token" });
+    res.status(401).json({ message: "GeÃ§ersiz token" });
   }
 });
 
@@ -248,13 +248,19 @@ app.get("/api/user/referrals", async (req, res) => {
 
     res.json(referrals);
   } catch (error) {
-    console.error("Referrals hatası:", error);
-    res.status(401).json({ message: "Geçersiz token" });
+    console.error("Referrals hatasÄ±:", error);
+    res.status(401).json({ message: "GeÃ§ersiz token" });
   }
 });
 
 app.get("/api/public/config", (req, res) => {
   res.json({
+    bank: {
+      iban: process.env.BANK_IBAN || "",
+      accountName: process.env.BANK_ACCOUNT_NAME || "",
+      bankName: process.env.BANK_NAME || "",
+      enabled: Boolean(process.env.BANK_IBAN && process.env.BANK_ACCOUNT_NAME),
+    },
     usdt: {
       trc20Address: process.env.USDT_TRC20_ADDRESS || "",
       network: process.env.USDT_NETWORK || "TRC20",
@@ -272,11 +278,11 @@ app.use("/api/superadmin", superadminRoutes);
 /* ================= TEST ================= */
 
 app.get("/api/ping", (req, res) => {
-  res.json({ ok: true, message: "Server çalışıyor" });
+  res.json({ ok: true, message: "Server Ã§alÄ±ÅŸÄ±yor" });
 });
 
 /* ================= SERVER ================= */
 
 app.listen(PORT, () => {
-  console.log(`Server çalışıyor: http://localhost:${PORT}`);
+  console.log(`Server Ã§alÄ±ÅŸÄ±yor: http://localhost:${PORT}`);
 });

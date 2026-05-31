@@ -21,6 +21,13 @@ export default function Payment() {
         paymentInfoTitle: "Odeme onayi admin tarafindan yapilir",
         paymentMethod: "Odeme Yontemi",
         bankTransfer: "Havale / EFT",
+        bankIban: "IBAN",
+        bankName: "Banka",
+        bankAccountName: "Alici Adi",
+        bankProof: "Dekont / Aciklama",
+        bankProofPlaceholder: "Ornek: EFT referans no veya dekont notu",
+        copyIban: "IBAN Kopyala",
+        bankUnavailable: "IBAN bilgisi henuz tanimlanmamis. Lutfen diger odeme yontemini secin.",
         usdtTrc20: "USDT TRC20",
         usdtAddress: "USDT TRC20 Cuzdan Adresi",
         usdtNetwork: "Ag",
@@ -74,6 +81,13 @@ export default function Payment() {
         paymentInfoTitle: "Payment is approved by admin",
         paymentMethod: "Payment Method",
         bankTransfer: "Bank Transfer",
+        bankIban: "IBAN",
+        bankName: "Bank",
+        bankAccountName: "Account Name",
+        bankProof: "Receipt / Reference",
+        bankProofPlaceholder: "Example: EFT reference number or receipt note",
+        copyIban: "Copy IBAN",
+        bankUnavailable: "Bank transfer details are not configured yet. Please choose another payment method.",
         usdtTrc20: "USDT TRC20",
         usdtAddress: "USDT TRC20 Wallet Address",
         usdtNetwork: "Network",
@@ -151,7 +165,7 @@ export default function Payment() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [publicConfig, setPublicConfig] = useState({ usdt: { trc20Address: "", network: "TRC20", enabled: false } });
+  const [publicConfig, setPublicConfig] = useState({ bank: { iban: "", accountName: "", bankName: "", enabled: false }, usdt: { trc20Address: "", network: "TRC20", enabled: false } });
   const [copyMsg, setCopyMsg] = useState("");
 
   const subtotal = cart.reduce((sum, item) => {
@@ -175,12 +189,12 @@ export default function Payment() {
       try {
         const res = await fetch(`${API}/public/config`);
         const data = await res.json().catch(() => ({}));
-        if (alive && data?.usdt) {
+        if (alive && (data?.bank || data?.usdt)) {
           setPublicConfig(data);
         }
       } catch {
         if (alive) {
-          setPublicConfig({ usdt: { trc20Address: "", network: "TRC20", enabled: false } });
+          setPublicConfig({ bank: { iban: "", accountName: "", bankName: "", enabled: false }, usdt: { trc20Address: "", network: "TRC20", enabled: false } });
         }
       }
     }
@@ -245,17 +259,24 @@ export default function Payment() {
   }
 
 
-  async function copyUsdtAddress() {
-    const address = publicConfig?.usdt?.trc20Address || "";
-    if (!address) return;
+  async function copyPaymentValue(value) {
+    if (!value) return;
 
     try {
-      await navigator.clipboard.writeText(address);
+      await navigator.clipboard.writeText(value);
       setCopyMsg(t.copied);
       setTimeout(() => setCopyMsg(""), 1400);
     } catch {
-      setCopyMsg(address);
+      setCopyMsg(value);
     }
+  }
+
+  function copyBankIban() {
+    copyPaymentValue(publicConfig?.bank?.iban || "");
+  }
+
+  function copyUsdtAddress() {
+    copyPaymentValue(publicConfig?.usdt?.trc20Address || "");
   }
   async function createOrder() {
     const token = sessionStorage.getItem("accessToken");
@@ -279,7 +300,7 @@ export default function Payment() {
       shippingPrice: shipping,
       total,
       paymentMethod: form.paymentMethod,
-      paymentProof: form.paymentMethod === "usdt_trc20" ? form.paymentProof.trim() : "",
+      paymentProof: ["bank_transfer", "usdt_trc20"].includes(form.paymentMethod) ? form.paymentProof.trim() : "",
     };
 
     const res = await fetch(`${API}/orders`, {
@@ -477,6 +498,43 @@ export default function Payment() {
                 <p>{t.paymentInfoText}</p>
               </div>
 
+              {form.paymentMethod === "bank_transfer" && (
+                <div className="payment-bank-box">
+                  {publicConfig?.bank?.iban ? (
+                    <>
+                      <div className="payment-bank-row">
+                        <span>{t.bankName}</span>
+                        <strong>{publicConfig.bank.bankName || "-"}</strong>
+                      </div>
+
+                      <div className="payment-bank-row">
+                        <span>{t.bankAccountName}</span>
+                        <strong>{publicConfig.bank.accountName || "-"}</strong>
+                      </div>
+
+                      <div className="payment-bank-address">
+                        <span>{t.bankIban}</span>
+                        <code>{publicConfig.bank.iban}</code>
+                        <button type="button" onClick={copyBankIban}>{t.copyIban}</button>
+                        {copyMsg && <small>{copyMsg}</small>}
+                      </div>
+
+                      <div className="payment-group">
+                        <label>{t.bankProof}</label>
+                        <input
+                          type="text"
+                          name="paymentProof"
+                          value={form.paymentProof}
+                          onChange={handleChange}
+                          placeholder={t.bankProofPlaceholder}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="payment-error">{t.bankUnavailable}</div>
+                  )}
+                </div>
+              )}
               {form.paymentMethod === "usdt_trc20" && (
                 <div className="payment-usdt-box">
                   {publicConfig?.usdt?.trc20Address ? (
@@ -608,3 +666,4 @@ export default function Payment() {
     </div>
   );
 }
+

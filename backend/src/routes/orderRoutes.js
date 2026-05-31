@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import jwt from "jsonwebtoken";
 import Order from "../models/Order.js";
 
@@ -93,7 +93,7 @@ router.post("/", authRequired, async (req, res) => {
         ? paymentMethod
         : "bank_transfer",
       paymentStatus: "pending",
-      paymentProof: paymentMethod === "usdt_trc20" ? String(paymentProof || "").trim() : "",
+      paymentProof: ["bank_transfer", "usdt_trc20"].includes(paymentMethod) ? String(paymentProof || "").trim() : "",
       paymentNetwork: paymentMethod === "usdt_trc20" ? "TRC20" : "",
       paymentAddress:
         paymentMethod === "usdt_trc20"
