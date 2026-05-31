@@ -5,96 +5,81 @@ import { addToCart } from "../utils/cart.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import "./Products.css";
 
-function ProductCard({
-  product,
-  id,
-  isLicensed,
-  handleAddToCart,
-  productsPage,
-  language,
-}) {
-  const productName =
-    language === "en"
-      ? product.nameEn || product.name || product.nameTr
-      : product.nameTr || product.name || product.nameEn;
+function formatPrice(value, language) {
+  const locale = language === "en" ? "en-US" : "tr-TR";
+  return new Intl.NumberFormat(locale).format(Number(value) || 0);
+}
 
-  const productCategory =
-    language === "en"
-      ? product.categoryEn || product.category || product.categoryTr
-      : product.categoryTr || product.category || product.categoryEn;
+function pickByLanguage(product, language, base) {
+  if (language === "en") {
+    return product[`${base}En`] || product[base] || product[`${base}Tr`] || "";
+  }
 
-  const productDescription =
-    language === "en"
-      ? product.descriptionEn || product.description || product.descriptionTr
-      : product.descriptionTr || product.description || product.descriptionEn;
+  return product[`${base}Tr`] || product[base] || product[`${base}En`] || "";
+}
+
+function ProductCard({ product, id, isLicensed, handleAddToCart, productsPage, language }) {
+  const productName = pickByLanguage(product, language, "name");
+  const productCategory = pickByLanguage(product, language, "category");
+  const productDescription = pickByLanguage(product, language, "description");
 
   const imageList =
     Array.isArray(product.images) && product.images.length > 0
       ? product.images
       : product.image
-      ? [product.image]
-      : ["/ftsline.png"];
+        ? [product.image]
+        : ["/ftsline.png"];
 
   const [selectedImage, setSelectedImage] = useState(imageList[0]);
 
   useEffect(() => {
     setSelectedImage(imageList[0]);
-  }, [product]);
+  }, [imageList[0], product._id]);
 
-  const price = isLicensed
-    ? product.priceLicensed || product.priceNormal || product.price
-    : product.priceNormal || product.price;
-
-  const normalPrice = product.priceNormal || product.price;
-  const licensedPrice = product.priceLicensed || product.price;
-
-  const hasDiscount =
-    isLicensed &&
-    Number(normalPrice) > 0 &&
-    Number(licensedPrice) > 0 &&
-    Number(licensedPrice) < Number(normalPrice);
+  const normalPrice = Number(product.priceNormal || product.price || 0);
+  const licensedPrice = Number(product.priceLicensed || product.price || 0);
+  const shownPrice = isLicensed && licensedPrice > 0 ? licensedPrice : normalPrice;
+  const hasDiscount = isLicensed && licensedPrice > 0 && normalPrice > 0 && licensedPrice < normalPrice;
+  const savings = hasDiscount ? normalPrice - licensedPrice : 0;
+  const stockText = product.stock || productsPage.unlimited;
 
   return (
-    <div className="product-card">
-      <div className="product-image-wrap">
-        <img
-          src={selectedImage}
-          alt={productName || "FTSLine Ürün"}
-          className="product-image"
-          onError={(e) => {
-            e.currentTarget.src = "/ftsline.png";
-          }}
-        />
+    <article className="product-card">
+      <div className="product-media">
+        <Link to={`/products/${id}`} className="product-image-link" aria-label={productName}>
+          <img
+            src={selectedImage}
+            alt={productName || "FTSLine product"}
+            className="product-image"
+            onError={(e) => {
+              e.currentTarget.src = "/ftsline.png";
+            }}
+          />
+        </Link>
 
-        {isLicensed && (
-          <span className="license-badge">
-            {language === "en" ? "Licensed Price" : "Lisanslı Fiyat"}
-          </span>
-        )}
+        <div className="product-badge-row">
+          {productCategory && <span className="product-pill category">{productCategory}</span>}
+          {isLicensed && <span className="product-pill licensed">{productsPage.licensedPrice}</span>}
+        </div>
 
-        {product.stock && product.stock !== "Sınırsız" && (
-          <span className="stock-badge">Stok: {product.stock}</span>
-        )}
-
-        {productCategory && (
-          <span className="product-category-badge">{productCategory}</span>
+        {product.stock && product.stock !== productsPage.unlimited && (
+          <span className="product-stock">{productsPage.stock}: {stockText}</span>
         )}
       </div>
 
       {imageList.length > 1 && (
-        <div className="product-thumbnails">
-          {imageList.map((img, index) => (
+        <div className="product-thumbnails" aria-label={productsPage.gallery}>
+          {imageList.slice(0, 5).map((img, index) => (
             <button
               key={`${img}-${index}`}
               type="button"
-              className={`product-thumb-btn ${
-                selectedImage === img ? "active" : ""
-              }`}
+              className={`product-thumb-btn ${selectedImage === img ? "active" : ""}`}
               onClick={() => setSelectedImage(img)}
+              aria-label={`${productsPage.image} ${index + 1}`}
             >
               <img
                 src={img}
-                alt={`${productName || "Ürün"}-${index + 1}`}
+                alt=""
                 className="product-thumb-image"
                 onError={(e) => {
                   e.currentTarget.src = "/ftsline.png";
@@ -106,33 +91,31 @@ function ProductCard({
       )}
 
       <div className="product-content">
-        <div className="product-meta">
-          <h3>{productName || "-"}</h3>
-          <p className="product-brand">
-            {product.brand || productsPage.noBrand}
-          </p>
+        <div className="product-heading-row">
+          <div>
+            <h3>{productName || productsPage.untitled}</h3>
+            <p className="product-brand">{product.brand || productsPage.noBrand}</p>
+          </div>
         </div>
 
-        <p className="product-desc">
-          {productDescription || productsPage.noDescription}
-        </p>
+        <p className="product-desc">{productDescription || productsPage.noDescription}</p>
 
-        <div className="product-price-box">
+        <div className="product-price-panel">
           <div>
+            <span className="product-price-label">{isLicensed ? productsPage.yourPrice : productsPage.price}</span>
             <div className="product-main-price">
-              {price ? `${price} TL` : productsPage.noPrice}
+              {shownPrice > 0 ? `${formatPrice(shownPrice, language)} TL` : productsPage.noPrice}
             </div>
-
-            {hasDiscount && (
-              <div className="product-save-text">
-                {language === "en" ? "Member saving" : "Lisans avantajı"}
-              </div>
-            )}
           </div>
 
           {hasDiscount && (
-            <div className="product-old-price">{normalPrice} TL</div>
+            <div className="product-savings">
+              <span>{productsPage.saving}</span>
+              <strong>{formatPrice(savings, language)} TL</strong>
+            </div>
           )}
+
+          {hasDiscount && <div className="product-old-price">{formatPrice(normalPrice, language)} TL</div>}
         </div>
 
         <div className="product-actions">
@@ -140,16 +123,12 @@ function ProductCard({
             {productsPage.detail}
           </Link>
 
-          <button
-            type="button"
-            className="cart-btn"
-            onClick={() => handleAddToCart(product)}
-          >
+          <button type="button" className="cart-btn" onClick={() => handleAddToCart(product)}>
             {productsPage.addToCart}
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -157,30 +136,52 @@ export default function Products() {
   const { t, language } = useI18n();
 
   const common = t?.common || {};
-  const productsPage = t?.productsPage || {};
+  const productsPageRaw = t?.productsPage || {};
 
   const text = {
-    storeBadge: productsPage.storeBadge || "FTSLine Store",
-    title: productsPage.title || "Ürünler",
+    storeBadge: productsPageRaw.storeBadge || (language === "en" ? "FTSLine Store" : "FTSLine Magaza"),
+    title: productsPageRaw.title || (language === "en" ? "Products" : "Urunler"),
     subtitle:
-      productsPage.subtitle ||
-      "Ürünleri incele, filtrele ve sepete ekle.",
-    detail: productsPage.detail || "Detay",
-    addToCart: productsPage.addToCart || "Sepete Ekle",
-    added: productsPage.added || "sepete eklendi",
-    loading: productsPage.loading || "Yükleniyor...",
-    empty: productsPage.empty || "Ürün bulunamadı",
-    error: productsPage.error || "Ürünler alınamadı",
-    errorLoad: productsPage.errorLoad || "Ürünler yüklenemedi",
-    category: productsPage.category || "Kategori",
-    brand: productsPage.brand || "Marka",
-    productCount: productsPage.productCount || "ürün listeleniyor",
-    all: productsPage.all || "Tümü",
-    noBrand: productsPage.noBrand || "-",
+      productsPageRaw.subtitle ||
+      (language === "en"
+        ? "Browse products, compare licensed prices and add items to your cart."
+        : "Urunleri incele, lisansli fiyatlari karsilastir ve sepete ekle."),
+    detail: productsPageRaw.detail || (language === "en" ? "View" : "Incele"),
+    addToCart: productsPageRaw.addToCart || (language === "en" ? "Add to Cart" : "Sepete Ekle"),
+    added: productsPageRaw.added || (language === "en" ? "added to cart" : "sepete eklendi"),
+    loading: productsPageRaw.loading || (language === "en" ? "Loading products..." : "Urunler yukleniyor..."),
+    empty: productsPageRaw.empty || (language === "en" ? "No products found" : "Urun bulunamadi"),
+    error: productsPageRaw.error || (language === "en" ? "Products could not be loaded" : "Urunler alinamadi"),
+    errorLoad: productsPageRaw.errorLoad || (language === "en" ? "Products could not be loaded" : "Urunler yuklenemedi"),
+    category: productsPageRaw.category || (language === "en" ? "Category" : "Kategori"),
+    brand: productsPageRaw.brand || (language === "en" ? "Brand" : "Marka"),
+    productCount: productsPageRaw.productCount || (language === "en" ? "products listed" : "urun listeleniyor"),
+    all: productsPageRaw.all || (language === "en" ? "All" : "Tumu"),
+    noBrand: productsPageRaw.noBrand || "FTSLine",
     noDescription:
-      productsPage.noDescription || "Ürün açıklaması bulunmuyor.",
-    noPrice: productsPage.noPrice || "Fiyat yok",
-    search: common.search || "Ara",
+      productsPageRaw.noDescription ||
+      (language === "en" ? "No product description has been added yet." : "Urun aciklamasi henuz eklenmemis."),
+    noPrice: productsPageRaw.noPrice || (language === "en" ? "No price" : "Fiyat yok"),
+    search: common.search || (language === "en" ? "Search" : "Ara"),
+    searchPlaceholder: language === "en" ? "Search product, brand or category" : "Urun, marka veya kategori ara",
+    sort: language === "en" ? "Sort" : "Siralama",
+    defaultSort: language === "en" ? "Featured" : "One Cikan",
+    newest: language === "en" ? "Newest" : "En Yeni",
+    priceAsc: language === "en" ? "Price: Low to High" : "Ucuzdan Pahaliya",
+    priceDesc: language === "en" ? "Price: High to Low" : "Pahalidan Ucuza",
+    nameAsc: language === "en" ? "Name A-Z" : "Isme Gore A-Z",
+    licensedPrice: language === "en" ? "Licensed" : "Lisansli",
+    licensedActive: language === "en" ? "Licensed account prices are active" : "Lisansli fiyatlar aktif",
+    standardPrices: language === "en" ? "Standard prices" : "Standart fiyatlar",
+    price: language === "en" ? "Price" : "Fiyat",
+    yourPrice: language === "en" ? "Your Price" : "Sana Ozel",
+    saving: language === "en" ? "Saving" : "Avantaj",
+    unlimited: language === "en" ? "Unlimited" : "Sinirsiz",
+    stock: language === "en" ? "Stock" : "Stok",
+    gallery: language === "en" ? "Product gallery" : "Urun galerisi",
+    image: language === "en" ? "Image" : "Gorsel",
+    untitled: language === "en" ? "Untitled product" : "Isimsiz urun",
+    clear: language === "en" ? "Clear" : "Temizle",
   };
 
   let user = null;
@@ -235,15 +236,9 @@ export default function Products() {
     loadProducts();
   }, [text.error, text.errorLoad]);
 
-  const getProductName = (product) =>
-    language === "en"
-      ? product.nameEn || product.name || product.nameTr || ""
-      : product.nameTr || product.name || product.nameEn || "";
-
-  const getProductCategory = (product) =>
-    language === "en"
-      ? product.categoryEn || product.category || product.categoryTr || ""
-      : product.categoryTr || product.category || product.categoryEn || "";
+  const getProductName = (product) => pickByLanguage(product, language, "name");
+  const getProductCategory = (product) => pickByLanguage(product, language, "category");
+  const getProductDescription = (product) => pickByLanguage(product, language, "description");
 
   const getProductPrice = (product) => {
     const value = isLicensed
@@ -261,10 +256,7 @@ export default function Products() {
   };
 
   const categories = useMemo(() => {
-    const values = products
-      .map((p) => getProductCategory(p)?.trim())
-      .filter(Boolean);
-
+    const values = products.map((p) => getProductCategory(p)?.trim()).filter(Boolean);
     return [text.all, ...new Set(values)];
   }, [products, text.all, language]);
 
@@ -283,24 +275,19 @@ export default function Products() {
         const productName = getProductName(product).toLowerCase();
         const productCategory = getProductCategory(product).toLowerCase();
         const productBrand = product.brand?.toLowerCase() || "";
-        const productDesc =
-          language === "en"
-            ? product.descriptionEn || product.description || ""
-            : product.descriptionTr || product.description || "";
+        const productDesc = getProductDescription(product).toLowerCase();
 
         return (
           productName.includes(q) ||
           productCategory.includes(q) ||
           productBrand.includes(q) ||
-          productDesc.toLowerCase().includes(q)
+          productDesc.includes(q)
         );
       });
     }
 
     if (selectedCategory !== text.all) {
-      result = result.filter(
-        (p) => getProductCategory(p) === selectedCategory
-      );
+      result = result.filter((p) => getProductCategory(p) === selectedCategory);
     }
 
     if (selectedBrand !== text.all) {
@@ -316,9 +303,7 @@ export default function Products() {
     }
 
     if (sort === "name_asc") {
-      result.sort((a, b) =>
-        getProductName(a).localeCompare(getProductName(b), "tr")
-      );
+      result.sort((a, b) => getProductName(a).localeCompare(getProductName(b), language === "en" ? "en" : "tr"));
     }
 
     if (sort === "newest") {
@@ -326,35 +311,41 @@ export default function Products() {
     }
 
     return result;
-  }, [
-    products,
-    search,
-    selectedCategory,
-    selectedBrand,
-    sort,
-    text.all,
-    language,
-    isLicensed,
-  ]);
+  }, [products, search, selectedCategory, selectedBrand, sort, text.all, language, isLicensed]);
+
+  const hasActiveFilters = search.trim() || selectedCategory !== text.all || selectedBrand !== text.all || sort !== "default";
+
+  function clearFilters() {
+    setSearch("");
+    setSelectedCategory(text.all);
+    setSelectedBrand(text.all);
+    setSort("default");
+  }
 
   return (
-    <div className="products-page">
+    <main className="products-page">
       <div className="products-container">
-        <div className="products-header">
-          <div>
+        <section className="products-hero">
+          <div className="products-hero-copy">
             <span className="products-badge">{text.storeBadge}</span>
             <h1>{text.title}</h1>
             <p className="products-subtitle">{text.subtitle}</p>
           </div>
-        </div>
+
+          <div className="products-hero-panel" aria-label={text.productCount}>
+            <span>{isLicensed ? text.licensedActive : text.standardPrices}</span>
+            <strong>{products.length}</strong>
+            <small>{text.productCount}</small>
+          </div>
+        </section>
 
         {message && <div className="products-message">{message}</div>}
 
-        <div className="products-filters">
+        <section className="products-toolbar" aria-label="Product filters">
           <div className="filter-group search-group">
             <label>{text.search}</label>
             <input
-              placeholder={text.search}
+              placeholder={text.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -362,10 +353,7 @@ export default function Products() {
 
           <div className="filter-group">
             <label>{text.category}</label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
+            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
               {categories.map((category, index) => (
                 <option key={`${category}-${index}`} value={category}>
                   {category}
@@ -376,10 +364,7 @@ export default function Products() {
 
           <div className="filter-group">
             <label>{text.brand}</label>
-            <select
-              value={selectedBrand}
-              onChange={(e) => setSelectedBrand(e.target.value)}
-            >
+            <select value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)}>
               {brands.map((brand, index) => (
                 <option key={`${brand}-${index}`} value={brand}>
                   {brand}
@@ -389,25 +374,27 @@ export default function Products() {
           </div>
 
           <div className="filter-group">
-            <label>{language === "en" ? "Sort" : "Sıralama"}</label>
+            <label>{text.sort}</label>
             <select value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="default">
-                {language === "en" ? "Default" : "Varsayılan"}
-              </option>
-              <option value="newest">
-                {language === "en" ? "Newest" : "En Yeni"}
-              </option>
-              <option value="price_asc">
-                {language === "en" ? "Price: Low to High" : "Ucuzdan Pahalıya"}
-              </option>
-              <option value="price_desc">
-                {language === "en" ? "Price: High to Low" : "Pahalıdan Ucuza"}
-              </option>
-              <option value="name_asc">
-                {language === "en" ? "Name A-Z" : "İsme Göre A-Z"}
-              </option>
+              <option value="default">{text.defaultSort}</option>
+              <option value="newest">{text.newest}</option>
+              <option value="price_asc">{text.priceAsc}</option>
+              <option value="price_desc">{text.priceDesc}</option>
+              <option value="name_asc">{text.nameAsc}</option>
             </select>
           </div>
+        </section>
+
+        <div className="products-result-bar">
+          <div>
+            <strong>{filteredProducts.length}</strong> {text.productCount}
+          </div>
+
+          {hasActiveFilters && (
+            <button type="button" className="products-clear" onClick={clearFilters}>
+              {text.clear}
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -415,43 +402,34 @@ export default function Products() {
         ) : errorMsg ? (
           <div className="products-state error">{errorMsg}</div>
         ) : filteredProducts.length === 0 ? (
-          <div className="products-state">{text.empty}</div>
+          <div className="products-state empty">
+            <strong>{text.empty}</strong>
+            {hasActiveFilters && (
+              <button type="button" onClick={clearFilters}>
+                {text.clear}
+              </button>
+            )}
+          </div>
         ) : (
-          <>
-            <div className="products-topbar">
-              <div className="products-count">
-                {filteredProducts.length} {text.productCount}
-              </div>
+          <section className="products-grid" aria-label={text.title}>
+            {filteredProducts.map((product, index) => {
+              const id = product._id || product.id || index;
 
-              {isLicensed && (
-                <div className="licensed-info">
-                  {language === "en"
-                    ? "Licensed account prices are active"
-                    : "Lisanslı fiyatlar aktif"}
-                </div>
-              )}
-            </div>
-
-            <div className="products-grid">
-              {filteredProducts.map((product, index) => {
-                const id = product._id || product.id || index;
-
-                return (
-                  <ProductCard
-                    key={id}
-                    product={product}
-                    id={id}
-                    isLicensed={isLicensed}
-                    handleAddToCart={handleAddToCart}
-                    productsPage={text}
-                    language={language}
-                  />
-                );
-              })}
-            </div>
-          </>
+              return (
+                <ProductCard
+                  key={id}
+                  product={product}
+                  id={id}
+                  isLicensed={isLicensed}
+                  handleAddToCart={handleAddToCart}
+                  productsPage={text}
+                  language={language}
+                />
+              );
+            })}
+          </section>
         )}
       </div>
-    </div>
+    </main>
   );
 }
