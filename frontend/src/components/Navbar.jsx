@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getCartCount } from "../utils/cart.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
+import "./Navbar.css";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -67,77 +68,85 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  const navLinkStyle = (path) => ({
-    textDecoration: "none",
-    color: location.pathname === path ? "#0f3fae" : "#1a1a1a",
-    fontWeight: location.pathname === path ? "700" : "500",
-    fontSize: "15px",
-    padding: "10px 14px",
-    borderRadius: "12px",
-    background:
-      location.pathname === path
-        ? "rgba(15,63,174,0.08)"
-        : "transparent",
-  });
-
-  const mobileLinkStyle = {
-    textDecoration: "none",
-    color: "#1a1a1a",
-    fontWeight: "600",
-    padding: "12px 14px",
-    borderRadius: "12px",
-    background: "#f5f7fc",
-  };
+  const navLinkClassName = (path) =>
+    location.pathname === path ? "navbar-link active" : "navbar-link";
 
   const LangButtons = () => (
-    <div style={{ display: "flex", gap: "5px", marginLeft: "8px" }}>
+    <div className="navbar-language">
       <button
         type="button"
         onClick={() => changeLanguage("tr")}
-        style={{
-          padding: "6px 10px",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          background: language === "tr" ? "#0f3fae" : "#eee",
-          color: language === "tr" ? "#fff" : "#000",
-          fontWeight: "700",
-        }}
+        className={language === "tr" ? "active" : ""}
       >
         TR
       </button>
       <button
         type="button"
         onClick={() => changeLanguage("en")}
-        style={{
-          padding: "6px 10px",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          background: language === "en" ? "#0f3fae" : "#eee",
-          color: language === "en" ? "#fff" : "#000",
-          fontWeight: "700",
-        }}
+        className={language === "en" ? "active" : ""}
       >
         EN
       </button>
     </div>
   );
 
+  const NavLinks = () => (
+    <>
+      <Link to="/" className={navLinkClassName("/")}>
+        {common.home || "Anasayfa"}
+      </Link>
+      <Link to="/products" className={navLinkClassName("/products")}>
+        {common.products || "Urunler"}
+      </Link>
+      <Link to="/about" className={navLinkClassName("/about")}>
+        {common.about || "Hakkimizda"}
+      </Link>
+      <Link to="/contact" className={navLinkClassName("/contact")}>
+        {common.contact || "Iletisim"}
+      </Link>
+      <Link to="/faq" className={navLinkClassName("/faq")}>
+        {common.faq || "SSS"}
+      </Link>
+
+      <Link to="/cart" className={navLinkClassName("/cart")}>
+        {common.cart || "Sepet"} ({cartCount})
+      </Link>
+
+      {isLoggedIn && isAdmin && (
+        <Link to={adminPath} className={navLinkClassName(adminPath)}>
+          {isSuperAdmin ? "S\u00fcper Admin" : common.admin || "Admin"}
+        </Link>
+      )}
+
+      {!isLoggedIn ? (
+        <>
+          <Link to="/login" className={navLinkClassName("/login")}>
+            {common.login || "Giris"}
+          </Link>
+          <Link to="/register" className={navLinkClassName("/register")}>
+            {common.register || "Kayit Ol"}
+          </Link>
+        </>
+      ) : (
+        <>
+          <Link to="/dashboard" className={navLinkClassName("/dashboard")}>
+            {user?.username || common.panel || "Panel"}
+          </Link>
+          <button type="button" onClick={handleLogout} className="navbar-logout">
+            {common.logout || "Cikis"}
+          </button>
+        </>
+      )}
+
+      <LangButtons />
+    </>
+  );
+
   return (
-    <nav style={{ background: "#fff", borderBottom: "1px solid #eee" }}>
-      <div style={{ maxWidth: "1280px", margin: "auto", padding: "15px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link
-            to="/"
-            style={{
-              display: "flex",
-              gap: "10px",
-              alignItems: "center",
-              textDecoration: "none",
-              color: "#111",
-            }}
-          >
+    <nav className="navbar">
+      <div className="navbar-inner">
+        <div className="navbar-row">
+          <Link to="/" className="navbar-brand">
             <img src="/ftsline.png" alt="FTSLine" style={{ width: "40px" }} />
             <div>
               <strong>FTSLine</strong>
@@ -147,67 +156,25 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <div className="menu" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            <Link to="/" style={navLinkStyle("/")}>
-              {common.home || "Anasayfa"}
-            </Link>
-            <Link to="/products" style={navLinkStyle("/products")}>
-              {common.products || "ÃœrÃ¼nler"}
-            </Link>
-            <Link to="/about" style={navLinkStyle("/about")}>
-              {common.about || "HakkÄ±mÄ±zda"}
-            </Link>
-            <Link to="/contact" style={navLinkStyle("/contact")}>
-              {common.contact || "Ä°letiÅŸim"}
-            </Link>
-            <Link to="/faq" style={navLinkStyle("/faq")}>
-              {common.faq || "SSS"}
-            </Link>
+          <button
+            type="button"
+            className="navbar-toggle"
+            aria-label={isMobileMenuOpen ? "Menuyu kapat" : "Menuyu ac"}
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
 
-            <Link to="/cart" style={navLinkStyle("/cart")}>
-              {common.cart || "Sepet"} ({cartCount})
-            </Link>
-
-            {isLoggedIn && isAdmin && (
-              <Link to={adminPath} style={navLinkStyle(adminPath)}>
-                {isSuperAdmin ? "S\u00fcper Admin" : common.admin || "Admin"}
-              </Link>
-            )}
-
-            {!isLoggedIn ? (
-              <>
-                <Link to="/login" style={navLinkStyle("/login")}>
-                  {common.login || "GiriÅŸ"}
-                </Link>
-                <Link to="/register" style={navLinkStyle("/register")}>
-                  {common.register || "KayÄ±t Ol"}
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link to="/dashboard" style={navLinkStyle("/dashboard")}>
-                  {user?.username || common.panel || "Panel"}
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  style={{
-                    border: "none",
-                    background: "#0f3fae",
-                    color: "#fff",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                  }}
-                >
-                  {common.logout || "Ã‡Ä±kÄ±ÅŸ"}
-                </button>
-              </>
-            )}
-
-            <LangButtons />
+          <div className="navbar-menu navbar-menu-desktop">
+            <NavLinks />
           </div>
+        </div>
+
+        <div className={isMobileMenuOpen ? "navbar-menu navbar-menu-mobile open" : "navbar-menu navbar-menu-mobile"}>
+          <NavLinks />
         </div>
       </div>
     </nav>
