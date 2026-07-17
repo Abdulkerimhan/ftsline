@@ -19,25 +19,13 @@ function productImage(product) {
 }
 
 export default function Home() {
-  const { t = {} } = useI18n() || {};
+  const { t = {}, language = "tr" } = useI18n() || {};
   const home = t.home || {};
   const hero = home.hero || {};
+  const storefront = home.storefront || {};
   const [products, setProducts] = useState([]);
 
-  const values = [
-    {
-      title: "Urun odakli magaza",
-      desc: "Ziyaretci once urunleri, fiyatlari ve lisansli kullanici avantajini net gorur.",
-    },
-    {
-      title: "Lisansli uyelik",
-      desc: "Baslangic, yillik ve iki yillik planlar sade bir satin alma akisiyle sunulur.",
-    },
-    {
-      title: "Takip edilebilir sistem",
-      desc: "Siparis, odeme bildirimi, kariyer ve ekip sureci panel tarafinda kontrol edilir.",
-    },
-  ];
+  const values = storefront.values || [];
 
   useEffect(() => {
     let mounted = true;
@@ -66,43 +54,27 @@ export default function Home() {
       })
       .slice(0, 3);
 
+    const showcases = storefront.showcases || [];
     return [
       {
-        label: "En cok satanlar",
-        title: "Magazada one cikan urunler",
+        label: showcases[0]?.label || "En cok satanlar",
+        title: showcases[0]?.title || "Magazada one cikan urunler",
         products: activeProducts.slice(0, 3),
       },
       {
-        label: "Yeni urunler",
-        title: "Son eklenen secenekler",
+        label: showcases[1]?.label || "Yeni urunler",
+        title: showcases[1]?.title || "Son eklenen secenekler",
         products: newest,
       },
       {
-        label: "Kampanyali urunler",
-        title: "Lisans avantajli fiyatlar",
+        label: showcases[2]?.label || "Kampanyali urunler",
+        title: showcases[2]?.title || "Lisans avantajli fiyatlar",
         products: campaign.length ? campaign : activeProducts.slice(0, 3),
       },
     ];
-  }, [products]);
+  }, [products, storefront.showcases]);
 
-  const licensedAdvantages = [
-    {
-      title: "Ozel fiyat avantajlari",
-      desc: "Lisansli kullanicilar, urunlerde kendilerine tanimlanan avantajli fiyatlari gorur.",
-    },
-    {
-      title: "Aktif uyelik deneyimi",
-      desc: "Lisans suresi boyunca hesap aktif kabul edilir ve panelde lisans durumu takip edilir.",
-    },
-    {
-      title: "Kariyer sistemine katilim",
-      desc: "Aktif lisans, kariyer ve ekip hesaplamalarinda kullanicinin sisteme dahil olmasini saglar.",
-    },
-    {
-      title: "Panelden surec takibi",
-      desc: "Siparisler, odeme bildirimleri, referans linki ve ekip bilgileri tek alanda izlenir.",
-    },
-  ];
+  const licensedAdvantages = storefront.licenseAdvantages || [];
 
   return (
     <main className="home-page">
@@ -126,10 +98,10 @@ export default function Home() {
             </p>
             <div className="home-actions">
               <Link to="/products" className="home-primary-action">
-                Urunleri Incele
+                {storefront.primaryButton}
               </Link>
               <Link to="/register" className="home-secondary-action">
-                Lisansli Uyelik
+                {storefront.secondaryButton}
               </Link>
             </div>
           </div>
@@ -138,7 +110,7 @@ export default function Home() {
             <img src="/ftsline.png" alt="FTSLine" />
             <div className="home-visual-copy">
               <span>FTSLine</span>
-              <strong>Gelecege yon veren dijital satis deneyimi</strong>
+              <strong>{storefront.visualText}</strong>
             </div>
           </div>
         </div>
@@ -147,8 +119,8 @@ export default function Home() {
       <section className="home-values">
         <div className="home-shell">
           <div className="home-section-heading">
-            <span>Sade deneyim</span>
-            <h2>FTSLine dijitallesmenin en kolay yolu.</h2>
+            <span>{storefront.valuesLabel}</span>
+            <h2>{storefront.valuesTitle}</h2>
           </div>
           <div className="home-value-grid">
             {values.map((item) => (
@@ -165,8 +137,8 @@ export default function Home() {
         <section className="home-products-showcase">
           <div className="home-shell">
             <div className="home-section-heading">
-              <span>Urun vitrini</span>
-              <h2>FTSLine'da Enlerimiz</h2>
+              <span>{storefront.showcaseLabel}</span>
+              <h2>{storefront.showcaseTitle}</h2>
             </div>
 
             <div className="home-showcase-stack">
@@ -177,7 +149,7 @@ export default function Home() {
                       <span>{section.label}</span>
                       <h3>{section.title}</h3>
                     </div>
-                    <Link to="/products">Tumunu gor</Link>
+                    <Link to="/products">{storefront.viewAll}</Link>
                   </div>
 
                   <div className="home-product-row">
@@ -192,18 +164,18 @@ export default function Home() {
                           <div className="home-product-image">
                             <img
                               src={productImage(product)}
-                              alt={product.nameTr || product.name || "FTSLine urun"}
+                              alt={(language === "en" ? product.nameEn : product.nameTr) || product.name || storefront.fallbackProduct}
                               onError={(event) => {
                                 event.currentTarget.src = "/ftsline.png";
                               }}
                             />
-                            {hasCampaign && <span>Kampanya</span>}
+                            {hasCampaign && <span>{storefront.campaign}</span>}
                           </div>
                           <div className="home-product-body">
-                            <strong>{product.nameTr || product.name || product.nameEn || "FTSLine urun"}</strong>
+                            <strong>{(language === "en" ? product.nameEn : product.nameTr) || product.name || product.nameEn || storefront.fallbackProduct}</strong>
                             <small>{product.brand || product.categoryTr || product.category || "FTSLine"}</small>
                             <div>
-                              {normalPrice > 0 ? `${formatPrice(normalPrice)} TL` : "Fiyat icin incele"}
+                              {normalPrice > 0 ? `${formatPrice(normalPrice)} TL` : storefront.noPrice}
                             </div>
                           </div>
                         </Link>
@@ -220,13 +192,9 @@ export default function Home() {
       <section className="home-license-advantages">
         <div className="home-shell home-license-advantages-inner">
           <div className="home-license-advantages-copy">
-            <span>Lisansli kullanici avantaji</span>
-            <h2>Lisans dijital dunyada ayricalikli olmanizi saglar.</h2>
-            <p>
-              Bu alanda lisansli kullanicilara sunulacak avantajlari net, sade ve guven veren bir
-              dille anlatabiliriz. Fiyat detaylarini ana ekranda gostermeden, uyeligin degerini one
-              cikarir.
-            </p>
+            <span>{storefront.licenseLabel}</span>
+            <h2>{storefront.licenseTitle}</h2>
+            <p>{storefront.licenseDesc}</p>
           </div>
 
           <div className="home-advantage-grid">
@@ -242,16 +210,14 @@ export default function Home() {
 
       <section className="home-final-cta">
         <div className="home-shell home-final-inner">
-          <h2>FTSLine ile dijital satis deneyimini baslat.</h2>
-          <p>
-            Urunleri incele, lisans avantajini gor ve tum sureci tek hesap uzerinden takip et.
-          </p>
+          <h2>{storefront.finalTitle}</h2>
+          <p>{storefront.finalDesc}</p>
           <div className="home-actions centered">
             <Link to="/products" className="home-primary-action">
-              Magazaya Git
+              {storefront.shopButton}
             </Link>
             <Link to="/contact" className="home-secondary-action light">
-              Iletisime Gec
+              {storefront.contactButton}
             </Link>
           </div>
         </div>
