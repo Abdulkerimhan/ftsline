@@ -1,7 +1,11 @@
 import User from "../models/User.js";
 import { CAREER_LEVELS, careerRank, isActiveMember } from "./careerService.js";
 
-export const INITIAL_LICENSE_BONUS_BASE_USDT = 74.99;
+// Ilk lisans odemesinin Unilevel dagitim matrahi.
+// Sonraki aylik Pro odemeleri bu servise kesinlikle gonderilmez.
+export const INITIAL_LICENSE_BONUS_BASE_TL = 3599;
+// Eski importlari kirmadan yeni TL kuralina gecis.
+export const INITIAL_LICENSE_BONUS_BASE_USDT = INITIAL_LICENSE_BONUS_BASE_TL;
 
 export const UNILEVEL_INITIAL_LICENSE_RATES = [
   0.5,
@@ -63,7 +67,7 @@ export async function distributeInitialUnilevelBonus({ payerUserId }) {
     const rate = UNILEVEL_INITIAL_LICENSE_RATES[depth - 1] || 0;
 
     if (unlockedDepth >= depth && isActiveMember(sponsor) && rate > 0) {
-      const amount = roundMoney(INITIAL_LICENSE_BONUS_BASE_USDT * rate);
+      const amount = roundMoney(INITIAL_LICENSE_BONUS_BASE_TL * rate);
 
       await User.findByIdAndUpdate(sponsor._id, {
         $inc: {
@@ -83,7 +87,7 @@ export async function distributeInitialUnilevelBonus({ payerUserId }) {
         source: "unilevel",
         rate,
         amount,
-        currency: "USDT",
+        currency: "TL",
       });
     }
 
@@ -97,8 +101,8 @@ export async function distributeInitialUnilevelBonus({ payerUserId }) {
   return {
     skipped: false,
     source: "unilevel",
-    baseAmount: INITIAL_LICENSE_BONUS_BASE_USDT,
-    currency: "USDT",
+    baseAmount: INITIAL_LICENSE_BONUS_BASE_TL,
+    currency: "TL",
     rates: UNILEVEL_INITIAL_LICENSE_RATES,
     totalDistributed: roundMoney(
       beneficiaries.reduce((sum, beneficiary) => sum + beneficiary.amount, 0)

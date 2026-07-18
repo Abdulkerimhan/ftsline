@@ -3,7 +3,11 @@ import { CAREER_LEVELS, CAREER_RULES, careerRank, isActiveMember } from "./caree
 
 export const CAREER_LICENSE_BONUS_RATE = 0.03;
 export const CAREER_LICENSE_BONUS_MAX_DEPTH = 15;
-export const MONTHLY_LICENSE_USAGE_FEE_USDT = 14.99;
+// Ilk aydan sonraki aylik Pro paket ucreti. Bunun sadece %3'u
+// Matrix kariyer agacinda dagitilir; Unilevel dagitimi yapilmaz.
+export const MONTHLY_PRO_PACKAGE_FEE_TL = 799;
+// Eski importlari kirmadan yeni TL kuralina gecis.
+export const MONTHLY_LICENSE_USAGE_FEE_USDT = MONTHLY_PRO_PACKAGE_FEE_TL;
 
 const CAREER_BONUS_DEPTH = {
   NONE: 12,
@@ -70,6 +74,7 @@ export async function distributeLicenseCareerBonus({ payerUserId, licenseFee }) 
         depth,
         source: "matrix",
         amount: bonusAmount,
+        currency: "TL",
       });
     }
 
@@ -82,6 +87,7 @@ export async function distributeLicenseCareerBonus({ payerUserId, licenseFee }) 
     maxDepth: CAREER_LICENSE_BONUS_MAX_DEPTH,
     licenseFee: amount,
     bonusAmount,
+    currency: "TL",
     totalDistributed: roundMoney(bonusAmount * beneficiaries.length),
     beneficiaries,
   };

@@ -9,21 +9,21 @@ export const LICENSE_PLANS = {
     label: "Lisans Bedeli",
     priceUsdt: 74.99,
     durationMonths: 1,
-    matrixPayoutMonths: 1,
+    matrixPayoutMonths: 0,
   },
   annual: {
     key: "annual",
     label: "1 Yillik Lisans",
     priceUsdt: 210,
     durationMonths: 12,
-    matrixPayoutMonths: 12,
+    matrixPayoutMonths: 11,
   },
   biennial: {
     key: "biennial",
     label: "2 Yillik Lisans",
     priceUsdt: 360,
     durationMonths: 24,
-    matrixPayoutMonths: 24,
+    matrixPayoutMonths: 23,
   },
 };
 
@@ -145,8 +145,10 @@ export async function activateLicensePlanForUser({ userId, planKey, paidAt = new
   user.licenseMatrixPayoutsTotal =
     Number(user.licenseMatrixPayoutsTotal || 0) + plan.matrixPayoutMonths;
 
-  if (!user.licenseNextMatrixPayoutAt) {
-    user.licenseNextMatrixPayoutAt = now;
+  if (!user.licenseNextMatrixPayoutAt && plan.matrixPayoutMonths > 0) {
+    // Ilk ay 3.599 TL uzerinden sadece Unilevel dagitilir.
+    // 799 TL'lik Matrix %3 dagitimi bir sonraki ay baslar.
+    user.licenseNextMatrixPayoutAt = addMonths(now, 1);
   }
 
   if (user.role !== "superadmin" && !user.matrixParent && user.sponsor) {
@@ -157,11 +159,13 @@ export async function activateLicensePlanForUser({ userId, planKey, paidAt = new
   await user.save();
 
   const unilevelBonusResult = await distributeInitialUnilevelBonus({ payerUserId: user._id });
-  const matrixPayoutResult = await processDueLicenseMatrixPayoutsForUser({
-    userId: user._id,
-    now,
-    maxRuns: 1,
-  });
+  const matrixPayoutResult = {
+    processed: 0,
+    nextMatrixPayoutAt: user.licenseNextMatrixPayoutAt,
+    paid: user.licenseMatrixPayoutsPaid,
+    total: user.licenseMatrixPayoutsTotal,
+    results: [],
+  };
 
   const updatedUser = await User.findById(user._id).select("-passwordHash").lean();
 
