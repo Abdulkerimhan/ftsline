@@ -61,27 +61,17 @@ export default function Dashboard() {
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   const [summary, setSummary] = useState({
-    balance: 24850,
-    monthEarning: 6850,
-    totalEarning: 92400,
-    teamCount: 27,
-    directReferrals: 8,
-    career: "Silver",
-    licenseStatus: safeText(dashboardT?.active, "Aktif"),
-    licenseEndsAt: "2026-12-31",
+    balance: 0,
+    monthEarning: 0,
+    totalEarning: 0,
+    teamCount: 0,
+    directReferrals: 0,
+    career: "",
+    licenseStatus: safeText(dashboardT?.passive, "Pasif"),
+    licenseEndsAt: null,
   });
 
-  const earningsChart = useMemo(
-    () => [
-      { label: language === "tr" ? "Ocak" : "January", value: 3200 },
-      { label: language === "tr" ? "Åubat" : "February", value: 4100 },
-      { label: language === "tr" ? "Mart" : "March", value: 5200 },
-      { label: language === "tr" ? "Nisan" : "April", value: 6850 },
-      { label: language === "tr" ? "MayÄ±s" : "May", value: 6100 },
-      { label: language === "tr" ? "Haziran" : "June", value: 7900 },
-    ],
-    [language]
-  );
+  const earningsChart = [];
 
   const [profileForm, setProfileForm] = useState({
     fullName: "",
@@ -92,64 +82,15 @@ export default function Dashboard() {
     password: "",
   });
 
-  const [matrixTree] = useState({
-    username: user?.username || "sen",
-    left: {
-      username: "ahmet_team",
-      left: {
-        username: "elif_network",
-        left: { username: "murat_01" },
-        right: { username: "zeynep_01" },
-      },
-      right: {
-        username: "kemal_line",
-        left: { username: "ayse_01" },
-        right: { username: "fatma_01" },
-      },
-    },
-    right: {
-      username: "ali_growth",
-      left: {
-        username: "sena_team",
-        left: { username: "burak_01" },
-        right: { username: "eda_01" },
-      },
-      right: {
-        username: "kaan_plus",
-        left: { username: "emre_01" },
-        right: { username: "mine_01" },
-      },
-    },
-  });
+  const matrixTree = useMemo(
+    () => ({ username: user?.username || "sen", left: null, right: null }),
+    [user?.username]
+  );
 
-  const [unilevelTree] = useState({
-    username: user?.username || "sen",
-    children: [
-      {
-        username: "ahmet_team",
-        children: [
-          {
-            username: "elif_network",
-            children: [
-              { username: "murat_01", children: [] },
-              { username: "zeynep_01", children: [] },
-            ],
-          },
-        ],
-      },
-      {
-        username: "ali_growth",
-        children: [
-          { username: "sena_team", children: [] },
-          { username: "kaan_plus", children: [] },
-        ],
-      },
-      {
-        username: "mehmet_line",
-        children: [{ username: "burak_01", children: [] }],
-      },
-    ],
-  });
+  const unilevelTree = useMemo(
+    () => ({ username: user?.username || "sen", children: [] }),
+    [user?.username]
+  );
 
   const [expandedNodes, setExpandedNodes] = useState({
     root: true,
@@ -164,116 +105,9 @@ export default function Dashboard() {
     "uniRoot-2": true,
   });
 
-  const earnings = useMemo(
-    () => [
-      {
-        id: 1,
-        title: safeText(
-          earningsT?.teamEarning,
-          language === "tr" ? "TakÄ±m KazancÄ±" : "Team Earning"
-        ),
-        source: "ahmet_team",
-        amount: 1250,
-        date: "2026-04-15",
-      },
-      {
-        id: 2,
-        title: safeText(
-          earningsT?.directBonus,
-          language === "tr" ? "Direkt Bonus" : "Direct Bonus"
-        ),
-        source: "elif_network",
-        amount: 800,
-        date: "2026-04-13",
-      },
-      {
-        id: 3,
-        title: safeText(
-          earningsT?.matrixIncome,
-          language === "tr" ? "Matrix Geliri" : "Matrix Income"
-        ),
-        source: language === "tr" ? "2. seviye dolum" : "2nd level fill",
-        amount: 2150,
-        date: "2026-04-10",
-      },
-      {
-        id: 4,
-        title: safeText(
-          earningsT?.salesProfit,
-          language === "tr" ? "SatÄ±ÅŸ KÃ¢rÄ±" : "Sales Profit"
-        ),
-        source: language === "tr" ? "fatma_01 sipariÅŸi" : "fatma_01 order",
-        amount: 640,
-        date: "2026-04-08",
-      },
-    ],
-    [earningsT, language]
-  );
-
-  const unilevelMembers = useMemo(
-    () => [
-      {
-        username: "ahmet_team",
-        level: 1,
-        joinDate: "2026-03-18",
-        contribution: 850,
-        status: safeText(dashboardT?.active, "Aktif"),
-      },
-      {
-        username: "elif_network",
-        level: 2,
-        joinDate: "2026-03-25",
-        contribution: 420,
-        status: safeText(dashboardT?.active, "Aktif"),
-      },
-      {
-        username: "ali_growth",
-        level: 1,
-        joinDate: "2026-03-29",
-        contribution: 1200,
-        status: safeText(dashboardT?.active, "Aktif"),
-      },
-      {
-        username: "kaan_plus",
-        level: 2,
-        joinDate: "2026-04-04",
-        contribution: 310,
-        status: safeText(dashboardT?.passive, "Pasif"),
-      },
-    ],
-    [dashboardT]
-  );
-
-  const matrixDailyEarnings = useMemo(
-    () => [
-      {
-        date: "2026-04-10",
-        amount: 2150,
-        note: language === "tr" ? "2. seviye dolumu" : "2nd level fill",
-      },
-      {
-        date: "2026-04-11",
-        amount: 480,
-        note: language === "tr" ? "Sol kol hareketi" : "Left branch movement",
-      },
-      {
-        date: "2026-04-12",
-        amount: 720,
-        note: language === "tr" ? "SaÄŸ kol hareketi" : "Right branch movement",
-      },
-      {
-        date: "2026-04-13",
-        amount: 350,
-        note: language === "tr" ? "Alt seviye eÅŸleÅŸmesi" : "Lower level match",
-      },
-      {
-        date: "2026-04-14",
-        amount: 910,
-        note: language === "tr" ? "Matrix bonusu" : "Matrix bonus",
-      },
-    ],
-    [language]
-  );
+  const earnings = [];
+  const unilevelMembers = [];
+  const matrixDailyEarnings = [];
 
   async function fetchMyOrders() {
     try {
@@ -704,7 +538,11 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-chart-box">
-          {earningsChart.map((item) => (
+          {earningsChart.length === 0 ? (
+            <div className="dashboard-empty-text">
+              {language === "tr" ? "Henüz kazanç kaydı yok." : "No earnings yet."}
+            </div>
+          ) : earningsChart.map((item) => (
             <div key={item.label} className="dashboard-chart-item">
               <div className="dashboard-chart-value">
                 {formatMoney(item.value)} TL
@@ -723,7 +561,11 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-list">
-          {earnings.map((item) => (
+          {earnings.length === 0 ? (
+            <div className="dashboard-empty-text">
+              {language === "tr" ? "Henüz kazanç hareketi yok." : "No earning activity yet."}
+            </div>
+          ) : earnings.map((item) => (
             <div key={item.id} className="dashboard-earning-row">
               <div className="dashboard-earning-left">
                 <div className="dashboard-list-title">{item.title}</div>
@@ -761,7 +603,13 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-unilevel-table">
-          {unilevelMembers.map((member, index) => (
+          {unilevelMembers.length === 0 ? (
+            <div className="dashboard-empty-text">
+              {language === "tr"
+                ? "Henüz alt ekibinizde kayıtlı üye yok."
+                : "There are no registered members in your team yet."}
+            </div>
+          ) : unilevelMembers.map((member, index) => (
             <div
               key={`${member.username}-${index}`}
               className="dashboard-unilevel-row"
@@ -892,7 +740,13 @@ export default function Dashboard() {
           </div>
 
           <div className="dashboard-matrix-daily-list">
-            {matrixDailyEarnings.map((item, index) => (
+            {matrixDailyEarnings.length === 0 ? (
+              <div className="dashboard-empty-text">
+                {language === "tr"
+                  ? "Henüz matrix kazanç kaydı yok."
+                  : "No matrix earnings yet."}
+              </div>
+            ) : matrixDailyEarnings.map((item, index) => (
               <div
                 key={`${item.date}-${index}`}
                 className="dashboard-matrix-daily-row"
