@@ -85,6 +85,16 @@ const shippingInfoSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
   {
+    trackingCode: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      sparse: true,
+      uppercase: true,
+      trim: true,
+    },
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -190,6 +190,7 @@ export default function Payment() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [guestTrackingCode, setGuestTrackingCode] = useState("");
   const [publicConfig, setPublicConfig] = useState({ bank: { iban: "", accountName: "", bankName: "", enabled: false }, usdt: { trc20Address: "", network: "TRC20", enabled: false } });
   const [copyMsg, setCopyMsg] = useState("");
 
@@ -394,16 +395,20 @@ export default function Payment() {
     try {
       setLoading(true);
 
-      await createOrder();
+      const result = await createOrder();
 
       clearCart();
       window.dispatchEvent(new Event("cartUpdated"));
 
       setSuccessMsg(t.success);
-
-      setTimeout(() => {
-        navigate(user ? "/dashboard" : "/products", { replace: true });
-      }, 1000);
+      if (!user) {
+        const code = result?.trackingCode || result?.order?.trackingCode || "";
+        setGuestTrackingCode(code);
+        sessionStorage.setItem("lastGuestTrackingCode", code);
+        sessionStorage.setItem("lastGuestOrderEmail", form.email.trim().toLowerCase());
+      } else {
+        setTimeout(() => navigate("/dashboard", { replace: true }), 1000);
+      }
     } catch (error) {
       setErrorMsg(error.message || t.serverError);
     } finally {
@@ -645,6 +650,20 @@ export default function Payment() {
 
               {errorMsg && <div className="payment-error">{errorMsg}</div>}
               {successMsg && <div className="payment-success">{successMsg}</div>}
+              {guestTrackingCode && (
+                <div className="payment-tracking-result">
+                  <strong>{language === "tr" ? "Siparis takip kodunuz" : "Your order tracking code"}</strong>
+                  <code>{guestTrackingCode}</code>
+                  <p>
+                    {language === "tr"
+                      ? "Bu kodu kaydedin. E-posta adresinizle birlikte siparisinizi takip edebilirsiniz."
+                      : "Save this code. You can track the order with your email address."}
+                  </p>
+                  <Link to="/order-tracking">
+                    {language === "tr" ? "Siparisi Takip Et" : "Track Order"}
+                  </Link>
+                </div>
+              )}
 
               <button
                 type="submit"

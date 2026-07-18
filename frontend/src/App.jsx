@@ -14,6 +14,7 @@ import FAQ from "./pages/FAQ.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
 import Cart from "./pages/Cart.jsx";
 import Payment from "./pages/Payment.jsx";
+import OrderTracking from "./pages/OrderTracking.jsx";
 import SuperAdminPanel from "./pages/SuperAdminPanel.jsx";
 import LiveTranslator from "./i18n/LiveTranslator.jsx";
 
@@ -79,6 +80,7 @@ export default function App() {
 
         <Route path="/cart" element={<Cart />} />
         <Route path="/payment" element={<Payment />} />
+        <Route path="/order-tracking" element={<OrderTracking />} />
 
         <Route
           path="/dashboard"

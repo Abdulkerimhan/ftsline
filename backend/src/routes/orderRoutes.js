@@ -1,5 +1,6 @@
 ﻿import express from "express";
 import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
 import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
@@ -101,6 +102,16 @@ async function normalizeOrderItems(items = [], isLicensed = false) {
   });
 }
 
+async function createUniqueTrackingCode() {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const code = `FTS-${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
+    const exists = await Order.exists({ trackingCode: code });
+    if (!exists) return code;
+  }
+
+  throw new Error("Takip kodu olusturulamadi");
+}
+
 /* ================= CREATE ORDER ================= */
 
 router.post("/", authOptional, async (req, res) => {
@@ -154,7 +165,9 @@ router.post("/", authOptional, async (req, res) => {
     const finalShippingPrice = 0;
     const finalTotal = calculatedSubtotal + finalShippingPrice;
 
+    const trackingCode = await createUniqueTrackingCode();
     const order = await Order.create({
+      trackingCode,
       user: req.user?._id || null,
       items: orderItems,
       shippingInfo,
@@ -180,6 +193,7 @@ router.post("/", authOptional, async (req, res) => {
 
     return res.status(201).json({
       message: "Siparis basariyla olusturuldu.",
+      trackingCode: order.trackingCode,
       order,
     });
   } catch (error) {
@@ -190,6 +204,37 @@ router.post("/", authOptional, async (req, res) => {
     return res.status(500).json({
       message: "Siparis olusturulamadi.",
     });
+  }
+});
+
+/* ================= PUBLIC GUEST TRACKING ================= */
+
+router.post("/track", async (req, res) => {
+  try {
+    const trackingCode = String(req.body?.trackingCode || "").trim().toUpperCase();
+    const email = String(req.body?.email || "").trim().toLowerCase();
+
+    if (!trackingCode || !email) {
+      return res.status(400).json({ message: "Takip kodu ve e-posta zorunludur." });
+    }
+
+    const order = await Order.findOne({
+      trackingCode,
+      "shippingInfo.email": email,
+    })
+      .select(
+        "trackingCode items subtotal shippingPrice total orderType status paymentMethod paymentStatus createdAt shippingInfo.fullName shippingInfo.city shippingInfo.district"
+      )
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Takip kodu veya e-posta eslesmedi." });
+    }
+
+    return res.json(order);
+  } catch (error) {
+    console.error("Misafir siparis takip hatasi:", error);
+    return res.status(500).json({ message: "Siparis bilgisi alinamadi." });
   }
 });
 
