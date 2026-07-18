@@ -107,11 +107,15 @@ app.post("/api/auth/register", async (req, res) => {
       });
     }
 
+    const normalizedSponsor = String(sponsor || "").trim().toLowerCase();
     let sponsorUser = null;
 
-    if (sponsor) {
+    if (normalizedSponsor) {
       sponsorUser = await User.findOne({
-        username: sponsor.trim().toLowerCase(),
+        $or: [
+          { username: normalizedSponsor },
+          { referralCode: normalizedSponsor },
+        ],
       });
 
       if (!sponsorUser) {
@@ -119,10 +123,16 @@ app.post("/api/auth/register", async (req, res) => {
           message: "GeÃ§ersiz referans kullanÄ±cÄ± adÄ±",
         });
       }
+    } else {
+      sponsorUser = await User.findOne({ role: "superadmin" }).sort({ createdAt: 1 });
+
+      if (!sponsorUser) {
+        return res.status(500).json({ message: "Süper Admin bulunamadı" });
+      }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const matrixSlot = await findNextMatrixSlot();
+    const matrixSlot = await findNextMatrixSlot(sponsorUser._id);
 
     const user = await User.create({
       username: normalizedUsername,
@@ -130,8 +140,12 @@ app.post("/api/auth/register", async (req, res) => {
       email: normalizedEmail,
       passwordHash,
       referralCode: normalizedUsername,
-      sponsor: sponsorUser ? sponsorUser._id : null,
+      sponsor: sponsorUser._id,
       ...getMatrixPlacementFields(matrixSlot),
+    });
+
+    await User.findByIdAndUpdate(sponsorUser._id, {
+      $inc: { teamCount: 1 },
     });
 
     res.json({

@@ -71,11 +71,15 @@ router.post("/register", async (req, res) => {
     let sponsorUser = null;
 
     if (sponsor) {
-      sponsorUser = await User.findOne({ username: sponsor });
-    }
+      sponsorUser = await User.findOne({
+        $or: [{ username: sponsor }, { referralCode: sponsor }],
+      });
 
-    if (!sponsorUser) {
-      sponsorUser = await User.findOne({ role: "superadmin" });
+      if (!sponsorUser) {
+        return res.status(400).json({ message: "Geçersiz sponsor kodu" });
+      }
+    } else {
+      sponsorUser = await User.findOne({ role: "superadmin" }).sort({ createdAt: 1 });
     }
 
     if (!sponsorUser) {
@@ -83,7 +87,7 @@ router.post("/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const matrixSlot = await findNextMatrixSlot();
+    const matrixSlot = await findNextMatrixSlot(sponsorUser._id);
 
     const user = await User.create({
       username,

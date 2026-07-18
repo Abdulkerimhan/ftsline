@@ -23,11 +23,15 @@ async function getChildrenMap(parentIds) {
   return map;
 }
 
-export async function findNextMatrixSlot() {
-  const roots = await User.find({ matrixParent: null })
-    .select("_id matrixDepth createdAt")
-    .sort({ createdAt: 1 })
-    .lean();
+export async function findNextMatrixSlot(rootUserId = null) {
+  const roots = rootUserId
+    ? await User.find({ _id: rootUserId })
+        .select("_id matrixDepth createdAt")
+        .lean()
+    : await User.find({ matrixParent: null })
+        .select("_id matrixDepth createdAt")
+        .sort({ createdAt: 1 })
+        .lean();
 
   if (!roots.length) {
     return { parent: null, position: "", depth: 0 };
