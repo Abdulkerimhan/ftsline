@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { getMe, getReferrals } from "../api.js";
+import { getMatrixTree, getMe, getReferrals } from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import "./Dashboard.css";
 
@@ -60,6 +60,11 @@ export default function Dashboard() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [referrals, setReferrals] = useState([]);
+  const [matrixTree, setMatrixTree] = useState(() => ({
+    username: user?.username || "sen",
+    left: null,
+    right: null,
+  }));
 
   const [summary, setSummary] = useState({
     balance: 0,
@@ -82,11 +87,6 @@ export default function Dashboard() {
     address: "",
     password: "",
   });
-
-  const matrixTree = useMemo(
-    () => ({ username: user?.username || "sen", left: null, right: null }),
-    [user?.username]
-  );
 
   const unilevelTree = useMemo(
     () => ({
@@ -176,6 +176,11 @@ export default function Dashboard() {
     }));
   }
 
+  async function fetchMatrixTree() {
+    const data = await getMatrixTree();
+    if (data?.username) setMatrixTree(data);
+  }
+
   useEffect(() => {
     let mounted = true;
 
@@ -224,6 +229,7 @@ export default function Dashboard() {
     fetchUser();
     fetchMyOrders();
     fetchReferrals();
+    fetchMatrixTree();
 
     return () => {
       mounted = false;

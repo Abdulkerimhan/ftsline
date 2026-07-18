@@ -105,6 +105,22 @@ export async function getReferrals() {
   }
 }
 
+export async function getMatrixTree() {
+  try {
+    const res = await fetch(`${API}/user/matrix`, {
+      method: "GET",
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Matrix API hata:", error);
+    return null;
+  }
+}
+
 /* ================= PRODUCTS (PUBLIC) ================= */
 
 export async function getProducts() {

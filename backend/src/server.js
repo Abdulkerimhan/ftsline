@@ -290,6 +290,63 @@ app.get("/api/user/referrals", async (req, res) => {
   }
 });
 
+app.get("/api/user/matrix", async (req, res) => {
+  const auth = req.headers.authorization;
+
+  if (!auth || !auth.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Token yok" });
+  }
+
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const rootUser = await User.findById(decoded.id).select("username role").lean();
+
+    if (!rootUser) {
+      return res.status(404).json({ message: "Kullanici bulunamadi" });
+    }
+
+    const users = await User.find({
+      isActive: true,
+      isLicensed: true,
+      role: { $ne: "superadmin" },
+    })
+      .select("username matrixParent matrixPosition matrixDepth")
+      .sort({ matrixDepth: 1, createdAt: 1 })
+      .lean();
+
+    const childrenByParent = new Map();
+    for (const member of users) {
+      if (!member.matrixParent || !["left", "right"].includes(member.matrixPosition)) continue;
+      const parentId = String(member.matrixParent);
+      const children = childrenByParent.get(parentId) || {};
+      children[member.matrixPosition] = member;
+      childrenByParent.set(parentId, children);
+    }
+
+    const buildNode = (member, visited = new Set()) => {
+      const memberId = String(member._id);
+      if (visited.has(memberId)) return null;
+
+      const nextVisited = new Set(visited);
+      nextVisited.add(memberId);
+      const children = childrenByParent.get(memberId) || {};
+
+      return {
+        id: memberId,
+        username: member.username,
+        left: children.left ? buildNode(children.left, nextVisited) : null,
+        right: children.right ? buildNode(children.right, nextVisited) : null,
+      };
+    };
+
+    res.json(buildNode(rootUser));
+  } catch (error) {
+    console.error("Matrix agaci hatasi:", error);
+    res.status(401).json({ message: "Gecersiz token" });
+  }
+});
+
 app.get("/api/public/config", (req, res) => {
   res.json({
     bank: {
