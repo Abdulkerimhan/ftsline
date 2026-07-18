@@ -1,35 +1,20 @@
 ﻿import express from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import Product from "../models/Product.js";
 import { authRequired } from "../middleware/authMiddleware.js";
+import { uploadProductImages } from "../utils/cloudinaryUpload.js";
 
 const router = express.Router();
 
 /* ================= UPLOAD AYARLARI ================= */
 
-const uploadDir = process.env.UPLOAD_DIR
-  ? path.resolve(process.env.UPLOAD_DIR)
-  : path.join(process.cwd(), "uploads", "products");
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, uploadDir);
-  },
-
-  filename(req, file, cb) {
-    const ext = path.extname(file.originalname);
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, uniqueName);
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 8 },
+  fileFilter(req, file, cb) {
+    cb(null, String(file.mimetype || "").startsWith("image/"));
   },
 });
-
-const upload = multer({ storage });
 
 /* ================= YETKÄ° KONTROL ================= */
 
@@ -62,13 +47,6 @@ function requireAdminPermission(permission) {
   };
 }
 
-function fileUrl(req, file) {
-  const publicApiUrl = process.env.PUBLIC_API_URL?.replace(/\/$/, "");
-  const baseUrl = publicApiUrl || `${req.protocol}://${req.get("host")}`;
-
-  return `${baseUrl}/uploads/products/${file.filename}`;
-}
-
 /* ================= ADMIN - TÃœM ÃœRÃœNLER ================= */
 
 router.get("/products", authRequired, adminOrSuperadmin, requireAdminPermission("products"), async (req, res) => {
@@ -92,9 +70,7 @@ router.post(
   upload.array("images"),
   async (req, res) => {
     try {
-      const uploadedImages = (req.files || []).map((file) =>
-        fileUrl(req, file)
-      );
+      const uploadedImages = await uploadProductImages(req.files || []);
 
       const product = await Product.create({
         name: req.body.name || req.body.nameTr || "",
@@ -152,9 +128,7 @@ router.put(
           : [req.body.existingImages]
         : [];
 
-      const uploadedImages = (req.files || []).map((file) =>
-        fileUrl(req, file)
-      );
+      const uploadedImages = await uploadProductImages(req.files || []);
 
       const allImages = [...existingImages, ...uploadedImages];
 
