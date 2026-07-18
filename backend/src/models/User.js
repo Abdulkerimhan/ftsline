@@ -283,7 +283,7 @@ const UserSchema = new mongoose.Schema(
 
     referralCode: {
       type: String,
-      default: "",
+      default: undefined,
       trim: true,
       lowercase: true,
       unique: true,

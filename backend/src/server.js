@@ -129,6 +129,7 @@ app.post("/api/auth/register", async (req, res) => {
       fullName: fullName || "",
       email: normalizedEmail,
       passwordHash,
+      referralCode: normalizedUsername,
       sponsor: sponsorUser ? sponsorUser._id : null,
       ...getMatrixPlacementFields(matrixSlot),
     });
