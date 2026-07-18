@@ -134,3 +134,14 @@
     border-radius: 14px;
   }
 }
+
+.faq-page-embedded {
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.faq-page-embedded .faq-hero,
+.faq-page-embedded .faq-shell {
+  max-width: none;
+}

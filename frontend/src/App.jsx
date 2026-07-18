@@ -10,7 +10,6 @@ import Products from "./pages/Products.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
-import FAQ from "./pages/FAQ.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
 import Cart from "./pages/Cart.jsx";
 import Payment from "./pages/Payment.jsx";
@@ -72,7 +71,14 @@ export default function App() {
 
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/faq" element={<FAQ />} />
+        <Route
+          path="/faq"
+          element={
+            <RequireAuth>
+              <Dashboard initialSection="faq" />
+            </RequireAuth>
+          }
+        />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

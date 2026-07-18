@@ -104,9 +104,6 @@ export default function Navbar() {
       <Link to="/contact" className={navLinkClassName("/contact")}>
         {common.contact || "Iletisim"}
       </Link>
-      <Link to="/faq" className={navLinkClassName("/faq")}>
-        {common.faq || "SSS"}
-      </Link>
       <Link to="/order-tracking" className={navLinkClassName("/order-tracking")}>
         {language === "tr" ? "Siparis Takip" : "Track Order"}
       </Link>

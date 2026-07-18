@@ -159,7 +159,7 @@ const faqContent = {
   },
 };
 
-export default function FAQ() {
+export default function FAQ({ embedded = false }) {
   const { language } = useI18n();
   const t = faqContent[language] || faqContent.tr;
   const [query, setQuery] = useState("");
@@ -175,7 +175,7 @@ export default function FAQ() {
   }, [query, t.items]);
 
   return (
-    <main className="faq-page">
+    <main className={embedded ? "faq-page faq-page-embedded" : "faq-page"}>
       <section className="faq-hero">
         <span>{t.badge}</span>
         <h1>{t.title}</h1>

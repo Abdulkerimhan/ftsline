@@ -1,11 +1,12 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { getMatrixTree, getMe, getReferrals } from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
+import FAQ from "./FAQ.jsx";
 import "./Dashboard.css";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
-export default function Dashboard() {
+export default function Dashboard({ initialSection = "overview" }) {
   const i18n = useI18n() || {};
   const t = i18n.t || {};
   const language = i18n.language || "tr";
@@ -50,7 +51,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
     typeof window === "undefined" ? true : window.innerWidth > 980,
   );
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState(initialSection);
 
   const selectSection = (section) => {
     setActiveSection(section);
@@ -1077,6 +1078,8 @@ export default function Dashboard() {
         return renderProfile();
       case "settings":
         return renderSettings();
+      case "faq":
+        return <FAQ embedded />;
       default:
         return renderOverview();
     }
@@ -1197,6 +1200,19 @@ export default function Dashboard() {
               <span className="dashboard-side-icon">P</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.profile, "Profil")}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "faq" ? "active" : ""
+              }`}
+              onClick={() => selectSection("faq")}
+            >
+              <span className="dashboard-side-icon">?</span>
+              {sidebarOpen && (
+                <span>{safeText(sectionsT?.faq, "SSS")}</span>
               )}
             </button>
 
