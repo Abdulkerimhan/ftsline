@@ -265,8 +265,22 @@ app.get("/api/user/referrals", async (req, res) => {
     const token = auth.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    const referrals = await User.find({ sponsor: decoded.id })
-      .select("username fullName email isActive isLicensed createdAt")
+    const currentUser = await User.findById(decoded.id).select("role");
+
+    if (!currentUser) {
+      return res.status(404).json({ message: "Kullanici bulunamadi" });
+    }
+
+    // Super Admin agacin kokudur. Eski kayitlarin sponsor alani bos veya eski
+    // bir hesaba bagli olsa bile kok kullanici tum gercek uyeleri gorebilmelidir.
+    // Normal kullanicilar ise yalnizca kendi dogrudan referanslarini gorur.
+    const referralFilter =
+      currentUser.role === "superadmin"
+        ? { _id: { $ne: currentUser._id }, role: { $ne: "superadmin" } }
+        : { sponsor: currentUser._id };
+
+    const referrals = await User.find(referralFilter)
+      .select("username fullName email isActive isLicensed createdAt sponsor")
       .sort({ createdAt: -1 });
 
     res.json(referrals);
