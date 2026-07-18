@@ -48,11 +48,11 @@ const faqContent = {
       },
       {
         q: "Platin, Elmas ve Tac Elmas sartlari nelerdir?",
-        a: "Platin icin 100 kisisel aktif + 500 toplam aktif, 3 ayri Altin kolu + 500 toplam aktif veya kol limitiyle 500 toplam aktif aranir. Elmas icin ekipte 2.400 toplam uye ve direk bagli 3 Platin gerekir. Tac Elmas icin ekipte 50.000 toplam uye sarti bulunur.",
+        a: "Platin icin 100 kisisel aktif + 500 toplam aktif, 3 ayri Altin kolu + 500 toplam aktif veya kol limitiyle 500 toplam aktif aranir. Elmas icin ekipte 2.400 toplam uye ve direk bagli 3 Platin gerekir. Tac Elmas icin 5 ayri kolun her birinde en az 10.000 uye bulunmasi gerekir.",
       },
       {
         q: "Kol limiti ne demektir?",
-        a: "Kol limiti, kariyer hesabinda tek bir bacaktan gelen uye sayisinin tamamini saymak yerine belirli bir ust sinira kadar sayilmasidir. Ornegin Elmas seviyesinde her koldan en fazla 600 uye, Tac Elmas seviyesinde her bacaktan en fazla 10.000 uye dikkate alinir.",
+        a: "Kol limiti, kariyer hesabinda tek bir bacaktan gelen uye sayisinin tamamini saymak yerine belirli bir ust sinira kadar sayilmasidir. Elmas seviyesinde her koldan en fazla 600 uye dikkate alinir. Tac Elmas icin ise 5 ayri kol gerekir ve her kolda en az 10.000 uye bulunmalidir; bir koldaki 10.000'i asan kisim diger kolun eksigini tamamlamaz.",
       },
       {
         q: "Aktif uye ne anlama gelir?",
@@ -125,11 +125,11 @@ const faqContent = {
       },
       {
         q: "What are Platinum, Diamond and Crown Diamond requirements?",
-        a: "Platinum requires 100 personal active + 500 total active members, 3 separate Gold legs + 500 total active members, or a 500 total active structure with leg limits. Diamond requires 2,400 total team members and 3 directly connected Platinum members. Crown Diamond requires 50,000 total team members.",
+        a: "Platinum requires 100 personal active + 500 total active members, 3 separate Gold legs + 500 total active members, or a 500 total active structure with leg limits. Diamond requires 2,400 total team members and 3 directly connected Platinum members. Crown Diamond requires 5 separate legs, with at least 10,000 members in each leg.",
       },
       {
         q: "What does leg limit mean?",
-        a: "A leg limit means that only a defined maximum count from one direct leg is included in career calculations. For example, Diamond counts up to 600 members from each leg, and Crown Diamond counts up to 10,000 members from each leg.",
+        a: "A leg limit means that only a defined maximum count from one direct leg is included in career calculations. Diamond counts up to 600 members from each leg. Crown Diamond requires 5 separate legs with at least 10,000 members in every leg; members above 10,000 in one leg cannot cover a shortage in another leg.",
       },
       {
         q: "What is an active member?",

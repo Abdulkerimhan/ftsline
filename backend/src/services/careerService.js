@@ -46,6 +46,7 @@ export const CAREER_RULES = {
   TAC_ELMAS: {
     cappedTotalMembers: 50000,
     maxMembersPerLeg: 10000,
+    requiredLegs: 5,
   },
 };
 
@@ -97,6 +98,9 @@ export function calculateCareerStats({ personalActive = 0, totalActive = 0, tota
   const gumusLegs = countLegsAtLeast(legs, CAREER_LEVELS.GUMUS);
   const altinLegs = countLegsAtLeast(legs, CAREER_LEVELS.ALTIN);
   const platinLegs = countLegsAtLeast(legs, CAREER_LEVELS.PLATIN);
+  const tacElmasLegs = legs.filter(
+    (leg) => Number(leg?.totalCount || 0) >= CAREER_RULES.TAC_ELMAS.maxMembersPerLeg
+  ).length;
 
   return {
     personalActive,
@@ -110,6 +114,7 @@ export function calculateCareerStats({ personalActive = 0, totalActive = 0, tota
     gumusLegs,
     altinLegs,
     platinLegs,
+    tacElmasLegs,
     legs,
   };
 }
@@ -175,9 +180,12 @@ export function calculateCareer(input) {
     return { level, matchedRules, stats };
   }
 
-  if (stats.cappedMembers10000 >= CAREER_RULES.TAC_ELMAS.cappedTotalMembers) {
+  if (
+    stats.cappedMembers10000 >= CAREER_RULES.TAC_ELMAS.cappedTotalMembers &&
+    stats.tacElmasLegs >= CAREER_RULES.TAC_ELMAS.requiredLegs
+  ) {
     level = CAREER_LEVELS.TAC_ELMAS;
-    matchedRules.push("TAC_ELMAS: 50000 capped members");
+    matchedRules.push("TAC_ELMAS: 5 separate legs with at least 10000 members each");
   }
 
   return { level, matchedRules, stats };
