@@ -8,7 +8,6 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 
 import User from "./models/User.js";
-import { findNextMatrixSlot, getMatrixPlacementFields } from "./services/matrixService.js";
 import { processDueLicenseMatrixPayouts } from "./services/licensePlanService.js";
 
 import productRoutes from "./routes/productRoutes.js";
@@ -132,8 +131,6 @@ app.post("/api/auth/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const matrixSlot = await findNextMatrixSlot(sponsorUser._id);
-
     const user = await User.create({
       username: normalizedUsername,
       fullName: fullName || "",
@@ -141,7 +138,6 @@ app.post("/api/auth/register", async (req, res) => {
       passwordHash,
       referralCode: normalizedUsername,
       sponsor: sponsorUser._id,
-      ...getMatrixPlacementFields(matrixSlot),
     });
 
     await User.findByIdAndUpdate(sponsorUser._id, {
@@ -270,7 +266,7 @@ app.get("/api/user/referrals", async (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const referrals = await User.find({ sponsor: decoded.id })
-      .select("username fullName email createdAt")
+      .select("username fullName email isActive isLicensed createdAt")
       .sort({ createdAt: -1 });
 
     res.json(referrals);

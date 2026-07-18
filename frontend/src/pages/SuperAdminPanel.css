@@ -276,6 +276,30 @@
   color: #991b1b;
 }
 
+.super-license-date {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.super-license-remaining {
+  display: inline-flex;
+  padding: 7px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.super-license-remaining.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.super-license-remaining.passive {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
 .super-career-badge {
   display: inline-flex;
   padding: 7px 12px;

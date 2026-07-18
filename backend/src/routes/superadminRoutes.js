@@ -12,6 +12,7 @@ import {
   INITIAL_LICENSE_BONUS_BASE_USDT,
   distributeInitialUnilevelBonus,
 } from "../services/unilevelBonusService.js";
+import { ensureUserMatrixPlacement } from "../services/matrixService.js";
 
 const router = express.Router();
 
@@ -24,6 +25,16 @@ function normalizeAdminPermissions(permissions) {
 
 router.get("/users", authRequired, superAdminOnly, async (req, res) => {
   try {
+    // Suresi dolan lisanslari otomatik pasife al; kullanici hesabi aktif kalir.
+    await User.updateMany(
+      {
+        role: { $ne: "superadmin" },
+        isLicensed: true,
+        licenseExpiresAt: { $ne: null, $lte: new Date() },
+      },
+      { $set: { isLicensed: false } }
+    );
+
     const users = await User.find()
       .select("-passwordHash")
       .sort({ createdAt: -1 });
@@ -58,7 +69,7 @@ router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) 
   try {
     const { isLicensed, licenseFee, licensePaymentType } = req.body;
 
-    const user = await User.findByIdAndUpdate(
+    let user = await User.findByIdAndUpdate(
       req.params.id,
       {
         isLicensed: Boolean(isLicensed),
@@ -72,6 +83,10 @@ router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) 
 
     if (!user) {
       return res.status(404).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
+    }
+
+    if (Boolean(isLicensed)) {
+      user = await ensureUserMatrixPlacement(user._id);
     }
 
     const numericLicenseFee = Number(licenseFee || 0);

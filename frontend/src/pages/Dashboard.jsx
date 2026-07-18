@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { getMe } from "../api.js";
+import { getMe, getReferrals } from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import "./Dashboard.css";
 
@@ -59,6 +59,7 @@ export default function Dashboard() {
 
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [referrals, setReferrals] = useState([]);
 
   const [summary, setSummary] = useState({
     balance: 0,
@@ -88,8 +89,14 @@ export default function Dashboard() {
   );
 
   const unilevelTree = useMemo(
-    () => ({ username: user?.username || "sen", children: [] }),
-    [user?.username]
+    () => ({
+      username: user?.username || "sen",
+      children: referrals.map((referral) => ({
+        username: referral.username,
+        children: [],
+      })),
+    }),
+    [referrals, user?.username]
   );
 
   const [expandedNodes, setExpandedNodes] = useState({
@@ -106,7 +113,23 @@ export default function Dashboard() {
   });
 
   const earnings = [];
-  const unilevelMembers = [];
+  const unilevelMembers = useMemo(
+    () =>
+      referrals.map((referral) => ({
+        username: referral.username,
+        level: 1,
+        joinDate: referral.createdAt
+          ? new Date(referral.createdAt).toLocaleDateString(
+              language === "tr" ? "tr-TR" : "en-US"
+            )
+          : "-",
+        contribution: 0,
+        status: referral.isActive
+          ? safeText(dashboardT?.active, "Aktif")
+          : safeText(dashboardT?.passive, "Pasif"),
+      })),
+    [dashboardT?.active, dashboardT?.passive, language, referrals]
+  );
   const matrixDailyEarnings = [];
 
   async function fetchMyOrders() {
@@ -140,6 +163,17 @@ export default function Dashboard() {
     } finally {
       setOrdersLoading(false);
     }
+  }
+
+  async function fetchReferrals() {
+    const data = await getReferrals();
+    const referralList = Array.isArray(data) ? data : [];
+    setReferrals(referralList);
+    setSummary((prev) => ({
+      ...prev,
+      directReferrals: referralList.length,
+      teamCount: Math.max(prev.teamCount || 0, referralList.length),
+    }));
   }
 
   useEffect(() => {
@@ -189,6 +223,7 @@ export default function Dashboard() {
 
     fetchUser();
     fetchMyOrders();
+    fetchReferrals();
 
     return () => {
       mounted = false;

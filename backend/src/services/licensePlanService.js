@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import { distributeLicenseCareerBonus, MONTHLY_LICENSE_USAGE_FEE_USDT } from "./careerBonusService.js";
 import { distributeInitialUnilevelBonus } from "./unilevelBonusService.js";
+import { findNextMatrixSlot, getMatrixPlacementFields } from "./matrixService.js";
 
 export const LICENSE_PLANS = {
   initial: {
@@ -146,6 +147,11 @@ export async function activateLicensePlanForUser({ userId, planKey, paidAt = new
 
   if (!user.licenseNextMatrixPayoutAt) {
     user.licenseNextMatrixPayoutAt = now;
+  }
+
+  if (user.role !== "superadmin" && !user.matrixParent && user.sponsor) {
+    const matrixSlot = await findNextMatrixSlot(user.sponsor);
+    Object.assign(user, getMatrixPlacementFields(matrixSlot));
   }
 
   await user.save();

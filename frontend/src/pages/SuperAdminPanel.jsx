@@ -21,6 +21,37 @@ const emptyProductForm = {
   status: "Aktif",
 };
 
+function formatLicenseDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function getRemainingLicenseTime(expiresAt, isLicensed) {
+  if (!expiresAt) return "-";
+  const difference = new Date(expiresAt).getTime() - Date.now();
+  if (difference <= 0) return "Suresi doldu";
+  if (!isLicensed) return "Pasif";
+
+  const days = Math.ceil(difference / (24 * 60 * 60 * 1000));
+  if (days >= 365) {
+    const years = Math.floor(days / 365);
+    const remainingDays = days % 365;
+    return `${years} yil${remainingDays ? ` ${remainingDays} gun` : ""}`;
+  }
+  if (days >= 30) {
+    const months = Math.floor(days / 30);
+    const remainingDays = days % 30;
+    return `${months} ay${remainingDays ? ` ${remainingDays} gun` : ""}`;
+  }
+  return `${days} gun`;
+}
+
 export default function SuperAdminPanel() {
   const [activeMenu, setActiveMenu] = useState("overview");
   const [search, setSearch] = useState("");
@@ -626,8 +657,11 @@ export default function SuperAdminPanel() {
                 <th>Rol</th>
                 <th>Durum</th>
                 <th>Lisans</th>
-                                <th>Admin Alanlari</th>
-<th>Islem</th>
+                <th>Lisans Baslangici</th>
+                <th>Pasife Dusecegi Tarih</th>
+                <th>Kalan Sure</th>
+                <th>Admin Alanlari</th>
+                <th>Islem</th>
               </tr>
             </thead>
 
@@ -672,6 +706,26 @@ export default function SuperAdminPanel() {
                         }
                       >
                         {user.isLicensed ? "Lisansli" : "Lisanssiz"}
+                      </span>
+                    </td>
+                    <td className="super-license-date">
+                      {formatLicenseDate(user.licenseStartedAt)}
+                    </td>
+                    <td className="super-license-date">
+                      {formatLicenseDate(user.licenseExpiresAt)}
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          user.isLicensed
+                            ? "super-license-remaining active"
+                            : "super-license-remaining passive"
+                        }
+                      >
+                        {getRemainingLicenseTime(
+                          user.licenseExpiresAt,
+                          user.isLicensed
+                        )}
                       </span>
                     </td>
                     <td>
@@ -732,7 +786,7 @@ export default function SuperAdminPanel() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="super-empty">
+                  <td colSpan="11" className="super-empty">
                     Kullanici bulunamadi.
                   </td>
                 </tr>

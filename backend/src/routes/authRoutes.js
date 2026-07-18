@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import User from "../models/User.js";
-import { findNextMatrixSlot, getMatrixPlacementFields } from "../services/matrixService.js";
 
 const router = express.Router();
 
@@ -87,8 +86,6 @@ router.post("/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const matrixSlot = await findNextMatrixSlot(sponsorUser._id);
-
     const user = await User.create({
       username,
       fullName,
@@ -96,7 +93,6 @@ router.post("/register", async (req, res) => {
       passwordHash,
       role: "user",
       sponsor: sponsorUser._id,
-      ...getMatrixPlacementFields(matrixSlot),
       referralCode: username,
     });
 

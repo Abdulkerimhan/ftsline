@@ -85,3 +85,21 @@ export function getMatrixPlacementFields(slot) {
     matrixDepth: Number(slot?.depth || 0),
   };
 }
+
+export async function ensureUserMatrixPlacement(userId) {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new Error("Kullanici bulunamadi");
+  }
+
+  if (user.role === "superadmin" || user.matrixParent || !user.sponsor) {
+    return user;
+  }
+
+  const slot = await findNextMatrixSlot(user.sponsor);
+  Object.assign(user, getMatrixPlacementFields(slot));
+  await user.save();
+
+  return user;
+}
