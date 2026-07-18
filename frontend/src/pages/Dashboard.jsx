@@ -47,8 +47,15 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window === "undefined" ? true : window.innerWidth > 980,
+  );
   const [activeSection, setActiveSection] = useState("overview");
+
+  const selectSection = (section) => {
+    setActiveSection(section);
+    if (window.innerWidth <= 980) setSidebarOpen(false);
+  };
 
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -1192,6 +1199,14 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-shell">
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="dashboard-sidebar-backdrop"
+          aria-label="Menüyü kapat"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
         <div>
           <div className="dashboard-sidebar-top">
@@ -1217,7 +1232,7 @@ export default function Dashboard() {
               className={`dashboard-side-link ${
                 activeSection === "overview" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("overview")}
+              onClick={() => selectSection("overview")}
             >
               <span className="dashboard-side-icon">G</span>
               {sidebarOpen && (
@@ -1230,7 +1245,7 @@ export default function Dashboard() {
               className={`dashboard-side-link ${
                 activeSection === "earnings" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("earnings")}
+              onClick={() => selectSection("earnings")}
             >
               <span className="dashboard-side-icon">K</span>
               {sidebarOpen && (
@@ -1243,7 +1258,7 @@ export default function Dashboard() {
               className={`dashboard-side-link ${
                 activeSection === "unilevel" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("unilevel")}
+              onClick={() => selectSection("unilevel")}
             >
               <span className="dashboard-side-icon">U</span>
               {sidebarOpen && (
@@ -1256,7 +1271,7 @@ export default function Dashboard() {
               className={`dashboard-side-link ${
                 activeSection === "matrix" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("matrix")}
+              onClick={() => selectSection("matrix")}
             >
               <span className="dashboard-side-icon">M</span>
               {sidebarOpen && (
@@ -1269,7 +1284,7 @@ export default function Dashboard() {
               className={`dashboard-side-link ${
                 activeSection === "orders" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("orders")}
+              onClick={() => selectSection("orders")}
             >
               <span className="dashboard-side-icon">S</span>
               {sidebarOpen && (
@@ -1282,7 +1297,7 @@ export default function Dashboard() {
               className={`dashboard-side-link ${
                 activeSection === "profile" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("profile")}
+              onClick={() => selectSection("profile")}
             >
               <span className="dashboard-side-icon">P</span>
               {sidebarOpen && (
@@ -1295,7 +1310,7 @@ export default function Dashboard() {
               className={`dashboard-side-link ${
                 activeSection === "settings" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("settings")}
+              onClick={() => selectSection("settings")}
             >
               <span className="dashboard-side-icon">A</span>
               {sidebarOpen && (

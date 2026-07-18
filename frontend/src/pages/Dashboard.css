@@ -32,6 +32,10 @@
   min-width: 84px;
 }
 
+.dashboard-sidebar-backdrop {
+  display: none;
+}
+
 .dashboard-sidebar-top {
   display: flex;
   align-items: center;
@@ -954,6 +958,17 @@
 }
 
 @media (max-width: 980px) {
+  .dashboard-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    border: 0;
+    padding: 0;
+    background: rgba(3, 10, 25, 0.58);
+    backdrop-filter: blur(2px);
+  }
+
   .dashboard-sidebar {
     position: fixed;
     left: 0;
@@ -962,6 +977,8 @@
     transform: translateX(0);
     width: 260px;
     min-width: 260px;
+    max-width: calc(100vw - 56px);
+    box-shadow: 18px 0 40px rgba(3, 10, 25, 0.3);
   }
 
   .dashboard-sidebar.closed {
