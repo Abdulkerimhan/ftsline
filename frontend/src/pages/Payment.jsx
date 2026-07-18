@@ -83,7 +83,7 @@ export default function Payment() {
         requiredAddress: "Adres zorunludur.",
         agreementRequired: "Satis sozlesmesini onaylamalisiniz.",
         txIdRequired: "USDT odemesi icin TxID zorunludur.",
-        loginRequired: "Siparis olusturmak icin giris yapmalisiniz.",
+        loginRequired: "Lisans siparisi olusturmak icin giris yapmalisiniz.",
         serverError: "Siparis olusturulurken bir hata olustu.",
       },
       en: {
@@ -150,7 +150,7 @@ export default function Payment() {
         requiredAddress: "Address is required.",
         agreementRequired: "You must accept the agreement.",
         txIdRequired: "TxID is required for USDT payment.",
-        loginRequired: "You must log in to create an order.",
+        loginRequired: "You must log in to create a license order.",
         serverError: "An error occurred while creating the order.",
       },
     }),
@@ -332,7 +332,7 @@ export default function Payment() {
   async function createOrder() {
     const token = sessionStorage.getItem("accessToken");
 
-    if (!token) {
+    if (isLicenseOrder && !token) {
       throw new Error(t.loginRequired);
     }
 
@@ -360,7 +360,7 @@ export default function Payment() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(payload),
     });
@@ -402,7 +402,7 @@ export default function Payment() {
       setSuccessMsg(t.success);
 
       setTimeout(() => {
-        navigate("/dashboard", { replace: true });
+        navigate(user ? "/dashboard" : "/products", { replace: true });
       }, 1000);
     } catch (error) {
       setErrorMsg(error.message || t.serverError);

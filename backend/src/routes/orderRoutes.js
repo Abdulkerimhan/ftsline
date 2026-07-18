@@ -1,6 +1,9 @@
 ﻿import express from "express";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import Order from "../models/Order.js";
+import Product from "../models/Product.js";
+import User from "../models/User.js";
 import { activateLicensePlanForUser, getLicensePlan } from "../services/licensePlanService.js";
 
 const router = express.Router();
@@ -33,6 +36,30 @@ function authRequired(req, res, next) {
   }
 }
 
+async function authOptional(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, getJwtSecret());
+    const user = await User.findById(decoded.id).select("role isActive isLicensed");
+
+    if (!user || user.isActive === false) {
+      return res.status(401).json({ message: "Kullanici oturumu gecersiz" });
+    }
+
+    req.user = user;
+    return next();
+  } catch (error) {
+    return res.status(401).json({ message: "Gecersiz token" });
+  }
+}
+
 function adminOrSuperadmin(req, res, next) {
   if (!["admin", "superadmin"].includes(req.user?.role)) {
     return res.status(403).json({ message: "Admin yetkisi gerekli" });
@@ -43,25 +70,40 @@ function adminOrSuperadmin(req, res, next) {
 
 /* ================= HELPERS ================= */
 
-function normalizeOrderItems(items = []) {
-  return items.map((item) => {
-    const price = Number(
-      item.selectedPrice ?? item.price ?? item.priceNormal ?? 0
-    );
+async function normalizeOrderItems(items = [], isLicensed = false) {
+  const requested = items.map((item) => ({
+    productId: String(item.productId || item._id || "").trim(),
+    quantity: Math.max(1, Math.floor(Number(item.quantity || 1))),
+  }));
+  const productIds = requested.map((item) => item.productId).filter(Boolean);
+  if (productIds.some((productId) => !mongoose.isValidObjectId(productId))) {
+    throw new Error("Sipariste gecersiz veya pasif urun var");
+  }
+  const products = await Product.find({ _id: { $in: productIds }, isActive: true }).lean();
+  const productMap = new Map(products.map((product) => [String(product._id), product]));
+
+  if (productIds.length !== requested.length || products.length !== new Set(productIds).size) {
+    throw new Error("Sipariste gecersiz veya pasif urun var");
+  }
+
+  return requested.map(({ productId, quantity }) => {
+    const product = productMap.get(productId);
+    const licensedPrice = Number(product.priceLicensed || 0);
+    const normalPrice = Number(product.priceNormal || 0);
 
     return {
-      productId: item._id || item.productId || null,
-      name: item.name,
-      image: item.image || item.images?.[0] || "",
-      price,
-      quantity: Number(item.quantity || 1),
+      productId: product._id,
+      name: product.nameTr || product.name || "Urun",
+      image: product.image || product.images?.[0] || "",
+      price: isLicensed && licensedPrice > 0 ? licensedPrice : normalPrice,
+      quantity,
     };
   });
 }
 
 /* ================= CREATE ORDER ================= */
 
-router.post("/", authRequired, async (req, res) => {
+router.post("/", authOptional, async (req, res) => {
   try {
     const {
       items,
@@ -79,6 +121,10 @@ router.post("/", authRequired, async (req, res) => {
 
     if (isLicenseOrder && !selectedLicensePlan) {
       return res.status(400).json({ message: "Gecersiz lisans plani." });
+    }
+
+    if (isLicenseOrder && !req.user) {
+      return res.status(401).json({ message: "Lisans siparisi icin giris yapmalisiniz." });
     }
 
     if (!isLicenseOrder && (!items || !Array.isArray(items) || items.length === 0)) {
@@ -99,22 +145,22 @@ router.post("/", authRequired, async (req, res) => {
             quantity: 1,
           },
         ]
-      : normalizeOrderItems(items);
+      : await normalizeOrderItems(items, req.user?.isLicensed === true);
 
     const calculatedSubtotal = orderItems.reduce((sum, item) => {
       return sum + Number(item.price || 0) * Number(item.quantity || 1);
     }, 0);
 
-    const finalShippingPrice = Number(shippingPrice || 0);
+    const finalShippingPrice = 0;
     const finalTotal = calculatedSubtotal + finalShippingPrice;
 
     const order = await Order.create({
-      user: req.user.id,
+      user: req.user?._id || null,
       items: orderItems,
       shippingInfo,
-      subtotal: Number(subtotal || calculatedSubtotal),
+      subtotal: calculatedSubtotal,
       shippingPrice: finalShippingPrice,
-      total: Number(total || finalTotal),
+      total: finalTotal,
       orderType: isLicenseOrder ? "license" : "product",
       licensePlan: selectedLicensePlan?.key || "",
       licenseMonths: selectedLicensePlan?.durationMonths || 0,
@@ -138,6 +184,9 @@ router.post("/", authRequired, async (req, res) => {
     });
   } catch (error) {
     console.error("Siparis olusturma hatasi:", error);
+    if (error.message === "Sipariste gecersiz veya pasif urun var") {
+      return res.status(400).json({ message: error.message });
+    }
     return res.status(500).json({
       message: "Siparis olusturulamadi.",
     });
