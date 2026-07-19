@@ -21,6 +21,14 @@ const emptyProductForm = {
   status: "Aktif",
 };
 
+const emptyFinanceData = {
+  summary: { paidSales: 0, pendingSales: 0, invoicePending: 0, totalEarnings: 0, orderCount: 0 },
+  orders: [],
+  users: [],
+  products: [],
+  transactions: [],
+};
+
 function formatLicenseDate(value) {
   if (!value) return "-";
   const date = new Date(value);
@@ -87,6 +95,9 @@ export default function SuperAdminPanel() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
+  const [financeData, setFinanceData] = useState(emptyFinanceData);
+  const [financeTab, setFinanceTab] = useState("sales");
+  const [loadingFinance, setLoadingFinance] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -153,6 +164,33 @@ export default function SuperAdminPanel() {
     setLoading(false);
   }
 
+  async function loadFinance() {
+    setLoadingFinance(true);
+    const data = await request("/admin/finance/overview", {}, null);
+    if (data) {
+      setFinanceData({
+        ...emptyFinanceData,
+        ...data,
+        summary: { ...emptyFinanceData.summary, ...(data.summary || {}) },
+      });
+    }
+    setLoadingFinance(false);
+  }
+
+  async function updateFinanceOrder(orderId, changes) {
+    setLoadingFinance(true);
+    const updated = await request(`/admin/finance/orders/${orderId}`, {
+      method: "PATCH",
+      body: JSON.stringify(changes),
+    }, null);
+    if (updated) {
+      setMessage("Finans kaydi guncellendi.");
+      await loadFinance();
+    } else {
+      setLoadingFinance(false);
+    }
+  }
+
   useEffect(() => {
     loadAll();
 
@@ -160,6 +198,10 @@ export default function SuperAdminPanel() {
       preview.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
+
+  useEffect(() => {
+    if (activeMenu === "finance") loadFinance();
+  }, [activeMenu]);
 
   const stats = useMemo(() => {
     const activeProducts = products.filter((p) => p.isActive).length;
@@ -1203,35 +1245,73 @@ export default function SuperAdminPanel() {
   }
 
   function renderFinance() {
-    const total = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    const q = search.trim().toLocaleLowerCase("tr-TR");
+    const financeOrders = financeData.orders.filter((order) =>
+      !q || [order.orderNumber, order.user?.username, order.user?.fullName, order.user?.email,
+        ...(order.items || []).map((item) => item.name)].some((value) =>
+        String(value || "").toLocaleLowerCase("tr-TR").includes(q))
+    );
+    const financeUsers = financeData.users.filter((user) =>
+      !q || [user.username, user.fullName, user.email].some((value) =>
+        String(value || "").toLocaleLowerCase("tr-TR").includes(q))
+    );
+    const financeProducts = financeData.products.filter((product) =>
+      !q || [product.name, product.brand, product.category].some((value) =>
+        String(value || "").toLocaleLowerCase("tr-TR").includes(q))
+    );
+    const paymentLabels = { pending: "Odeme Bekliyor", paid: "Odendi", failed: "Basarisiz", refunded: "Iade Edildi" };
+    const orderLabels = { pending: "Onay Bekliyor", preparing: "Hazirlaniyor", shipped: "Kargoda", completed: "Teslim Edildi", cancelled: "Iptal Edildi" };
 
     return (
-      <section className="super-card">
-        <h2>Finans Ozeti</h2>
-        <p className="super-muted">Siparis cirosu ve sistem ozeti.</p>
-
-        <div className="super-finance-grid">
-          <div>
-            <span>Toplam Siparis Cirosu</span>
-            <strong>{total.toLocaleString("tr-TR")} TL</strong>
+      <div className="super-finance-page">
+        <section className="super-card">
+          <div className="super-section-head">
+            <div><h2>Finans Merkezi</h2><p className="super-muted">Satis, fatura, urun ve kullanici hak edislerini tek ekranda yonetin.</p></div>
+            <button className="super-btn" onClick={loadFinance} disabled={loadingFinance}>{loadingFinance ? "Yukleniyor..." : "Finansi Yenile"}</button>
           </div>
 
-          <div>
-            <span>Toplam Siparis</span>
-            <strong>{orders.length}</strong>
+          <div className="super-finance-grid">
+            <div><span>Odenen Satis</span><strong>{formatMoney(financeData.summary.paidSales)}</strong></div>
+            <div><span>Bekleyen Odeme</span><strong>{formatMoney(financeData.summary.pendingSales)}</strong></div>
+            <div><span>Toplam Hak Edis</span><strong>{formatMoney(financeData.summary.totalEarnings)}</strong></div>
+            <div><span>Fatura Bekleyen</span><strong>{financeData.summary.invoicePending}</strong></div>
+            <div><span>Toplam Siparis</span><strong>{financeData.summary.orderCount}</strong></div>
           </div>
 
-          <div>
-            <span>Aktif Urun</span>
-            <strong>{products.filter((p) => p.isActive).length}</strong>
+          <div className="super-finance-tabs">
+            <button className={financeTab === "sales" ? "active" : ""} onClick={() => setFinanceTab("sales")}>Satis ve Faturalar</button>
+            <button className={financeTab === "earnings" ? "active" : ""} onClick={() => setFinanceTab("earnings")}>Hak Edisler ve Kaynaklari</button>
+            <button className={financeTab === "products" ? "active" : ""} onClick={() => setFinanceTab("products")}>Urun Takibi</button>
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Finansta ara..." />
           </div>
+        </section>
 
-          <div>
-            <span>Lisansli Kullanici</span>
-            <strong>{users.filter((u) => u.isLicensed).length}</strong>
-          </div>
-        </div>
-      </section>
+        {financeTab === "sales" && <section className="super-card">
+          <h2>Satis ve Fatura Takibi</h2>
+          <div className="super-table-wrap"><table className="super-table"><thead><tr><th>Siparis</th><th>Musteri / Urun</th><th>Tutar</th><th>Odeme</th><th>Siparis Durumu</th><th>Fatura</th><th>Tarih</th></tr></thead>
+            <tbody>{financeOrders.map((order) => <tr key={order._id}>
+              <td>#{order.orderNumber || String(order._id).slice(-8).toUpperCase()}</td>
+              <td><strong>{order.user?.fullName || order.user?.username || "Misafir"}</strong><small>{(order.items || []).map((item) => `${item.name} (${item.quantity})`).join(", ")}</small></td>
+              <td><strong>{formatMoney(order.total)}</strong></td>
+              <td><select className="super-select" value={order.paymentStatus || "pending"} onChange={(e) => updateFinanceOrder(order._id, { paymentStatus: e.target.value })}>{Object.entries(paymentLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></td>
+              <td><select className="super-select" value={order.status || "pending"} onChange={(e) => updateFinanceOrder(order._id, { status: e.target.value })}>{Object.entries(orderLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></td>
+              <td>{order.invoiceIssued ? <button className="super-invoice issued" onClick={() => updateFinanceOrder(order._id, { invoiceIssued: false })}>Kesildi {order.invoiceNumber ? `#${order.invoiceNumber}` : ""}</button> : <button className="super-invoice" onClick={() => { const number = window.prompt("Fatura numarasi (istege bagli):", ""); if (number !== null) updateFinanceOrder(order._id, { invoiceIssued: true, invoiceNumber: number }); }}>Fatura Kesildi</button>}</td>
+              <td>{formatLicenseDate(order.createdAt)}</td>
+            </tr>)}</tbody></table>{!financeOrders.length && <div className="super-empty">Eslesen satis kaydi yok.</div>}</div>
+        </section>}
+
+        {financeTab === "earnings" && <section className="super-card">
+          <h2>Kullanici Kazanc ve Hak Edis Kaynaklari</h2>
+          <div className="super-table-wrap"><table className="super-table"><thead><tr><th>Kullanici</th><th>Hak Edilen</th><th>Odenen</th><th>Bekleyen</th><th>Cuzdan</th><th>Son Hak Edis Kaynaklari</th></tr></thead>
+            <tbody>{financeUsers.map((user) => <tr key={user._id}><td><strong>{user.username}</strong><small>{user.fullName}<br />{user.email}</small></td><td>{formatMoney(user.earnedTotal)}</td><td>{formatMoney(user.paidTotal)}</td><td>{formatMoney(user.pendingTotal)}</td><td>{formatMoney(user.walletBalance)}</td><td><div className="super-earning-sources">{(user.recentSources || []).slice(0, 4).map((source, index) => <span key={`${source._id || index}`}><b>{formatEarningType(source.type)}</b> · {formatMoney(source.amount)} · {formatEarningStatus(source.status)}<small>{source.sourceUser?.username ? `Kaynak: ${source.sourceUser.username}` : "Sistem"} · {formatLicenseDate(source.createdAt)}</small></span>)}{!(user.recentSources || []).length && "Henuz hak edis yok"}</div></td></tr>)}</tbody></table>{!financeUsers.length && <div className="super-empty">Eslesen kullanici finans kaydi yok.</div>}</div>
+        </section>}
+
+        {financeTab === "products" && <section className="super-card">
+          <h2>Urun Satis ve Stok Takibi</h2>
+          <div className="super-table-wrap"><table className="super-table"><thead><tr><th>Urun</th><th>Kategori</th><th>Stok</th><th>Satilan Adet</th><th>Satis Cirosu</th><th>Durum</th></tr></thead>
+            <tbody>{financeProducts.map((product) => <tr key={product._id}><td><strong>{product.name}</strong><small>{product.brand}</small></td><td>{product.category || "-"}</td><td>{product.stock ?? "Sinirsiz"}</td><td>{product.soldQuantity || 0}</td><td>{formatMoney(product.salesRevenue)}</td><td><span className={`super-status ${product.isActive ? "active" : "passive"}`}>{product.isActive ? "Aktif" : "Pasif"}</span></td></tr>)}</tbody></table>{!financeProducts.length && <div className="super-empty">Eslesen urun kaydi yok.</div>}</div>
+        </section>}
+      </div>
     );
   }
 

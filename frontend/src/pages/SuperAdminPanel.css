@@ -449,7 +449,7 @@
 
 .super-finance-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
   gap: 16px;
   margin-top: 18px;
 }
@@ -470,6 +470,65 @@
 
 .super-finance-grid strong {
   font-size: 24px;
+}
+
+.super-finance-page {
+  display: grid;
+  gap: 22px;
+}
+
+.super-finance-tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.super-finance-tabs button,
+.super-invoice {
+  border: 1px solid #dbe4f0;
+  background: #fff;
+  color: #1e3a8a;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.super-finance-tabs button.active,
+.super-invoice.issued {
+  color: #fff;
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.super-finance-tabs input {
+  min-width: 240px;
+  margin-left: auto;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  padding: 11px 14px;
+}
+
+.super-earning-sources {
+  display: grid;
+  gap: 7px;
+  min-width: 320px;
+}
+
+.super-earning-sources > span {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f1f5f9;
+}
+
+.super-earning-sources small,
+.super-table td > small {
+  display: block;
+  color: #64748b;
+  margin-top: 4px;
 }
 
 .super-alert {
