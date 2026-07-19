@@ -341,6 +341,45 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
     return res.status(500).json({ message: "Odeme durumu guncellenemedi" });
   }
 });
+
+/* ================= ADMIN UPDATE ORDER ================= */
+
+router.put("/admin/:id/status", authRequired, adminOrSuperadmin, async (req, res) => {
+  try {
+    const { status, shippingCarrier, cargoTrackingNumber } = req.body;
+    const allowedStatuses = ["pending", "preparing", "shipped", "completed", "cancelled"];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: "Gecersiz siparis durumu" });
+    }
+
+    const updates = {
+      status,
+      shippingCarrier: String(shippingCarrier || "").trim(),
+      cargoTrackingNumber: String(cargoTrackingNumber || "").trim(),
+    };
+
+    if (status === "shipped" && !updates.cargoTrackingNumber) {
+      return res.status(400).json({ message: "Kargoya verildi durumunda takip numarasi gereklidir" });
+    }
+
+    const order = await Order.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+      runValidators: true,
+    })
+      .populate("user", "username fullName email role")
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Siparis bulunamadi" });
+    }
+
+    return res.json(order);
+  } catch (error) {
+    console.error("Siparis durumu guncelleme hatasi:", error);
+    return res.status(500).json({ message: "Siparis durumu guncellenemedi" });
+  }
+});
 /* ================= SINGLE ORDER ================= */
 
 router.get("/:id", authRequired, async (req, res) => {

@@ -172,6 +172,20 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    shippingCarrier: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 80,
+    },
+
+    cargoTrackingNumber: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 120,
+    },
+
     paymentMethod: {
       type: String,
       enum: ["card", "cash_on_delivery", "bank_transfer", "usdt_trc20"],

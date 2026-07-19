@@ -72,6 +72,12 @@ export default function SuperAdminPanel() {
   const [selectedUserDetails, setSelectedUserDetails] = useState(null);
   const [userDetailsLoading, setUserDetailsLoading] = useState(false);
   const [licenseDuration, setLicenseDuration] = useState("12");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderEdit, setOrderEdit] = useState({
+    status: "pending",
+    shippingCarrier: "",
+    cargoTrackingNumber: "",
+  });
 
   const token = sessionStorage.getItem("accessToken");
 
@@ -512,6 +518,44 @@ export default function SuperAdminPanel() {
       await loadAll();
     }
   }
+
+  function openOrderDetails(order) {
+    setSelectedOrder(order);
+    setOrderEdit({
+      status: order.status || "pending",
+      shippingCarrier: order.shippingCarrier || "",
+      cargoTrackingNumber: order.cargoTrackingNumber || "",
+    });
+  }
+
+  async function updateOrderStatus() {
+    if (!selectedOrder) return;
+
+    const result = await request(
+      `/orders/admin/${selectedOrder._id}/status`,
+      {
+        method: "PUT",
+        body: JSON.stringify(orderEdit),
+      },
+      null
+    );
+
+    if (result) {
+      setMessage("Siparis ve kargo bilgileri guncellendi");
+      setSelectedOrder(null);
+      await loadAll();
+    }
+  }
+
+  function getOrderStatusLabel(status) {
+    return {
+      pending: "Onay Bekliyor",
+      preparing: "Hazirlaniyor",
+      shipped: "Kargoya Verildi",
+      completed: "Teslim Edildi",
+      cancelled: "Iptal Edildi",
+    }[status] || "Onay Bekliyor";
+  }
   function renderOverview() {
     return (
       <>
@@ -886,7 +930,11 @@ export default function SuperAdminPanel() {
               {filteredOrders.length ? (
                 filteredOrders.map((order) => (
                   <tr key={order._id}>
-                    <td>#{String(order._id).slice(-8).toUpperCase()}</td>
+                    <td>
+                      <button className="super-order-link" onClick={() => openOrderDetails(order)}>
+                        #{String(order._id).slice(-8).toUpperCase()}
+                      </button>
+                    </td>
 
                     <td>
                       {order.shippingInfo?.fullName || "-"}
@@ -940,8 +988,8 @@ export default function SuperAdminPanel() {
                     </td>
 
                     <td>
-                      <span className="super-status active">
-                        {order.status || "pending"}
+                      <span className={`super-order-status ${order.status || "pending"}`}>
+                        {getOrderStatusLabel(order.status)}
                       </span>
                     </td>
 
@@ -962,6 +1010,73 @@ export default function SuperAdminPanel() {
             </tbody>
           </table>
         </div>
+
+        {selectedOrder ? (
+          <div className="super-modal-backdrop" onMouseDown={() => setSelectedOrder(null)}>
+            <div className="super-modal super-order-modal" onMouseDown={(e) => e.stopPropagation()}>
+              <div className="super-modal-head">
+                <div>
+                  <h2>Siparis Detayi</h2>
+                  <p>#{String(selectedOrder._id).slice(-8).toUpperCase()}</p>
+                </div>
+                <button className="super-modal-close" onClick={() => setSelectedOrder(null)}>×</button>
+              </div>
+
+              <div className="super-order-detail-grid">
+                <div className="super-order-info">
+                  <h3>Musteri ve Teslimat</h3>
+                  <p><strong>Ad Soyad:</strong> {selectedOrder.shippingInfo?.fullName || "-"}</p>
+                  <p><strong>E-posta:</strong> {selectedOrder.shippingInfo?.email || "-"}</p>
+                  <p><strong>Telefon:</strong> {selectedOrder.shippingInfo?.phone || "-"}</p>
+                  <p><strong>Adres:</strong> {selectedOrder.shippingInfo?.address || "-"}, {selectedOrder.shippingInfo?.district || "-"} / {selectedOrder.shippingInfo?.city || "-"}</p>
+                  <p><strong>Not:</strong> {selectedOrder.shippingInfo?.note || "-"}</p>
+                  <p><strong>Siparis takip kodu:</strong> {selectedOrder.trackingCode || "-"}</p>
+                </div>
+
+                <div className="super-order-info">
+                  <h3>Odeme</h3>
+                  <p><strong>Yontem:</strong> {selectedOrder.paymentMethod || "-"}</p>
+                  <p><strong>Durum:</strong> {getPaymentStatusLabel(selectedOrder.paymentStatus)}</p>
+                  <p><strong>Kanit / islem no:</strong> {selectedOrder.paymentProof || "-"}</p>
+                  <p><strong>Toplam:</strong> {Number(selectedOrder.total || 0).toLocaleString("tr-TR")} {selectedOrder.orderType === "license" ? "USDT" : "TL"}</p>
+                </div>
+              </div>
+
+              <div className="super-order-items">
+                <h3>Urunler</h3>
+                {(selectedOrder.items || []).map((item, index) => (
+                  <div className="super-order-item" key={`${item.productId || item.name}-${index}`}>
+                    {item.image ? <img src={item.image} alt="" /> : <div className="super-order-item-placeholder">Urun</div>}
+                    <div><strong>{item.name}</strong><small>{item.quantity} adet × {Number(item.price || 0).toLocaleString("tr-TR")}</small></div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="super-order-editor">
+                <label>Siparis Durumu
+                  <select value={orderEdit.status} onChange={(e) => setOrderEdit((old) => ({ ...old, status: e.target.value }))}>
+                    <option value="pending">Onay Bekliyor</option>
+                    <option value="preparing">Hazirlaniyor</option>
+                    <option value="shipped">Kargoya Verildi</option>
+                    <option value="completed">Teslim Edildi</option>
+                    <option value="cancelled">Iptal Edildi</option>
+                  </select>
+                </label>
+                <label>Kargo Firmasi
+                  <input value={orderEdit.shippingCarrier} onChange={(e) => setOrderEdit((old) => ({ ...old, shippingCarrier: e.target.value }))} placeholder="Ornek: Yurtici Kargo" />
+                </label>
+                <label>Kargo Takip Numarasi
+                  <input value={orderEdit.cargoTrackingNumber} onChange={(e) => setOrderEdit((old) => ({ ...old, cargoTrackingNumber: e.target.value }))} placeholder="Takip numarasi" />
+                </label>
+              </div>
+
+              <div className="super-modal-actions">
+                <button className="super-btn secondary" onClick={() => setSelectedOrder(null)}>Vazgec</button>
+                <button className="super-btn success" onClick={updateOrderStatus}>Siparisi Guncelle</button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
     );
   }

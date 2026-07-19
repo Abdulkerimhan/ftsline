@@ -897,6 +897,68 @@
   min-width: 120px;
 }
 
+.super-order-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font: inherit;
+  font-weight: 900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.super-order-status {
+  display: inline-flex;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.super-order-status.preparing { background: #dbeafe; color: #1d4ed8; }
+.super-order-status.shipped { background: #ede9fe; color: #6d28d9; }
+.super-order-status.completed { background: #dcfce7; color: #166534; }
+.super-order-status.cancelled { background: #fee2e2; color: #991b1b; }
+
+.super-order-modal { max-width: 940px; }
+.super-order-detail-grid,
+.super-order-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.super-order-info,
+.super-order-items {
+  padding: 16px;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+.super-order-info h3,
+.super-order-items h3 { margin: 0 0 12px; }
+.super-order-info p { margin: 8px 0; color: #334155; }
+.super-order-items { margin-bottom: 16px; }
+.super-order-item { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #e2e8f0; }
+.super-order-item:last-child { border-bottom: 0; }
+.super-order-item img,
+.super-order-item-placeholder { width: 58px; height: 58px; border-radius: 10px; object-fit: cover; background: #e2e8f0; display: grid; place-items: center; font-size: 11px; }
+.super-order-item div { display: grid; gap: 5px; }
+.super-order-item small { color: #64748b; }
+.super-order-editor { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.super-order-editor label { display: grid; gap: 7px; font-weight: 900; }
+.super-order-editor input,
+.super-order-editor select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; }
+
+@media (max-width: 760px) {
+  .super-order-detail-grid,
+  .super-order-editor { grid-template-columns: 1fr; }
+}
+
 .super-permission-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
