@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { getMatrixTree, getMe, getReferrals } from "../api.js";
+import { getMatrixTree, getMe, getMyEarnings, getReferrals } from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import FAQ from "./FAQ.jsx";
 import "./Dashboard.css";
@@ -78,7 +78,13 @@ export default function Dashboard({ initialSection = "overview" }) {
     licenseEndsAt: null,
   });
 
-  const earningsChart = [];
+  const [earningData, setEarningData] = useState({
+    summary: {},
+    sourceSummary: [],
+    movements: [],
+    chart: [],
+  });
+  const earningsChart = earningData.chart || [];
 
   const [profileForm, setProfileForm] = useState({
     fullName: "",
@@ -113,7 +119,28 @@ export default function Dashboard({ initialSection = "overview" }) {
     "uniRoot-2": true,
   });
 
-  const earnings = [];
+  const earningTypeLabels = {
+    unilevel_initial: "Ilk ay unilevel hak edisi",
+    matrix_monthly: "Aylik matrix hak edisi",
+    career_bonus: "Kariyer bonusu",
+    pool_bonus: "Havuz bonusu",
+    manual_adjustment: "Manuel duzeltme",
+  };
+  const earnings = (earningData.movements || []).map((item) => ({
+    id: item._id,
+    title: item.description || earningTypeLabels[item.sourceType] || "Hak edis",
+    type: earningTypeLabels[item.sourceType] || item.sourceType || "Hak edis",
+    source:
+      item.sourceUser?.username ||
+      item.sourceUsername ||
+      "Onceki kayitlardan gelen",
+    date: item.createdAt
+      ? new Date(item.createdAt).toLocaleString(language === "tr" ? "tr-TR" : "en-US")
+      : "-",
+    amount: item.amount,
+    depth: item.depth,
+    rate: item.rate,
+  }));
   const unilevelMembers = useMemo(
     () =>
       referrals.map((referral) => ({
@@ -182,6 +209,20 @@ export default function Dashboard({ initialSection = "overview" }) {
     if (data?.username) setMatrixTree(data);
   }
 
+  async function fetchEarnings() {
+    const data = await getMyEarnings();
+    setEarningData(data || { summary: {}, sourceSummary: [], movements: [], chart: [] });
+
+    if (data?.summary) {
+      setSummary((prev) => ({
+        ...prev,
+        balance: data.summary.availableBalance ?? prev.balance,
+        monthEarning: data.summary.monthlyEarning ?? prev.monthEarning,
+        totalEarning: data.summary.totalEarning ?? prev.totalEarning,
+      }));
+    }
+  }
+
   useEffect(() => {
     let mounted = true;
 
@@ -231,6 +272,7 @@ export default function Dashboard({ initialSection = "overview" }) {
     fetchMyOrders();
     fetchReferrals();
     fetchMatrixTree();
+    fetchEarnings();
 
     return () => {
       mounted = false;
@@ -614,6 +656,14 @@ export default function Dashboard({ initialSection = "overview" }) {
                 <div className="dashboard-list-sub">
                   {safeText(earningsT?.source, "Kaynak")}: {item.source}
                 </div>
+                <div className="dashboard-list-sub">Tur: {item.type}</div>
+                {(item.depth || item.rate) && (
+                  <div className="dashboard-list-sub">
+                    {item.depth ? `Seviye: ${item.depth}` : ""}
+                    {item.depth && item.rate ? " · " : ""}
+                    {item.rate ? `Oran: %${Number((Number(item.rate) * 100).toFixed(2))}` : ""}
+                  </div>
+                )}
                 <div className="dashboard-list-sub">
                   {safeText(earningsT?.date, "Tarih")}: {item.date}
                 </div>

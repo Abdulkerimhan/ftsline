@@ -33,32 +33,30 @@ const initialUsers = [
   },
 ];
 
-const initialFinance = [
-  {
-    id: 1,
-    title: "Komisyon Ã–demesi",
-    type: "Gelir",
-    amount: "1200",
-    status: "TamamlandÄ±",
-    date: "2026-04-18",
-  },
-  {
-    id: 2,
-    title: "Paket SatÄ±ÅŸÄ±",
-    type: "Gelir",
-    amount: "450",
-    status: "TamamlandÄ±",
-    date: "2026-04-17",
-  },
-  {
-    id: 3,
-    title: "Ä°ade Ä°ÅŸlemi",
-    type: "Gider",
-    amount: "90",
-    status: "Bekliyor",
-    date: "2026-04-16",
-  },
-];
+const emptyFinanceData = {
+  summary: { paidSales: 0, pendingSales: 0, invoicePending: 0, totalEarnings: 0, orderCount: 0 },
+  orders: [],
+  users: [],
+  products: [],
+  transactions: [],
+};
+
+const earningSourceLabels = {
+  unilevel_initial: "İlk satış unilevel",
+  matrix_monthly: "Aylık matrix",
+  career_bonus: "Kariyer bonusu",
+  pool_bonus: "Havuz bonusu",
+  manual_adjustment: "Manuel düzeltme",
+};
+
+const formatMoney = (value) =>
+  `${Number(value || 0).toLocaleString("tr-TR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} TL`;
+
+const formatDate = (value) =>
+  value ? new Date(value).toLocaleString("tr-TR") : "-";
 
 const emptyProductForm = {
   name: "",
@@ -83,7 +81,9 @@ export default function AdminPanel() {
 
   const [users] = useState(initialUsers);
   const [products, setProducts] = useState([]);
-  const [finance] = useState(initialFinance);
+  const [financeData, setFinanceData] = useState(emptyFinanceData);
+  const [financeTab, setFinanceTab] = useState("sales");
+  const [loadingFinance, setLoadingFinance] = useState(false);
 
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -160,6 +160,43 @@ export default function AdminPanel() {
     }
   }
 
+  async function loadFinance() {
+    if (!hasAdminSection("finance")) return;
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      setLoadingFinance(true);
+      const res = await fetch(`${API}/admin/finance/overview`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.message || "Finans verileri alınamadı");
+      setFinanceData({ ...emptyFinanceData, ...data, summary: { ...emptyFinanceData.summary, ...data?.summary } });
+    } catch (error) {
+      console.error("Finans verileri alınamadı:", error);
+      alert(error.message || "Finans verileri alınamadı");
+    } finally {
+      setLoadingFinance(false);
+    }
+  }
+
+  async function updateFinanceOrder(orderId, changes) {
+    const token = sessionStorage.getItem("accessToken");
+    try {
+      const res = await fetch(`${API}/admin/finance/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(changes),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.message || "Sipariş güncellenemedi");
+      await loadFinance();
+    } catch (error) {
+      alert(error.message || "Sipariş güncellenemedi");
+    }
+  }
+
   useEffect(() => {
     refreshCurrentUser();
     loadProducts();
@@ -176,6 +213,10 @@ export default function AdminPanel() {
   }, [currentUser]);
 
   useEffect(() => {
+    if (activeMenu === "finance" && hasAdminSection("finance")) loadFinance();
+  }, [activeMenu, currentUser]);
+
+  useEffect(() => {
     if (activeMenu !== "dashboard" && !hasAdminSection(activeMenu)) {
       setActiveMenu("dashboard");
     }
@@ -190,13 +231,8 @@ export default function AdminPanel() {
 
     const passiveProducts = products.length - activeProducts;
 
-    const totalIncome = finance
-      .filter((f) => f.type === "Gelir")
-      .reduce((sum, item) => sum + Number(item.amount), 0);
-
-    const totalExpense = finance
-      .filter((f) => f.type === "Gider")
-      .reduce((sum, item) => sum + Number(item.amount), 0);
+    const totalIncome = Number(financeData.summary.paidSales || 0);
+    const totalExpense = Number(financeData.summary.totalEarnings || 0);
 
     return [
       { title: "Toplam KullanÄ±cÄ±", value: users.length },
@@ -209,7 +245,7 @@ export default function AdminPanel() {
         value: `${(totalIncome - totalExpense).toFixed(2)} TL`,
       },
     ];
-  }, [users, products, finance]);
+  }, [users, products, financeData]);
 
   const filteredUsers = users.filter((user) => {
     const q = searchTerm.toLowerCase();
@@ -236,16 +272,18 @@ export default function AdminPanel() {
     );
   });
 
-  const filteredFinance = finance.filter((item) => {
-    const q = searchTerm.toLowerCase();
-
-    return (
-      item.title.toLowerCase().includes(q) ||
-      item.type.toLowerCase().includes(q) ||
-      item.status.toLowerCase().includes(q) ||
-      item.date.toLowerCase().includes(q)
-    );
-  });
+  const financeQuery = searchTerm.trim().toLowerCase();
+  const filteredFinanceOrders = financeData.orders.filter((order) =>
+    [order.orderNumber, order.user?.username, order.shippingInfo?.fullName, order.shippingInfo?.email,
+      ...(order.items || []).map((item) => item.name)]
+      .filter(Boolean).join(" ").toLowerCase().includes(financeQuery)
+  );
+  const filteredFinanceUsers = financeData.users.filter((user) =>
+    [user.username, user.fullName, user.email].filter(Boolean).join(" ").toLowerCase().includes(financeQuery)
+  );
+  const filteredFinanceProducts = financeData.products.filter((product) =>
+    [product.name, product.brand, product.category].filter(Boolean).join(" ").toLowerCase().includes(financeQuery)
+  );
 
   function resetProductForm() {
     setProductForm(emptyProductForm);
@@ -718,58 +756,89 @@ export default function AdminPanel() {
   }
 
   function renderFinance() {
+    const summary = financeData.summary;
+
     return (
       <div className="admin-section wide-section">
         <div className="admin-section-head">
           <div>
             <h2>Finans</h2>
-            <p>Finans kayÄ±tlarÄ±nÄ± gÃ¶rÃ¼ntÃ¼le. Admin bu alanda iÅŸlem yapamaz.</p>
+            <p>Satışları, faturaları, kullanıcı hakedişlerini ve ürün hareketlerini yönet.</p>
           </div>
-
-          <input
-            className="admin-search"
-            type="text"
-            placeholder="Finans kaydÄ± ara..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="finance-head-actions">
+            <input
+              className="admin-search"
+              type="text"
+              placeholder="Finans kaydı ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="admin-btn small" type="button" onClick={loadFinance} disabled={loadingFinance}>
+              {loadingFinance ? "Yükleniyor..." : "Yenile"}
+            </button>
+          </div>
         </div>
 
-        <div className="admin-table-wrapper">
+        <div className="admin-stats wide finance-summary">
+          <div className="admin-stat-card"><span>Ödenen satış</span><strong>{formatMoney(summary.paidSales)}</strong></div>
+          <div className="admin-stat-card"><span>Bekleyen satış</span><strong>{formatMoney(summary.pendingSales)}</strong></div>
+          <div className="admin-stat-card"><span>Toplam hakediş</span><strong>{formatMoney(summary.totalEarnings)}</strong></div>
+          <div className="admin-stat-card"><span>Fatura bekleyen</span><strong>{summary.invoicePending || 0}</strong></div>
+          <div className="admin-stat-card"><span>Sipariş sayısı</span><strong>{summary.orderCount || 0}</strong></div>
+        </div>
+
+        <div className="finance-tabs">
+          <button className={financeTab === "sales" ? "active" : ""} onClick={() => setFinanceTab("sales")}>Satış ve Fatura</button>
+          <button className={financeTab === "earnings" ? "active" : ""} onClick={() => setFinanceTab("earnings")}>Hakedişler ve Kaynakları</button>
+          <button className={financeTab === "products" ? "active" : ""} onClick={() => setFinanceTab("products")}>Ürün Takibi</button>
+        </div>
+
+        {financeTab === "sales" && <div className="admin-table-wrapper">
           <table className="admin-table wide-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>BaÅŸlÄ±k</th>
-                <th>TÃ¼r</th>
-                <th>Tutar</th>
-                <th>Durum</th>
-                <th>Tarih</th>
+            <thead><tr><th>Sipariş</th><th>Müşteri</th><th>Ürünler</th><th>Tutar</th><th>Ödeme</th><th>Sipariş Durumu</th><th>Fatura</th><th>Tarih</th></tr></thead>
+            <tbody>{filteredFinanceOrders.length ? filteredFinanceOrders.map((order) => (
+              <tr key={order._id}>
+                <td>#{order.orderNumber || String(order._id).slice(-8).toUpperCase()}</td>
+                <td><strong>{order.user?.username || order.shippingInfo?.fullName || "Misafir"}</strong><small>{order.shippingInfo?.email || order.user?.email || ""}</small></td>
+                <td>{(order.items || []).map((item) => `${item.name} x${item.quantity || 1}`).join(", ") || "-"}</td>
+                <td>{formatMoney(order.total)}</td>
+                <td><select className="finance-select" value={order.paymentStatus || "pending"} onChange={(e) => updateFinanceOrder(order._id, { paymentStatus: e.target.value })}>
+                  <option value="pending">Bekliyor</option><option value="paid">Ödendi</option><option value="failed">Başarısız</option><option value="refunded">İade</option>
+                </select></td>
+                <td><select className="finance-select" value={order.status || "pending"} onChange={(e) => updateFinanceOrder(order._id, { status: e.target.value })}>
+                  <option value="pending">Onay bekliyor</option><option value="preparing">Hazırlanıyor</option><option value="shipped">Kargoda</option><option value="completed">Teslim edildi</option><option value="cancelled">İptal</option>
+                </select></td>
+                <td>{order.invoiceStatus === "issued" ? <div className="finance-invoice"><strong>Kesildi</strong><small>{order.invoiceNumber || formatDate(order.invoiceIssuedAt)}</small><button className="admin-btn small warning" onClick={() => updateFinanceOrder(order._id, { invoiceStatus: "pending", invoiceNumber: "" })}>Geri Al</button></div> : <button className="admin-btn small success" onClick={() => {
+                  const invoiceNumber = window.prompt("Fatura numarası (isteğe bağlı)", order.invoiceNumber || "");
+                  if (invoiceNumber !== null) updateFinanceOrder(order._id, { invoiceStatus: "issued", invoiceNumber });
+                }}>Fatura Kesildi</button>}</td>
+                <td>{formatDate(order.createdAt)}</td>
               </tr>
-            </thead>
-
-            <tbody>
-              {filteredFinance.length > 0 ? (
-                filteredFinance.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.id}</td>
-                    <td>{item.title}</td>
-                    <td>{item.type}</td>
-                    <td>{item.amount} TL</td>
-                    <td>{item.status}</td>
-                    <td>{item.date}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="empty-row">
-                    KayÄ±t bulunamadÄ±.
-                  </td>
-                </tr>
-              )}
-            </tbody>
+            )) : <tr><td colSpan="8" className="empty-row">Satış kaydı bulunamadı.</td></tr>}</tbody>
           </table>
-        </div>
+        </div>}
+
+        {financeTab === "earnings" && <div className="admin-table-wrapper">
+          <table className="admin-table wide-table">
+            <thead><tr><th>Kullanıcı</th><th>Toplam Hakediş</th><th>Ödenen</th><th>Bekleyen</th><th>Cüzdan</th><th>Hakediş Kaynakları</th></tr></thead>
+            <tbody>{filteredFinanceUsers.length ? filteredFinanceUsers.map((user) => {
+              const earned = Number(user.earnings?.earned || 0);
+              const paid = Number(user.earnings?.paid || 0);
+              return <tr key={user._id}>
+                <td><strong>{user.username}</strong><small>{user.fullName || "-"}<br />{user.email}</small></td>
+                <td>{formatMoney(earned)}</td><td>{formatMoney(paid)}</td><td>{formatMoney(Math.max(0, earned - paid))}</td><td>{formatMoney(user.walletBalance)}</td>
+                <td><div className="finance-source-list">{user.earnings?.recentSources?.length ? user.earnings.recentSources.map((source, index) => <div key={`${source._id || index}`}><strong>{earningSourceLabels[source.sourceType] || source.sourceType}</strong><span>{source.sourceUsername ? `${source.sourceUsername} kaynaklı · ` : ""}{formatMoney(source.amount)} · {formatDate(source.createdAt)}</span></div>) : <span>Henüz hakediş yok.</span>}</div></td>
+              </tr>;
+            }) : <tr><td colSpan="6" className="empty-row">Kullanıcı hakedişi bulunamadı.</td></tr>}</tbody>
+          </table>
+        </div>}
+
+        {financeTab === "products" && <div className="admin-table-wrapper">
+          <table className="admin-table wide-table">
+            <thead><tr><th>Ürün</th><th>Marka</th><th>Kategori</th><th>Durum</th><th>Stok</th><th>Satılan Adet</th><th>Satış Geliri</th></tr></thead>
+            <tbody>{filteredFinanceProducts.length ? filteredFinanceProducts.map((product) => <tr key={product._id}><td><strong>{product.name}</strong></td><td>{product.brand || "-"}</td><td>{product.category || "-"}</td><td><span className={`status-badge ${product.isActive ? "active" : "passive"}`}>{product.isActive ? "Aktif" : "Pasif"}</span></td><td>{product.stock ?? "Sınırsız"}</td><td>{product.soldQuantity || 0}</td><td>{formatMoney(product.salesRevenue)}</td></tr>) : <tr><td colSpan="7" className="empty-row">Ürün kaydı bulunamadı.</td></tr>}</tbody>
+          </table>
+        </div>}
       </div>
     );
   }

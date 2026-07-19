@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import EarningTransaction from "../models/EarningTransaction.js";
 import { CAREER_LEVELS, careerRank, isActiveMember } from "./careerService.js";
 
 // Ilk lisans odemesinin Unilevel dagitim matrahi.
@@ -76,6 +77,22 @@ export async function distributeInitialUnilevelBonus({ payerUserId }) {
           monthlyEarning: amount,
         },
       });
+
+      try {
+        await EarningTransaction.create({
+          beneficiary: sponsor._id,
+          sourceType: "unilevel_initial",
+          sourceUser: payer._id,
+          sourceUsername: payer.username,
+          amount,
+          depth,
+          rate,
+          description: `${payer.username} ilk lisans odemesi - Unilevel ${depth}. seviye`,
+          metadata: { baseAmount: INITIAL_LICENSE_BONUS_BASE_TL, career: level },
+        });
+      } catch (ledgerError) {
+        console.error("Unilevel hak edis kaydi olusturulamadi:", ledgerError);
+      }
 
       beneficiaries.push({
         userId: sponsor._id,

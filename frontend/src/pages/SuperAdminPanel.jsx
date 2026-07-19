@@ -52,6 +52,30 @@ function getRemainingLicenseTime(expiresAt, isLicensed) {
   return `${days} gun`;
 }
 
+function formatMoney(value) {
+  return `${Number(value || 0).toLocaleString("tr-TR")} TL`;
+}
+
+function formatEarningType(type) {
+  const labels = {
+    unilevel_initial: "İlk ay ünilevel hak edişi",
+    matrix_monthly: "Aylık matrix hak edişi",
+    career_bonus: "Kariyer bonusu",
+    pool_bonus: "Havuz bonusu",
+    manual_adjustment: "Manuel düzeltme",
+  };
+  return labels[type] || type || "Hak ediş";
+}
+
+function formatEarningStatus(status) {
+  const labels = {
+    earned: "Hak edildi",
+    paid: "Ödendi",
+    cancelled: "İptal edildi",
+  };
+  return labels[status] || status || "-";
+}
+
 export default function SuperAdminPanel() {
   const [activeMenu, setActiveMenu] = useState("overview");
   const [search, setSearch] = useState("");
@@ -1330,6 +1354,77 @@ export default function SuperAdminPanel() {
                     <div><span>Toplam Alt Ekip</span><strong>{selectedUserDetails.totalTeamCount}</strong></div>
                     <div><span>Lisans Bitisi</span><strong>{formatLicenseDate(selectedUserDetails.user.licenseExpiresAt)}</strong></div>
                   </div>
+
+                  <section className="super-finance-section">
+                    <div className="super-finance-head">
+                      <div>
+                        <h3>Hak Ediş ve Kazanç Kaynakları</h3>
+                        <p>Kazancın kimden, hangi bonus türünden ve ne zaman oluştuğunu gösterir.</p>
+                      </div>
+                    </div>
+
+                    <div className="super-earning-summary">
+                      <div><span>Kullanılabilir Bakiye</span><strong>{formatMoney(selectedUserDetails.financial?.summary?.availableBalance)}</strong></div>
+                      <div><span>Bu Ay</span><strong>{formatMoney(selectedUserDetails.financial?.summary?.monthlyEarning)}</strong></div>
+                      <div><span>Toplam Hak Ediş</span><strong>{formatMoney(selectedUserDetails.financial?.summary?.totalEarning)}</strong></div>
+                      <div><span>Ödenen / Çekilen</span><strong>{formatMoney(selectedUserDetails.financial?.summary?.totalWithdrawn)}</strong></div>
+                    </div>
+
+                    {Number(selectedUserDetails.financial?.summary?.previousUntrackedTotal || 0) > 0 && (
+                      <div className="super-earning-legacy">
+                        Önceki kayıtlardan gelen, kaynak bilgisi bulunmayan tutar: <strong>{formatMoney(selectedUserDetails.financial.summary.previousUntrackedTotal)}</strong>
+                      </div>
+                    )}
+
+                    {!!selectedUserDetails.financial?.sourceSummary?.length && (
+                      <div className="super-earning-sources">
+                        {selectedUserDetails.financial.sourceSummary.map((source) => (
+                          <div key={source.sourceType}>
+                            <span>{formatEarningType(source.sourceType)}</span>
+                            <strong>{formatMoney(source.amount)}</strong>
+                            <small>{source.count} hareket</small>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedUserDetails.financial?.movements?.length ? (
+                      <div className="super-earning-table-wrap">
+                        <table className="super-earning-table">
+                          <thead>
+                            <tr>
+                              <th>Tarih</th>
+                              <th>Hak Ediş Türü</th>
+                              <th>Kaynak Kullanıcı</th>
+                              <th>Seviye / Oran</th>
+                              <th>Tutar</th>
+                              <th>Durum</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedUserDetails.financial.movements.map((movement) => (
+                              <tr key={movement._id}>
+                                <td>{formatLicenseDate(movement.createdAt)}</td>
+                                <td>{formatEarningType(movement.sourceType)}</td>
+                                <td>
+                                  <strong>{movement.sourceUser?.username || movement.sourceUsername || "Önceki kayıtlardan gelen"}</strong>
+                                  {movement.sourceUser?.fullName && <small>{movement.sourceUser.fullName}</small>}
+                                </td>
+                                <td>
+                                  {movement.depth ? `Seviye ${movement.depth}` : "-"}
+                                  {movement.rate ? ` / %${Number((Number(movement.rate) * 100).toFixed(2))}` : ""}
+                                </td>
+                                <td className="super-earning-amount">+ {formatMoney(movement.amount)}</td>
+                                <td><span className={`super-earning-status ${movement.status}`}>{formatEarningStatus(movement.status)}</span></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="super-empty">Henüz kaynaklandırılmış hak ediş hareketi yok.</div>
+                    )}
+                  </section>
 
                   <div className="super-license-editor">
                     <label>

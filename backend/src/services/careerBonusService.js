@@ -1,4 +1,5 @@
 ﻿import User from "../models/User.js";
+import EarningTransaction from "../models/EarningTransaction.js";
 import { CAREER_LEVELS, CAREER_RULES, careerRank, isActiveMember } from "./careerService.js";
 
 export const CAREER_LICENSE_BONUS_RATE = 0.03;
@@ -64,6 +65,22 @@ export async function distributeLicenseCareerBonus({ payerUserId, licenseFee }) 
           monthlyEarning: bonusAmount,
         },
       });
+
+      try {
+        await EarningTransaction.create({
+          beneficiary: matrixParent._id,
+          sourceType: "matrix_monthly",
+          sourceUser: payer._id,
+          sourceUsername: payer.username,
+          amount: bonusAmount,
+          depth,
+          rate: CAREER_LICENSE_BONUS_RATE,
+          description: `${payer.username} aylik Pro odemesi - Matrix ${depth}. seviye`,
+          metadata: { licenseFee: amount, career: level },
+        });
+      } catch (ledgerError) {
+        console.error("Matrix hak edis kaydi olusturulamadi:", ledgerError);
+      }
 
       beneficiaries.push({
         userId: matrixParent._id,

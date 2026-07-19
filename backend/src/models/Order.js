@@ -216,6 +216,32 @@ const orderSchema = new mongoose.Schema(
       trim: true,
       maxlength: 120,
     },
+
+    invoiceStatus: {
+      type: String,
+      enum: ["pending", "issued"],
+      default: "pending",
+      index: true,
+    },
+
+    invoiceNumber: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 100,
+    },
+
+    invoiceIssuedAt: {
+      type: Date,
+      default: null,
+    },
+
+    invoiceNote: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 500,
+    },
   },
   { timestamps: true }
 );

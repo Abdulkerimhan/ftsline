@@ -1,6 +1,9 @@
 ﻿import express from "express";
 import multer from "multer";
 import Product from "../models/Product.js";
+import Order from "../models/Order.js";
+import User from "../models/User.js";
+import EarningTransaction from "../models/EarningTransaction.js";
 import { authRequired } from "../middleware/authMiddleware.js";
 import { uploadProductImages } from "../utils/cloudinaryUpload.js";
 
@@ -199,6 +202,152 @@ router.delete(
     } catch (error) {
       console.error("ÃœrÃ¼n silme hatasÄ±:", error);
       res.status(500).json({ message: "ÃœrÃ¼n silinemedi" });
+    }
+  }
+);
+
+/* ================= FINANS YONETIMI ================= */
+
+router.get(
+  "/finance/overview",
+  authRequired,
+  adminOrSuperadmin,
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const [orders, products, users, transactions] = await Promise.all([
+        Order.find()
+          .sort({ createdAt: -1 })
+          .populate("user", "username fullName email phone")
+          .lean(),
+        Product.find().sort({ createdAt: -1 }).lean(),
+        User.find({ role: { $ne: "superadmin" } })
+          .select("username fullName email phone walletBalance totalEarning monthlyEarning totalWithdrawn isActive license")
+          .sort({ createdAt: -1 })
+          .lean(),
+        EarningTransaction.find({ status: { $ne: "cancelled" } })
+          .sort({ createdAt: -1 })
+          .limit(1000)
+          .populate("beneficiary", "username fullName email")
+          .populate("sourceUser", "username fullName")
+          .lean(),
+      ]);
+
+      const paidOrders = orders.filter(
+        (order) => order.paymentStatus === "paid" && order.status !== "cancelled"
+      );
+      const paidSales = paidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+      const pendingSales = orders
+        .filter((order) => order.paymentStatus === "pending" && order.status !== "cancelled")
+        .reduce((sum, order) => sum + Number(order.total || 0), 0);
+      const invoicePending = paidOrders.filter(
+        (order) => order.orderType === "product" && order.invoiceStatus !== "issued"
+      ).length;
+
+      const earningsByUser = new Map();
+      for (const transaction of transactions) {
+        const beneficiary = transaction.beneficiary;
+        const userId = String(beneficiary?._id || transaction.beneficiary || "");
+        if (!userId) continue;
+        if (!earningsByUser.has(userId)) {
+          earningsByUser.set(userId, { earned: 0, paid: 0, bySource: {}, recentSources: [] });
+        }
+        const summary = earningsByUser.get(userId);
+        const amount = Number(transaction.amount || 0);
+        summary.earned += amount;
+        if (transaction.status === "paid") summary.paid += amount;
+        summary.bySource[transaction.sourceType] =
+          Number(summary.bySource[transaction.sourceType] || 0) + amount;
+        if (summary.recentSources.length < 8) {
+          summary.recentSources.push({
+            id: transaction._id,
+            sourceType: transaction.sourceType,
+            sourceUsername:
+              transaction.sourceUser?.username || transaction.sourceUsername || "Sistem",
+            description: transaction.description || "",
+            amount,
+            status: transaction.status,
+            createdAt: transaction.createdAt,
+          });
+        }
+      }
+
+      const productSales = new Map();
+      for (const order of paidOrders) {
+        if (order.orderType !== "product") continue;
+        for (const item of order.items || []) {
+          const productId = String(item.productId || "");
+          if (!productId) continue;
+          const current = productSales.get(productId) || { quantity: 0, revenue: 0 };
+          current.quantity += Number(item.quantity || 0);
+          current.revenue += Number(item.price || 0) * Number(item.quantity || 0);
+          productSales.set(productId, current);
+        }
+      }
+
+      res.json({
+        summary: {
+          paidSales,
+          pendingSales,
+          invoicePending,
+          totalEarnings: transactions.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+          orderCount: orders.length,
+        },
+        orders,
+        products: products.map((product) => ({
+          ...product,
+          soldQuantity: productSales.get(String(product._id))?.quantity || 0,
+          salesRevenue: productSales.get(String(product._id))?.revenue || 0,
+        })),
+        users: users.map((user) => ({
+          ...user,
+          earnings: earningsByUser.get(String(user._id)) || {
+            earned: 0,
+            paid: 0,
+            bySource: {},
+            recentSources: [],
+          },
+        })),
+        transactions,
+      });
+    } catch (error) {
+      console.error("Finans ozeti alinamadi:", error);
+      res.status(500).json({ message: "Finans verileri alinamadi" });
+    }
+  }
+);
+
+router.patch(
+  "/finance/orders/:id",
+  authRequired,
+  adminOrSuperadmin,
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const update = {};
+      const allowedPayment = ["pending", "paid", "failed", "refunded"];
+      const allowedStatus = ["pending", "preparing", "shipped", "completed", "cancelled"];
+      const allowedInvoice = ["pending", "issued"];
+
+      if (allowedPayment.includes(req.body.paymentStatus)) update.paymentStatus = req.body.paymentStatus;
+      if (allowedStatus.includes(req.body.status)) update.status = req.body.status;
+      if (allowedInvoice.includes(req.body.invoiceStatus)) {
+        update.invoiceStatus = req.body.invoiceStatus;
+        update.invoiceIssuedAt = req.body.invoiceStatus === "issued" ? new Date() : null;
+      }
+      if (typeof req.body.invoiceNumber === "string") update.invoiceNumber = req.body.invoiceNumber.trim();
+      if (typeof req.body.invoiceNote === "string") update.invoiceNote = req.body.invoiceNote.trim();
+
+      const order = await Order.findByIdAndUpdate(req.params.id, update, {
+        new: true,
+        runValidators: true,
+      }).populate("user", "username fullName email phone");
+
+      if (!order) return res.status(404).json({ message: "Siparis bulunamadi" });
+      res.json({ message: "Finans kaydi guncellendi", order });
+    } catch (error) {
+      console.error("Finans siparis guncelleme hatasi:", error);
+      res.status(500).json({ message: "Siparis guncellenemedi" });
     }
   }
 );

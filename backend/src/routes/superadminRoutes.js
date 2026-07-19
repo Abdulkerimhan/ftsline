@@ -13,6 +13,7 @@ import {
   distributeInitialUnilevelBonus,
 } from "../services/unilevelBonusService.js";
 import { ensureUserMatrixPlacement } from "../services/matrixService.js";
+import { buildUserEarningSummary } from "../services/earningSummaryService.js";
 
 const router = express.Router();
 
@@ -82,11 +83,14 @@ router.get("/users/:id/details", authRequired, superAdminOnly, async (req, res) 
       level += 1;
     }
 
+    const financial = await buildUserEarningSummary(user._id);
+
     res.json({
       user,
       team,
       directTeamCount: team.filter((member) => member.level === 1).length,
       totalTeamCount: team.length,
+      financial,
     });
   } catch (error) {
     res.status(500).json({ message: "Kullanici ayrintilari getirilemedi" });

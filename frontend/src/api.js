@@ -105,6 +105,29 @@ export async function getReferrals() {
   }
 }
 
+export async function getMyEarnings() {
+  const emptyResult = {
+    summary: {},
+    sourceSummary: [],
+    movements: [],
+    chart: [],
+  };
+
+  try {
+    const res = await fetch(`${API}/earnings/me`, {
+      method: "GET",
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+
+    return await parseResponse(res);
+  } catch (error) {
+    console.error("Kazanc hareketleri alinamadi:", error);
+    return emptyResult;
+  }
+}
+
 export async function getMatrixTree() {
   try {
     const res = await fetch(`${API}/user/matrix`, {
