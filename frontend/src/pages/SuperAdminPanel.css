@@ -498,6 +498,138 @@
   transition: 0.2s;
 }
 
+.super-user-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #174fbd;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.super-user-link:hover {
+  text-decoration: underline;
+}
+
+.super-user-modal {
+  width: min(920px, calc(100vw - 32px));
+}
+
+.super-user-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.super-user-summary > div {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border: 1px solid #dce5f4;
+  border-radius: 12px;
+  background: #f7f9fd;
+}
+
+.super-user-summary span,
+.super-license-editor label {
+  color: #61708b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.super-user-summary strong {
+  overflow-wrap: anywhere;
+}
+
+.super-license-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #eef4ff;
+}
+
+.super-license-editor label {
+  display: grid;
+  gap: 6px;
+}
+
+.super-license-editor select {
+  min-width: 150px;
+  padding: 10px 12px;
+  border: 1px solid #cbd8ee;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.super-team-section h3 {
+  margin-bottom: 10px;
+}
+
+.super-team-list {
+  display: grid;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.super-team-member {
+  display: grid;
+  grid-template-columns: 70px minmax(120px, 0.7fr) minmax(180px, 1fr) minmax(120px, 0.7fr);
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #dce5f4;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.super-team-member:hover {
+  border-color: #2d67e8;
+  background: #f5f8ff;
+}
+
+.super-team-member span {
+  color: #2d67e8;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.super-team-member small {
+  color: #61708b;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .super-user-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .super-license-editor {
+    align-items: stretch;
+  }
+
+  .super-license-editor label,
+  .super-license-editor select,
+  .super-license-editor button {
+    width: 100%;
+  }
+
+  .super-team-member {
+    grid-template-columns: 1fr;
+  }
+}
+
 .super-product-form input:focus,
 .super-product-form textarea:focus,
 .super-product-form select:focus {

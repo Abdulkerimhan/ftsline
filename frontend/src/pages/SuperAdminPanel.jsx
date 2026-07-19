@@ -69,6 +69,9 @@ export default function SuperAdminPanel() {
   const [images, setImages] = useState([]);
   const [preview, setPreview] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
+  const [selectedUserDetails, setSelectedUserDetails] = useState(null);
+  const [userDetailsLoading, setUserDetailsLoading] = useState(false);
+  const [licenseDuration, setLicenseDuration] = useState("12");
 
   const token = sessionStorage.getItem("accessToken");
 
@@ -366,19 +369,52 @@ export default function SuperAdminPanel() {
     await loadAll();
   }
 
-  async function toggleUserLicense(user) {
-    await request(
+  async function toggleUserLicense(user, durationMonths = 12) {
+    const result = await request(
       `/superadmin/users/${user._id}/license`,
       {
         method: "PUT",
         body: JSON.stringify({
           isLicensed: user.isLicensed === true ? false : true,
+          durationMonths,
         }),
       },
       null
     );
 
-    await loadAll();
+    if (result) await loadAll();
+    return result;
+  }
+
+  async function openUserDetails(user) {
+    setUserDetailsLoading(true);
+    setSelectedUserDetails(null);
+    setLicenseDuration("12");
+    const result = await request(`/superadmin/users/${user._id}/details`, {}, null);
+    setSelectedUserDetails(result);
+    setUserDetailsLoading(false);
+  }
+
+  async function updateLicenseFromDetails() {
+    const user = selectedUserDetails?.user;
+    if (!user) return;
+
+    const result = await request(
+      `/superadmin/users/${user._id}/license`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          isLicensed: true,
+          durationMonths: Number(licenseDuration),
+        }),
+      },
+      null
+    );
+    if (result) {
+      await loadAll();
+      const refreshed = await request(`/superadmin/users/${user._id}/details`, {}, null);
+      setSelectedUserDetails(refreshed);
+    }
   }
 
   async function changeUserRole(user, role) {
@@ -669,8 +705,24 @@ export default function SuperAdminPanel() {
               {filteredUsers.length ? (
                 filteredUsers.map((user) => (
                   <tr key={user._id}>
-                    <td>{user.username}</td>
-                    <td>{user.fullName || "-"}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="super-user-link"
+                        onClick={() => openUserDetails(user)}
+                      >
+                        {user.username}
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="super-user-link"
+                        onClick={() => openUserDetails(user)}
+                      >
+                        {user.fullName || "-"}
+                      </button>
+                    </td>
                     <td>{user.email}</td>
 
                     <td>
@@ -1024,6 +1076,127 @@ export default function SuperAdminPanel() {
         {message && <div className="super-alert">{message}</div>}
 
         {renderContent()}
+
+        {(selectedUserDetails || userDetailsLoading) && (
+          <div className="super-modal-backdrop">
+            <div className="super-modal super-user-modal">
+              <div className="super-modal-head">
+                <div>
+                  <h2>Kullanici Ayrintilari</h2>
+                  <p>Sponsor, telefon, lisans ve alt ekip bilgileri.</p>
+                </div>
+                <button
+                  className="super-modal-close"
+                  type="button"
+                  onClick={() => {
+                    setSelectedUserDetails(null);
+                    setUserDetailsLoading(false);
+                  }}
+                >
+                  x
+                </button>
+              </div>
+
+              {userDetailsLoading ? (
+                <div className="super-empty">Yukleniyor...</div>
+              ) : (
+                <>
+                  <div className="super-user-summary">
+                    <div><span>Kullanici</span><strong>{selectedUserDetails.user.username}</strong></div>
+                    <div><span>Ad Soyad</span><strong>{selectedUserDetails.user.fullName || "-"}</strong></div>
+                    <div><span>E-posta</span><strong>{selectedUserDetails.user.email || "-"}</strong></div>
+                    <div><span>Telefon</span><strong>{selectedUserDetails.user.phone || "-"}</strong></div>
+                    <div>
+                      <span>Sponsor</span>
+                      <strong>
+                        {selectedUserDetails.user.sponsor?.username ||
+                          selectedUserDetails.user.sponsor?.fullName ||
+                          "Sponsor yok"}
+                      </strong>
+                    </div>
+                    <div><span>Doğrudan Ekip</span><strong>{selectedUserDetails.directTeamCount}</strong></div>
+                    <div><span>Toplam Alt Ekip</span><strong>{selectedUserDetails.totalTeamCount}</strong></div>
+                    <div><span>Lisans Bitisi</span><strong>{formatLicenseDate(selectedUserDetails.user.licenseExpiresAt)}</strong></div>
+                  </div>
+
+                  <div className="super-license-editor">
+                    <label>
+                      <span>Manuel lisans suresi</span>
+                      <select
+                        className="super-select"
+                        value={licenseDuration}
+                        onChange={(event) => setLicenseDuration(event.target.value)}
+                      >
+                        <option value="1">1 Ay</option>
+                        <option value="12">1 Yil</option>
+                        <option value="24">2 Yil</option>
+                      </select>
+                    </label>
+                    <button className="super-btn" type="button" onClick={updateLicenseFromDetails}>
+                      {selectedUserDetails.user.isLicensed ? "Secilen Sureyi Uygula" : "Secilen Sureyle Aktif Et"}
+                    </button>
+                    {selectedUserDetails.user.isLicensed && (
+                      <button
+                        className="super-btn"
+                        type="button"
+                        onClick={async () => {
+                          const result = await toggleUserLicense(selectedUserDetails.user);
+                          if (result) {
+                            const refreshed = await request(
+                              `/superadmin/users/${selectedUserDetails.user._id}/details`,
+                              {},
+                              null
+                            );
+                            setSelectedUserDetails(refreshed);
+                          }
+                        }}
+                      >
+                        Lisansi Kaldir
+                      </button>
+                    )}
+                    <button
+                      className="super-btn"
+                      type="button"
+                      onClick={async () => {
+                        await toggleUserActive(selectedUserDetails.user);
+                        const refreshed = await request(
+                          `/superadmin/users/${selectedUserDetails.user._id}/details`,
+                          {},
+                          null
+                        );
+                        setSelectedUserDetails(refreshed);
+                      }}
+                    >
+                      {selectedUserDetails.user.isActive === false ? "Hesabi Aktif Et" : "Hesabi Pasiflestir"}
+                    </button>
+                  </div>
+
+                  <div className="super-team-section">
+                    <h3>Alt Ekip</h3>
+                    {selectedUserDetails.team.length ? (
+                      <div className="super-team-list">
+                        {selectedUserDetails.team.map((member) => (
+                          <button
+                            type="button"
+                            className="super-team-member"
+                            key={member._id}
+                            onClick={() => openUserDetails(member)}
+                          >
+                            <span>Seviye {member.level}</span>
+                            <strong>{member.username}</strong>
+                            <small>{member.fullName || member.email} · {member.phone || "Telefon yok"}</small>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="super-empty">Bu kullanicinin alt ekibi yok.</div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {productModalOpen && (
           <div className="super-modal-backdrop">

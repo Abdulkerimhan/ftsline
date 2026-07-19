@@ -23,6 +23,16 @@ function normalizeAdminPermissions(permissions) {
   return permissions.filter((permission) => ADMIN_PERMISSION_VALUES.includes(permission));
 }
 
+function addMonths(date, months) {
+  const result = new Date(date);
+  const originalDay = result.getDate();
+  result.setDate(1);
+  result.setMonth(result.getMonth() + months);
+  const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+  result.setDate(Math.min(originalDay, lastDay));
+  return result;
+}
+
 router.get("/users", authRequired, superAdminOnly, async (req, res) => {
   try {
     // Suresi dolan lisanslari otomatik pasife al; kullanici hesabi aktif kalir.
@@ -37,11 +47,49 @@ router.get("/users", authRequired, superAdminOnly, async (req, res) => {
 
     const users = await User.find()
       .select("-passwordHash")
+      .populate("sponsor", "username fullName email phone")
       .sort({ createdAt: -1 });
 
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "KullanÄ±cÄ±lar getirilemedi" });
+  }
+});
+
+router.get("/users/:id/details", authRequired, superAdminOnly, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select("-passwordHash")
+      .populate("sponsor", "username fullName email phone");
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanici bulunamadi" });
+    }
+
+    const team = [];
+    let parentIds = [user._id];
+    let level = 1;
+
+    while (parentIds.length) {
+      const members = await User.find({ sponsor: { $in: parentIds } })
+        .select("-passwordHash")
+        .populate("sponsor", "username fullName email phone")
+        .sort({ createdAt: 1 });
+
+      if (!members.length) break;
+      team.push(...members.map((member) => ({ ...member.toObject(), level })));
+      parentIds = members.map((member) => member._id);
+      level += 1;
+    }
+
+    res.json({
+      user,
+      team,
+      directTeamCount: team.filter((member) => member.level === 1).length,
+      totalTeamCount: team.length,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Kullanici ayrintilari getirilemedi" });
   }
 });
 
@@ -68,15 +116,30 @@ router.put("/users/:id/active", authRequired, superAdminOnly, async (req, res) =
 router.put("/users/:id/license", authRequired, superAdminOnly, async (req, res) => {
   try {
     const { isLicensed, licenseFee, licensePaymentType } = req.body;
+    const durationMonths = Number(req.body.durationMonths || 12);
+
+    if (Boolean(isLicensed) && ![1, 12, 24].includes(durationMonths)) {
+      return res.status(400).json({ message: "Lisans suresi 1 ay, 1 yil veya 2 yil olmalidir" });
+    }
+
+    const licenseStartedAt = Boolean(isLicensed) ? new Date() : null;
+    const licensePlan = !isLicensed
+      ? ""
+      : durationMonths === 1
+        ? "initial"
+        : durationMonths === 24
+          ? "biennial"
+          : "annual";
 
     let user = await User.findByIdAndUpdate(
       req.params.id,
       {
         isLicensed: Boolean(isLicensed),
-        licenseStartedAt: isLicensed ? new Date() : null,
+        licenseStartedAt,
         licenseExpiresAt: isLicensed
-          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          ? addMonths(licenseStartedAt, durationMonths)
           : null,
+        licensePlan,
       },
       { new: true }
     ).select("-passwordHash");
