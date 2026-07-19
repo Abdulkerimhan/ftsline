@@ -55,6 +55,10 @@ function getRemainingLicenseTime(expiresAt, isLicensed) {
 export default function SuperAdminPanel() {
   const [activeMenu, setActiveMenu] = useState("overview");
   const [search, setSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("all");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+  const [orderDateFrom, setOrderDateFrom] = useState("");
+  const [orderDateTo, setOrderDateTo] = useState("");
 
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -179,14 +183,44 @@ export default function SuperAdminPanel() {
   });
 
   const filteredOrders = orders.filter((o) => {
-    const q = search.toLowerCase();
-
-    return (
+    const q = search.trim().toLowerCase();
+    const matchesSearch =
       String(o._id || "").toLowerCase().includes(q) ||
       o.shippingInfo?.fullName?.toLowerCase().includes(q) ||
-      o.shippingInfo?.email?.toLowerCase().includes(q)
+      o.shippingInfo?.email?.toLowerCase().includes(q) ||
+      o.shippingInfo?.phone?.toLowerCase().includes(q) ||
+      o.cargoTrackingNumber?.toLowerCase().includes(q) ||
+      o.items?.some((item) => item.name?.toLowerCase().includes(q));
+
+    const matchesOrderStatus =
+      orderStatusFilter === "all" ||
+      (o.status || "pending") === orderStatusFilter;
+    const matchesPaymentStatus =
+      paymentStatusFilter === "all" ||
+      (o.paymentStatus || "pending") === paymentStatusFilter;
+
+    const createdAt = o.createdAt ? new Date(o.createdAt) : null;
+    const from = orderDateFrom ? new Date(`${orderDateFrom}T00:00:00`) : null;
+    const to = orderDateTo ? new Date(`${orderDateTo}T23:59:59.999`) : null;
+    const matchesDate =
+      (!from || (createdAt && createdAt >= from)) &&
+      (!to || (createdAt && createdAt <= to));
+
+    return (
+      matchesSearch &&
+      matchesOrderStatus &&
+      matchesPaymentStatus &&
+      matchesDate
     );
   });
+
+  function clearOrderFilters() {
+    setSearch("");
+    setOrderStatusFilter("all");
+    setPaymentStatusFilter("all");
+    setOrderDateFrom("");
+    setOrderDateTo("");
+  }
 
   function menuClick(menu) {
     setActiveMenu(menu);
@@ -909,6 +943,69 @@ export default function SuperAdminPanel() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+
+        <div className="super-order-filters">
+          <label className="super-filter-field">
+            <span>Siparis durumu</span>
+            <select
+              value={orderStatusFilter}
+              onChange={(e) => setOrderStatusFilter(e.target.value)}
+            >
+              <option value="all">Tum durumlar</option>
+              <option value="pending">Onay Bekliyor</option>
+              <option value="preparing">Hazirlaniyor</option>
+              <option value="shipped">Kargoya Verildi</option>
+              <option value="completed">Teslim Edildi</option>
+              <option value="cancelled">Iptal Edildi</option>
+            </select>
+          </label>
+
+          <label className="super-filter-field">
+            <span>Odeme durumu</span>
+            <select
+              value={paymentStatusFilter}
+              onChange={(e) => setPaymentStatusFilter(e.target.value)}
+            >
+              <option value="all">Tum odemeler</option>
+              <option value="pending">Odeme Bekliyor</option>
+              <option value="paid">Odendi</option>
+              <option value="failed">Basarisiz</option>
+              <option value="refunded">Iade Edildi</option>
+            </select>
+          </label>
+
+          <label className="super-filter-field">
+            <span>Baslangic tarihi</span>
+            <input
+              type="date"
+              value={orderDateFrom}
+              max={orderDateTo || undefined}
+              onChange={(e) => setOrderDateFrom(e.target.value)}
+            />
+          </label>
+
+          <label className="super-filter-field">
+            <span>Bitis tarihi</span>
+            <input
+              type="date"
+              value={orderDateTo}
+              min={orderDateFrom || undefined}
+              onChange={(e) => setOrderDateTo(e.target.value)}
+            />
+          </label>
+
+          <button
+            type="button"
+            className="super-filter-clear"
+            onClick={clearOrderFilters}
+          >
+            Filtreleri Temizle
+          </button>
+
+          <span className="super-filter-result">
+            {filteredOrders.length} siparis bulundu
+          </span>
         </div>
 
         <div className="super-table-wrap">
