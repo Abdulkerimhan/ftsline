@@ -322,6 +322,25 @@ export default function Dashboard({ initialSection = "overview" }) {
     };
   }, [dashboardT?.active, dashboardT?.passive]);
 
+  useEffect(() => {
+    if (activeSection !== "earnings") return undefined;
+
+    const refreshEarnings = () => {
+      fetchEarnings().catch((error) => {
+        console.error("Kazanc verileri yenilenemedi:", error);
+      });
+    };
+
+    refreshEarnings();
+    const refreshTimer = window.setInterval(refreshEarnings, 5000);
+    window.addEventListener("focus", refreshEarnings);
+
+    return () => {
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refreshEarnings);
+    };
+  }, [activeSection]);
+
   const referralLink = useMemo(() => {
     const username = user?.username || "ftsline";
     return `${window.location.origin}/register?sponsor=${username}`;
