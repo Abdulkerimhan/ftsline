@@ -1,5 +1,12 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { getMatrixTree, getMe, getMyEarnings, getReferrals } from "../api.js";
+import {
+  createWithdrawalRequest,
+  getMatrixTree,
+  getMe,
+  getMyEarnings,
+  getMyWithdrawals,
+  getReferrals,
+} from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import FAQ from "./FAQ.jsx";
 import "./Dashboard.css";
@@ -84,6 +91,10 @@ export default function Dashboard({ initialSection = "overview" }) {
     movements: [],
     chart: [],
   });
+  const [withdrawalData, setWithdrawalData] = useState({ minimumAmount: 5000, requests: [] });
+  const [withdrawalAmount, setWithdrawalAmount] = useState("");
+  const [withdrawalSubmitting, setWithdrawalSubmitting] = useState(false);
+  const [withdrawalMessage, setWithdrawalMessage] = useState("");
   const earningsChart = earningData.chart || [];
 
   const [profileForm, setProfileForm] = useState({
@@ -253,8 +264,12 @@ export default function Dashboard({ initialSection = "overview" }) {
   }
 
   async function fetchEarnings() {
-    const data = await getMyEarnings();
+    const [data, withdrawals] = await Promise.all([
+      getMyEarnings(),
+      getMyWithdrawals().catch(() => ({ minimumAmount: 5000, requests: [] })),
+    ]);
     setEarningData(data || { summary: {}, sourceSummary: [], movements: [], chart: [] });
+    setWithdrawalData(withdrawals || { minimumAmount: 5000, requests: [] });
 
     if (data?.summary) {
       setSummary((prev) => ({
@@ -263,6 +278,22 @@ export default function Dashboard({ initialSection = "overview" }) {
         monthEarning: data.summary.monthlyEarning ?? prev.monthEarning,
         totalEarning: data.summary.totalEarning ?? prev.totalEarning,
       }));
+    }
+  }
+
+  async function submitWithdrawal(event) {
+    event.preventDefault();
+    setWithdrawalMessage("");
+    setWithdrawalSubmitting(true);
+    try {
+      const result = await createWithdrawalRequest(Number(withdrawalAmount));
+      setWithdrawalAmount("");
+      setWithdrawalMessage(result.message || "Cekim talebiniz alindi");
+      await fetchEarnings();
+    } catch (error) {
+      setWithdrawalMessage(error.message || "Cekim talebi olusturulamadi");
+    } finally {
+      setWithdrawalSubmitting(false);
     }
   }
 
@@ -627,6 +658,52 @@ export default function Dashboard({ initialSection = "overview" }) {
   const renderEarnings = () => (
     <div className="dashboard-content-grid">
       <div className="dashboard-card">
+        <div className="dashboard-withdrawal-box">
+          <div>
+            <h2 className="dashboard-section-title">Çekim Talebi</h2>
+            <p className="dashboard-section-text">
+              Kullanılabilir bakiye: <strong>{formatMoney(summary.balance)} TL</strong>. Minimum çekim tutarı {formatMoney(withdrawalData.minimumAmount)} TL'dir.
+            </p>
+          </div>
+          <form className="dashboard-withdrawal-form" onSubmit={submitWithdrawal}>
+            <input
+              type="number"
+              min={withdrawalData.minimumAmount}
+              max={summary.balance}
+              step="0.01"
+              value={withdrawalAmount}
+              onChange={(event) => setWithdrawalAmount(event.target.value)}
+              placeholder="Tutar (TL)"
+              disabled={summary.balance < withdrawalData.minimumAmount || withdrawalSubmitting}
+              required
+            />
+            <button
+              type="submit"
+              className="dashboard-btn-primary"
+              disabled={summary.balance < withdrawalData.minimumAmount || withdrawalSubmitting || withdrawalData.requests.some((request) => request.status === "pending")}
+            >
+              {withdrawalSubmitting ? "Gönderiliyor..." : "Çekim Talebi Oluştur"}
+            </button>
+          </form>
+          {summary.balance < withdrawalData.minimumAmount && (
+            <div className="dashboard-withdrawal-note">Çekim talebi için bakiyeniz en az 5.000 TL olmalıdır.</div>
+          )}
+          {withdrawalData.requests.some((request) => request.status === "pending") && (
+            <div className="dashboard-withdrawal-note">Bekleyen bir çekim talebiniz bulunuyor.</div>
+          )}
+          {withdrawalMessage && <div className="dashboard-withdrawal-note">{withdrawalMessage}</div>}
+          {withdrawalData.requests.length > 0 && (
+            <div className="dashboard-withdrawal-history">
+              {withdrawalData.requests.slice(0, 5).map((request) => (
+                <div key={request._id}>
+                  <strong>{formatMoney(request.amount)} TL</strong>
+                  <span>{request.status === "pending" ? "Bekliyor" : request.status === "approved" ? "Ödendi" : "Reddedildi"}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="dashboard-section-head">
           <div>
             <h2 className="dashboard-section-title">

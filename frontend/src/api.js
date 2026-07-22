@@ -128,6 +128,22 @@ export async function getMyEarnings() {
   }
 }
 
+export async function getMyWithdrawals() {
+  const res = await fetch(`${API}/earnings/withdrawals/me`, {
+    headers: { ...getAuthHeader() },
+  });
+  return parseResponse(res);
+}
+
+export async function createWithdrawalRequest(amount) {
+  const res = await fetch(`${API}/earnings/withdrawals`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAuthHeader() },
+    body: JSON.stringify({ amount }),
+  });
+  return parseResponse(res);
+}
+
 export async function getMatrixTree() {
   try {
     const res = await fetch(`${API}/user/matrix`, {
