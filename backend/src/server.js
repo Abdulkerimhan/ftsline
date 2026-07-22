@@ -103,7 +103,7 @@ app.post("/api/auth/register", async (req, res) => {
 
     if (existingUser) {
       return res.status(400).json({
-        message: "Bu kullanÄ±cÄ± adÄ± veya email zaten kullanÄ±lÄ±yor",
+        message: "Bu kullanıcı adı veya e-posta zaten kullanılıyor",
       });
     }
 
@@ -120,7 +120,7 @@ app.post("/api/auth/register", async (req, res) => {
 
       if (!sponsorUser) {
         return res.status(400).json({
-          message: "GeÃ§ersiz referans kullanÄ±cÄ± adÄ±",
+          message: "Geçersiz referans kullanıcı adı",
         });
       }
     } else {
@@ -146,7 +146,7 @@ app.post("/api/auth/register", async (req, res) => {
     });
 
     res.json({
-      message: "KayÄ±t baÅŸarÄ±lÄ±",
+      message: "Kayıt başarılı",
       user: {
         _id: user._id,
         username: user.username,
@@ -162,7 +162,7 @@ app.post("/api/auth/register", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Register hatasÄ±:", error);
+    console.error("Kayıt hatası:", error);
     res.status(500).json({ message: "Server hata" });
   }
 });
@@ -182,7 +182,7 @@ app.post("/api/auth/login", async (req, res) => {
     }).select("+passwordHash");
 
     if (!user) {
-      return res.status(401).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
+      return res.status(401).json({ message: "Kullanıcı bulunamadı" });
     }
 
     if (!user.isActive) {
@@ -192,7 +192,7 @@ app.post("/api/auth/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Åifre yanlÄ±ÅŸ" });
+      return res.status(401).json({ message: "Şifre yanlış" });
     }
 
     const token = jwt.sign(
@@ -222,7 +222,7 @@ app.post("/api/auth/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login hatasÄ±:", error);
+    console.error("Giriş hatası:", error);
     res.status(500).json({ message: "Server hata" });
   }
 });
@@ -246,12 +246,12 @@ app.get("/api/user/me", async (req, res) => {
     );
 
     if (!user) {
-      return res.status(404).json({ message: "KullanÄ±cÄ± bulunamadÄ±" });
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
     }
 
     res.json(user);
   } catch {
-    res.status(401).json({ message: "GeÃ§ersiz token" });
+    res.status(401).json({ message: "Geçersiz token" });
   }
 });
 
@@ -306,8 +306,8 @@ app.get("/api/user/referrals", async (req, res) => {
 
     res.json(referrals);
   } catch (error) {
-    console.error("Referrals hatasÄ±:", error);
-    res.status(401).json({ message: "GeÃ§ersiz token" });
+    console.error("Referanslar hatası:", error);
+    res.status(401).json({ message: "Geçersiz token" });
   }
 });
 

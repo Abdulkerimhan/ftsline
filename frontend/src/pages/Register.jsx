@@ -6,7 +6,7 @@ import logo from "../assets/ftsline.png";
 
 const text = {
   tr: {
-    title: "Kayit Ol",
+    title: "Kayıt Ol",
     username: "Kullanici adi",
     fullName: "Ad Soyad",
     email: "E-mail adresi",
@@ -17,11 +17,11 @@ const text = {
     usernameLength: "Kullanici adi en az 3 karakter olmali",
     usernameInvalid: "Kullanici adinda sadece kucuk harf, rakam, _ ve . olabilir",
     passwordLength: "Sifre en az 6 karakter olmali",
-    success: "Kayit basarili! Giris sayfasina yonlendiriliyorsun...",
-    failed: "Kayit basarisiz",
+    success: "Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...",
+    failed: "Kayıt başarısız",
     serverError: "Sunucu baglanti hatasi",
-    loading: "Kayit olusturuluyor...",
-    submit: "Kayit Ol",
+    loading: "Kayıt oluşturuluyor...",
+    submit: "Kayıt Ol",
     hasAccount: "Zaten hesabin var mi?",
     login: "Giris Yap",
   },
