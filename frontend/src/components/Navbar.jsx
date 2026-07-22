@@ -129,9 +129,6 @@ export default function Navbar() {
         </>
       ) : (
         <>
-          <Link to="/dashboard" className={navLinkClassName("/dashboard")}>
-            {user?.username || common.panel || "Panel"}
-          </Link>
           <button type="button" onClick={handleLogout} className="navbar-logout">
             {common.logout || "Cikis"}
           </button>

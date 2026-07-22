@@ -111,12 +111,17 @@ export default function Dashboard({ initialSection = "overview" }) {
         if (!memberId || visited.has(memberId)) return [];
         const nextVisited = new Set(visited);
         nextVisited.add(memberId);
+        const children = buildChildren(memberId, nextVisited);
         return [{
           id: memberId,
           username: member.username,
           createdAt: member.createdAt,
           isActive: member.isActive,
-          children: buildChildren(memberId, nextVisited),
+          children,
+          totalTeamCount: children.reduce(
+            (total, child) => total + 1 + Number(child.totalTeamCount || 0),
+            0
+          ),
         }];
       });
 
@@ -754,7 +759,14 @@ export default function Dashboard({ initialSection = "overview" }) {
               aria-expanded={hasChildren ? isExpanded : undefined}
             >
               <div>
-                <div className="dashboard-list-title">{member.username}</div>
+                <div className="dashboard-list-title dashboard-unilevel-name">
+                  {member.username}
+                  {member.totalTeamCount > 0 && (
+                    <span className="dashboard-team-count">
+                      {language === "tr" ? "Alt ekip" : "Team"}: {member.totalTeamCount}
+                    </span>
+                  )}
+                </div>
                 <div className="dashboard-list-sub">
                   {safeText(unilevelT?.level, "Seviye")}: {member.level}
                 </div>
@@ -762,13 +774,6 @@ export default function Dashboard({ initialSection = "overview" }) {
                   {safeText(unilevelT?.joinDate, "KatÄ±lÄ±m Tarihi")}:{" "}
                   {member.joinDate}
                 </div>
-                {hasChildren && (
-                  <div className="dashboard-list-sub dashboard-unilevel-toggle">
-                    {isExpanded
-                      ? language === "tr" ? "Alt ekibi gizle" : "Hide team"
-                      : language === "tr" ? `Alt ekibi göster (${member.children.length})` : `Show team (${member.children.length})`}
-                  </div>
-                )}
               </div>
 
               <div className="dashboard-unilevel-mid">
