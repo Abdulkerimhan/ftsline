@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   createWithdrawalRequest,
   getMatrixTree,
@@ -230,12 +230,12 @@ export default function Dashboard({ initialSection = "overview" }) {
       const data = await res.json().catch(() => []);
 
       if (!res.ok) {
-        throw new Error(data.message || "SipariÅŸler alÄ±namadÄ±");
+        throw new Error(data.message || "Siparişler alınamadı");
       }
 
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("SipariÅŸler alÄ±namadÄ±:", error);
+      console.error("Siparişler alınamadı:", error);
       setOrders([]);
     } finally {
       setOrdersLoading(false);
@@ -336,7 +336,7 @@ export default function Dashboard({ initialSection = "overview" }) {
           }));
         }
       } catch (error) {
-        console.error("Dashboard kullanÄ±cÄ± verisi alÄ±namadÄ±:", error);
+        console.error("Dashboard kullanÄ±cÄ± verisi alınamadı:", error);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -966,12 +966,12 @@ export default function Dashboard({ initialSection = "overview" }) {
       <div className="dashboard-card">
         <div className="dashboard-section-head-col">
           <h2 className="dashboard-section-title">
-            {safeText(ordersT?.title, "SipariÅŸlerim")}
+            {safeText(ordersT?.title, "Siparişlerim")}
           </h2>
           <p className="dashboard-section-text">
             {safeText(
               ordersT?.text,
-              "GeÃ§miÅŸ ve gÃ¼ncel sipariÅŸlerini buradan takip et."
+              "Geçmiş ve güncel siparişlerini buradan takip et."
             )}
           </p>
         </div>
@@ -980,20 +980,20 @@ export default function Dashboard({ initialSection = "overview" }) {
           {ordersLoading ? (
             <div className="dashboard-empty-text">
               {language === "tr"
-                ? "SipariÅŸler yÃ¼kleniyor..."
+                ? "Siparişler yükleniyor..."
                 : "Loading orders..."}
             </div>
           ) : orders.length === 0 ? (
             <div className="dashboard-empty-text">
               {language === "tr"
-                ? "HenÃ¼z sipariÅŸin yok."
+                ? "Henüz siparişin yok."
                 : "You do not have any orders yet."}
             </div>
           ) : (
             orders.map((order) => {
               const firstItem = order.items?.[0];
               const productName =
-                firstItem?.name || (language === "tr" ? "SipariÅŸ" : "Order");
+                firstItem?.name || (language === "tr" ? "Sipariş" : "Order");
 
               const extraCount =
                 order.items?.length > 1 ? ` +${order.items.length - 1}` : "";
@@ -1338,7 +1338,7 @@ export default function Dashboard({ initialSection = "overview" }) {
             >
               <span className="dashboard-side-icon">S</span>
               {sidebarOpen && (
-                <span>{safeText(sectionsT?.orders, "SipariÅŸler")}</span>
+                <span>{safeText(sectionsT?.orders, "Siparişler")}</span>
               )}
             </button>
 
