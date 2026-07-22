@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import { distributeLicenseCareerBonus, MONTHLY_LICENSE_USAGE_FEE_USDT } from "./careerBonusService.js";
 import { distributeInitialUnilevelBonus } from "./unilevelBonusService.js";
 import { findNextMatrixSlot, getMatrixPlacementFields } from "./matrixService.js";
+import { updateAllCareers } from "./networkCareerService.js";
 
 export const LICENSE_PLANS = {
   initial: {
@@ -158,6 +159,9 @@ export async function activateLicensePlanForUser({ userId, planKey, paidAt = new
 
   await user.save();
 
+  // Yeni lisans, sponsorun aktif direkt uye sayisini ve kariyer derinligini
+  // degistirebilir. Unilevel dagitimi eski kariyer verisiyle hesaplanmamali.
+  const careerUpdateResult = await updateAllCareers();
   const unilevelBonusResult = await distributeInitialUnilevelBonus({ payerUserId: user._id });
   const matrixPayoutResult = {
     processed: 0,
@@ -172,7 +176,14 @@ export async function activateLicensePlanForUser({ userId, planKey, paidAt = new
   return {
     plan,
     user: updatedUser,
+    careerUpdateResult,
     unilevelBonusResult,
     matrixPayoutResult,
   };
+}
+
+export async function retryInitialUnilevelForActivatedLicense({ userId }) {
+  const careerUpdateResult = await updateAllCareers();
+  const unilevelBonusResult = await distributeInitialUnilevelBonus({ payerUserId: userId });
+  return { careerUpdateResult, unilevelBonusResult };
 }

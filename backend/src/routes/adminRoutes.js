@@ -6,7 +6,10 @@ import User from "../models/User.js";
 import EarningTransaction from "../models/EarningTransaction.js";
 import { authRequired } from "../middleware/authMiddleware.js";
 import { uploadProductImages } from "../utils/cloudinaryUpload.js";
-import { activateLicensePlanForUser } from "../services/licensePlanService.js";
+import {
+  activateLicensePlanForUser,
+  retryInitialUnilevelForActivatedLicense,
+} from "../services/licensePlanService.js";
 import {
   buildFinanceOrderUpdate,
   serializeFinanceOrder,
@@ -338,16 +341,21 @@ router.patch(
         update.paymentStatus === "paid" &&
         previousOrder.paymentStatus !== "paid" &&
         previousOrder.orderType === "license" &&
-        previousOrder.licensePlan &&
-        !previousOrder.licenseActivatedAt
+        previousOrder.licensePlan
       ) {
-        licenseActivation = await activateLicensePlanForUser({
-          userId: previousOrder.user,
-          planKey: previousOrder.licensePlan,
-          paidAt: new Date(),
-        });
-        update.status = "completed";
-        update.licenseActivatedAt = new Date();
+        if (previousOrder.licenseActivatedAt) {
+          licenseActivation = await retryInitialUnilevelForActivatedLicense({
+            userId: previousOrder.user,
+          });
+        } else {
+          licenseActivation = await activateLicensePlanForUser({
+            userId: previousOrder.user,
+            planKey: previousOrder.licensePlan,
+            paidAt: new Date(),
+          });
+          update.status = "completed";
+          update.licenseActivatedAt = new Date();
+        }
       }
 
       const order = await Order.findByIdAndUpdate(req.params.id, update, {

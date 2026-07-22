@@ -5,7 +5,11 @@ import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
-import { activateLicensePlanForUser, getLicensePlan } from "../services/licensePlanService.js";
+import {
+  activateLicensePlanForUser,
+  getLicensePlan,
+  retryInitialUnilevelForActivatedLicense,
+} from "../services/licensePlanService.js";
 
 const router = express.Router();
 
@@ -324,19 +328,24 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
       order.orderType === "license" &&
       order.licensePlan &&
       paymentStatus === "paid" &&
-      previousOrder.paymentStatus !== "paid" &&
-      !previousOrder.licenseActivatedAt
+      previousOrder.paymentStatus !== "paid"
     ) {
-      licenseActivation = await activateLicensePlanForUser({
-        userId: previousOrder.user,
-        planKey: order.licensePlan,
-        paidAt: new Date(),
-      });
+      if (previousOrder.licenseActivatedAt) {
+        licenseActivation = await retryInitialUnilevelForActivatedLicense({
+          userId: previousOrder.user,
+        });
+      } else {
+        licenseActivation = await activateLicensePlanForUser({
+          userId: previousOrder.user,
+          planKey: order.licensePlan,
+          paidAt: new Date(),
+        });
 
-      await Order.findByIdAndUpdate(order._id, {
-        status: "completed",
-        licenseActivatedAt: new Date(),
-      });
+        await Order.findByIdAndUpdate(order._id, {
+          status: "completed",
+          licenseActivatedAt: new Date(),
+        });
+      }
     }
 
     const finalOrder = await Order.findById(order._id)

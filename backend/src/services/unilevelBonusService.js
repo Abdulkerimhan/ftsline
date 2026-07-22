@@ -50,7 +50,14 @@ export async function distributeInitialUnilevelBonus({ payerUserId }) {
   }
 
   if (payer.unilevelInitialBonusPaidAt) {
-    return { skipped: true, reason: "ALREADY_PAID", totalDistributed: 0, beneficiaries: [] };
+    const existingPayout = await EarningTransaction.exists({
+      sourceType: "unilevel_initial",
+      sourceUser: payer._id,
+      status: { $ne: "cancelled" },
+    });
+    if (existingPayout) {
+      return { skipped: true, reason: "ALREADY_PAID", totalDistributed: 0, beneficiaries: [] };
+    }
   }
 
   const beneficiaries = [];
