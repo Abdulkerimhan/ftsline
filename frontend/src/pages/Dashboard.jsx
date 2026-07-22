@@ -495,45 +495,6 @@ export default function Dashboard({ initialSection = "overview" }) {
     );
   };
 
-  const renderUniNode = (node, level = 1, nodeId = "uniRoot") => {
-    if (!node) return null;
-
-    const hasChildren = !!(node.children && node.children.length > 0);
-    const expansionKey = node.id || nodeId;
-    const isExpanded = level === 1 || !!expandedUniNodes[expansionKey];
-
-    return (
-      <div className="uni-node-wrap" key={nodeId}>
-        <button
-          type="button"
-          className={`uni-node ${level === 1 ? "uni-root" : ""} ${
-            hasChildren ? "uni-clickable" : ""
-          }`}
-          onClick={() => level > 1 && hasChildren && toggleUniNode(expansionKey)}
-        >
-          <span className="uni-node-name">{node.username}</span>
-          {level > 1 && hasChildren && (
-            <span className="uni-toggle-text">
-              {isExpanded
-                ? safeText(unilevelT?.close, "Kapat")
-                : safeText(unilevelT?.open, "AÃ§")}
-            </span>
-          )}
-        </button>
-
-        {hasChildren && isExpanded && (
-          <div className="uni-children">
-            {node.children.map((child, index) => (
-              <div key={`${child.username}-${index}`}>
-                {renderUniNode(child, level + 1, `${nodeId}-${index}`)}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const renderOverview = () => (
     <>
       <div className="dashboard-hero">
@@ -796,21 +757,6 @@ export default function Dashboard({ initialSection = "overview" }) {
           })}
         </div>
 
-        <div className="dashboard-card-lite">
-          <div className="dashboard-section-head-col">
-            <h3 className="dashboard-sub-title">
-              {safeText(unilevelT?.treeTitle, "Ãœnilevel AÄŸaÃ§")}
-            </h3>
-            <p className="dashboard-section-text">
-              {safeText(
-                unilevelT?.treeText,
-                "AÄŸacÄ±nÄ± katmanlÄ± ÅŸekilde gÃ¶rÃ¼ntÃ¼le."
-              )}
-            </p>
-          </div>
-
-          <div className="uni-scroll">{renderUniNode(unilevelTree, 1, "uniRoot")}</div>
-        </div>
       </div>
     </div>
   );
