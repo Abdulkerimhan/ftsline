@@ -95,16 +95,37 @@ export default function Dashboard({ initialSection = "overview" }) {
     password: "",
   });
 
-  const unilevelTree = useMemo(
-    () => ({
+  const unilevelTree = useMemo(() => {
+    const childrenBySponsor = new Map();
+
+    referrals.forEach((referral) => {
+      const sponsorId = String(referral.sponsor?._id || referral.sponsor || "");
+      const children = childrenBySponsor.get(sponsorId) || [];
+      children.push(referral);
+      childrenBySponsor.set(sponsorId, children);
+    });
+
+    const buildChildren = (sponsorId, visited = new Set()) =>
+      (childrenBySponsor.get(String(sponsorId)) || []).flatMap((member) => {
+        const memberId = String(member._id);
+        if (!memberId || visited.has(memberId)) return [];
+        const nextVisited = new Set(visited);
+        nextVisited.add(memberId);
+        return [{
+          id: memberId,
+          username: member.username,
+          createdAt: member.createdAt,
+          isActive: member.isActive,
+          children: buildChildren(memberId, nextVisited),
+        }];
+      });
+
+    return {
+      id: String(user?._id || "uniRoot"),
       username: user?.username || "sen",
-      children: referrals.map((referral) => ({
-        username: referral.username,
-        children: [],
-      })),
-    }),
-    [referrals, user?.username]
-  );
+      children: buildChildren(user?._id),
+    };
+  }, [referrals, user?._id, user?.username]);
 
   const [expandedNodes, setExpandedNodes] = useState({
     root: true,
@@ -112,12 +133,7 @@ export default function Dashboard({ initialSection = "overview" }) {
     "root-R": true,
   });
 
-  const [expandedUniNodes, setExpandedUniNodes] = useState({
-    uniRoot: true,
-    "uniRoot-0": true,
-    "uniRoot-1": true,
-    "uniRoot-2": true,
-  });
+  const [expandedUniNodes, setExpandedUniNodes] = useState({});
 
   const earningTypeLabels = {
     unilevel_initial: "Ilk ay unilevel hak edisi",
@@ -141,23 +157,40 @@ export default function Dashboard({ initialSection = "overview" }) {
     depth: item.depth,
     rate: item.rate,
   }));
-  const unilevelMembers = useMemo(
-    () =>
-      referrals.map((referral) => ({
-        username: referral.username,
-        level: 1,
-        joinDate: referral.createdAt
-          ? new Date(referral.createdAt).toLocaleDateString(
-              language === "tr" ? "tr-TR" : "en-US"
-            )
-          : "-",
-        contribution: 0,
-        status: referral.isActive
-          ? safeText(dashboardT?.active, "Aktif")
-          : safeText(dashboardT?.passive, "Pasif"),
-      })),
-    [dashboardT?.active, dashboardT?.passive, language, referrals]
-  );
+  const visibleUnilevelMembers = useMemo(() => {
+    const visible = [];
+
+    const appendVisible = (nodes, level) => {
+      nodes.forEach((node) => {
+        visible.push({
+          ...node,
+          level,
+          joinDate: node.createdAt
+            ? new Date(node.createdAt).toLocaleDateString(
+                language === "tr" ? "tr-TR" : "en-US"
+              )
+            : "-",
+          contribution: 0,
+          status: node.isActive
+            ? safeText(dashboardT?.active, "Aktif")
+            : safeText(dashboardT?.passive, "Pasif"),
+        });
+
+        if (expandedUniNodes[node.id]) {
+          appendVisible(node.children || [], level + 1);
+        }
+      });
+    };
+
+    appendVisible(unilevelTree.children || [], 1);
+    return visible;
+  }, [
+    dashboardT?.active,
+    dashboardT?.passive,
+    expandedUniNodes,
+    language,
+    unilevelTree,
+  ]);
   const matrixDailyEarnings = [];
 
   async function fetchMyOrders() {
@@ -196,10 +229,15 @@ export default function Dashboard({ initialSection = "overview" }) {
   async function fetchReferrals() {
     const data = await getReferrals();
     const referralList = Array.isArray(data) ? data : [];
+    const currentUserId = String(user?._id || "");
+    const directCount = referralList.filter(
+      (referral) =>
+        String(referral.sponsor?._id || referral.sponsor || "") === currentUserId
+    ).length;
     setReferrals(referralList);
     setSummary((prev) => ({
       ...prev,
-      directReferrals: referralList.length,
+      directReferrals: directCount,
       teamCount: Math.max(prev.teamCount || 0, referralList.length),
     }));
   }
@@ -456,7 +494,8 @@ export default function Dashboard({ initialSection = "overview" }) {
     if (!node) return null;
 
     const hasChildren = !!(node.children && node.children.length > 0);
-    const isExpanded = !!expandedUniNodes[nodeId];
+    const expansionKey = node.id || nodeId;
+    const isExpanded = level === 1 || !!expandedUniNodes[expansionKey];
 
     return (
       <div className="uni-node-wrap" key={nodeId}>
@@ -465,10 +504,10 @@ export default function Dashboard({ initialSection = "overview" }) {
           className={`uni-node ${level === 1 ? "uni-root" : ""} ${
             hasChildren ? "uni-clickable" : ""
           }`}
-          onClick={() => hasChildren && toggleUniNode(nodeId)}
+          onClick={() => level > 1 && hasChildren && toggleUniNode(expansionKey)}
         >
           <span className="uni-node-name">{node.username}</span>
-          {hasChildren && (
+          {level > 1 && hasChildren && (
             <span className="uni-toggle-text">
               {isExpanded
                 ? safeText(unilevelT?.close, "Kapat")
@@ -695,16 +734,24 @@ export default function Dashboard({ initialSection = "overview" }) {
         </div>
 
         <div className="dashboard-unilevel-table">
-          {unilevelMembers.length === 0 ? (
+          {visibleUnilevelMembers.length === 0 ? (
             <div className="dashboard-empty-text">
               {language === "tr"
                 ? "Henüz alt ekibinizde kayıtlı üye yok."
                 : "There are no registered members in your team yet."}
             </div>
-          ) : unilevelMembers.map((member, index) => (
-            <div
-              key={`${member.username}-${index}`}
-              className="dashboard-unilevel-row"
+          ) : visibleUnilevelMembers.map((member) => {
+            const hasChildren = member.children?.length > 0;
+            const isExpanded = !!expandedUniNodes[member.id];
+
+            return (
+            <button
+              type="button"
+              key={member.id}
+              className={`dashboard-unilevel-row ${hasChildren ? "is-clickable" : ""}`}
+              style={{ "--unilevel-depth": member.level - 1 }}
+              onClick={() => hasChildren && toggleUniNode(member.id)}
+              aria-expanded={hasChildren ? isExpanded : undefined}
             >
               <div>
                 <div className="dashboard-list-title">{member.username}</div>
@@ -715,6 +762,13 @@ export default function Dashboard({ initialSection = "overview" }) {
                   {safeText(unilevelT?.joinDate, "KatÄ±lÄ±m Tarihi")}:{" "}
                   {member.joinDate}
                 </div>
+                {hasChildren && (
+                  <div className="dashboard-list-sub dashboard-unilevel-toggle">
+                    {isExpanded
+                      ? language === "tr" ? "Alt ekibi gizle" : "Hide team"
+                      : language === "tr" ? `Alt ekibi göster (${member.children.length})` : `Show team (${member.children.length})`}
+                  </div>
+                )}
               </div>
 
               <div className="dashboard-unilevel-mid">
@@ -732,8 +786,9 @@ export default function Dashboard({ initialSection = "overview" }) {
               <div className="dashboard-amount-positive">
                 + {formatMoney(member.contribution)} TL
               </div>
-            </div>
-          ))}
+            </button>
+            );
+          })}
         </div>
 
         <div className="dashboard-card-lite">

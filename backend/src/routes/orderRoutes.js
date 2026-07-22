@@ -298,6 +298,10 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
       updates.paymentProof = String(paymentProof || "").trim();
     }
 
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "Guncellenecek odeme alani bulunamadi" });
+    }
+
     const previousOrder = await Order.findById(req.params.id);
 
     if (!previousOrder) {
@@ -335,7 +339,11 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
       });
     }
 
-    return res.json({ ...order, licenseActivation });
+    const finalOrder = await Order.findById(order._id)
+      .populate("user", "username fullName email role")
+      .lean();
+
+    return res.json({ ...finalOrder, licenseActivation });
   } catch (error) {
     console.error("Odeme durumu guncelleme hatasi:", error);
     return res.status(500).json({ message: "Odeme durumu guncellenemedi" });

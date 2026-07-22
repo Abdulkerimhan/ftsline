@@ -778,6 +778,29 @@
   border: 1px solid #eef2f7;
 }
 
+.dashboard-unilevel-row {
+  width: calc(100% - (var(--unilevel-depth, 0) * 26px));
+  margin-left: calc(var(--unilevel-depth, 0) * 26px);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.dashboard-unilevel-row.is-clickable {
+  cursor: pointer;
+}
+
+.dashboard-unilevel-row.is-clickable:hover {
+  border-color: #93b4ff;
+  background: #f2f6ff;
+}
+
+.dashboard-unilevel-toggle {
+  margin-top: 6px;
+  color: #2459d3;
+  font-weight: 700;
+}
+
 .dashboard-unilevel-mid {
   display: flex;
   align-items: center;

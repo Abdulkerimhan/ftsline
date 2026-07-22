@@ -6,6 +6,12 @@ import User from "../models/User.js";
 import EarningTransaction from "../models/EarningTransaction.js";
 import { authRequired } from "../middleware/authMiddleware.js";
 import { uploadProductImages } from "../utils/cloudinaryUpload.js";
+import { activateLicensePlanForUser } from "../services/licensePlanService.js";
+import {
+  buildFinanceOrderUpdate,
+  serializeFinanceOrder,
+  serializeFinanceUser,
+} from "../services/financeContractService.js";
 
 const router = express.Router();
 
@@ -293,21 +299,20 @@ router.get(
           totalEarnings: transactions.reduce((sum, item) => sum + Number(item.amount || 0), 0),
           orderCount: orders.length,
         },
-        orders,
+        orders: orders.map(serializeFinanceOrder),
         products: products.map((product) => ({
           ...product,
           soldQuantity: productSales.get(String(product._id))?.quantity || 0,
           salesRevenue: productSales.get(String(product._id))?.revenue || 0,
         })),
-        users: users.map((user) => ({
-          ...user,
-          earnings: earningsByUser.get(String(user._id)) || {
+        users: users.map((user) =>
+          serializeFinanceUser(user, earningsByUser.get(String(user._id)) || {
             earned: 0,
             paid: 0,
             bySource: {},
             recentSources: [],
-          },
-        })),
+          })
+        ),
         transactions,
       });
     } catch (error) {
@@ -324,30 +329,44 @@ router.patch(
   requireAdminPermission("finance"),
   async (req, res) => {
     try {
-      const update = {};
-      const allowedPayment = ["pending", "paid", "failed", "refunded"];
-      const allowedStatus = ["pending", "preparing", "shipped", "completed", "cancelled"];
-      const allowedInvoice = ["pending", "issued"];
+      const update = buildFinanceOrderUpdate(req.body);
+      const previousOrder = await Order.findById(req.params.id);
+      if (!previousOrder) return res.status(404).json({ message: "Siparis bulunamadi" });
 
-      if (allowedPayment.includes(req.body.paymentStatus)) update.paymentStatus = req.body.paymentStatus;
-      if (allowedStatus.includes(req.body.status)) update.status = req.body.status;
-      if (allowedInvoice.includes(req.body.invoiceStatus)) {
-        update.invoiceStatus = req.body.invoiceStatus;
-        update.invoiceIssuedAt = req.body.invoiceStatus === "issued" ? new Date() : null;
+      let licenseActivation = null;
+      if (
+        update.paymentStatus === "paid" &&
+        previousOrder.paymentStatus !== "paid" &&
+        previousOrder.orderType === "license" &&
+        previousOrder.licensePlan &&
+        !previousOrder.licenseActivatedAt
+      ) {
+        licenseActivation = await activateLicensePlanForUser({
+          userId: previousOrder.user,
+          planKey: previousOrder.licensePlan,
+          paidAt: new Date(),
+        });
+        update.status = "completed";
+        update.licenseActivatedAt = new Date();
       }
-      if (typeof req.body.invoiceNumber === "string") update.invoiceNumber = req.body.invoiceNumber.trim();
-      if (typeof req.body.invoiceNote === "string") update.invoiceNote = req.body.invoiceNote.trim();
 
       const order = await Order.findByIdAndUpdate(req.params.id, update, {
         new: true,
         runValidators: true,
-      }).populate("user", "username fullName email phone");
+      }).populate("user", "username fullName email phone").lean();
 
       if (!order) return res.status(404).json({ message: "Siparis bulunamadi" });
-      res.json({ message: "Finans kaydi guncellendi", order });
+      res.json({
+        message: "Finans kaydi guncellendi",
+        order: serializeFinanceOrder(order),
+        licenseActivation,
+      });
     } catch (error) {
       console.error("Finans siparis guncelleme hatasi:", error);
-      res.status(500).json({ message: "Siparis guncellenemedi" });
+      const isContractError = /Gecersiz|Guncellenecek/.test(error.message || "");
+      res.status(isContractError ? 400 : 500).json({
+        message: isContractError ? error.message : "Siparis guncellenemedi",
+      });
     }
   }
 );

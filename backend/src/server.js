@@ -272,17 +272,37 @@ app.get("/api/user/referrals", async (req, res) => {
       return res.status(404).json({ message: "Kullanici bulunamadi" });
     }
 
-    // Super Admin agacin kokudur. Eski kayitlarin sponsor alani bos veya eski
-    // bir hesaba bagli olsa bile kok kullanici tum gercek uyeleri gorebilmelidir.
-    // Normal kullanicilar ise yalnizca kendi dogrudan referanslarini gorur.
-    const referralFilter =
-      currentUser.role === "superadmin"
-        ? { _id: { $ne: currentUser._id }, role: { $ne: "superadmin" } }
-        : { sponsor: currentUser._id };
-
-    const referrals = await User.find(referralFilter)
+    // Unilevel agacini istemci sponsor alanindan katmanli kurar. Super admin
+    // tum gercek uyeleri; normal kullanici ise yalnizca kendi alt agini gorur.
+    const allMembers = await User.find({
+      _id: { $ne: currentUser._id },
+      role: { $ne: "superadmin" },
+    })
       .select("username fullName email isActive isLicensed createdAt sponsor")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: 1 })
+      .lean();
+
+    let referrals = allMembers;
+
+    if (currentUser.role !== "superadmin") {
+      const visibleSponsorIds = new Set([String(currentUser._id)]);
+      referrals = [];
+
+      // Sponsorlar daima uyelerden once kaydedilmis olsa da veri tasimalarinda
+      // siralama bozulabilir; tekrarlı gecis tum torunlari guvenle toplar.
+      let foundNewMember = true;
+      while (foundNewMember) {
+        foundNewMember = false;
+        for (const member of allMembers) {
+          const memberId = String(member._id);
+          if (visibleSponsorIds.has(memberId)) continue;
+          if (!visibleSponsorIds.has(String(member.sponsor || ""))) continue;
+          visibleSponsorIds.add(memberId);
+          referrals.push(member);
+          foundNewMember = true;
+        }
+      }
+    }
 
     res.json(referrals);
   } catch (error) {
