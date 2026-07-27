@@ -343,14 +343,13 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
     if (
       order.orderType === "license" &&
       order.licensePlan &&
-      paymentStatus === "paid" &&
-      previousOrder.paymentStatus !== "paid"
+      paymentStatus === "paid"
     ) {
       if (previousOrder.licenseActivatedAt) {
         licenseActivation = await retryInitialUnilevelForActivatedLicense({
           userId: previousOrder.user,
         });
-      } else {
+      } else if (previousOrder.paymentStatus !== "paid") {
         licenseActivation = await activateLicensePlanForUser({
           userId: previousOrder.user,
           planKey: order.licensePlan,

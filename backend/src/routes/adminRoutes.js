@@ -353,7 +353,6 @@ router.patch(
       let licenseActivation = null;
       if (
         update.paymentStatus === "paid" &&
-        previousOrder.paymentStatus !== "paid" &&
         previousOrder.orderType === "license" &&
         previousOrder.licensePlan
       ) {
@@ -361,7 +360,7 @@ router.patch(
           licenseActivation = await retryInitialUnilevelForActivatedLicense({
             userId: previousOrder.user,
           });
-        } else {
+        } else if (previousOrder.paymentStatus !== "paid") {
           licenseActivation = await activateLicensePlanForUser({
             userId: previousOrder.user,
             planKey: previousOrder.licensePlan,

@@ -1,6 +1,6 @@
 import User from "../models/User.js";
 import EarningTransaction from "../models/EarningTransaction.js";
-import { CAREER_LEVELS, careerRank, isActiveMember } from "./careerService.js";
+import { CAREER_LEVELS, isActiveMember } from "./careerService.js";
 
 // Ilk lisans odemesinin Unilevel dagitim matrahi.
 // Sonraki aylik Pro odemeleri bu servise kesinlikle gonderilmez.
@@ -22,8 +22,8 @@ export const UNILEVEL_INITIAL_LICENSE_RATES = [
 ];
 
 const CAREER_UNILEVEL_DEPTH = {
-  NONE: 0,
-  BRONZ: 1,
+  NONE: 1,
+  BRONZ: 2,
   GUMUS: 3,
   ALTIN: 5,
   PLATIN: 7,
@@ -36,8 +36,7 @@ function roundMoney(value) {
 }
 
 function getUnlockedDepth(level) {
-  if (!level || careerRank(level) < careerRank(CAREER_LEVELS.BRONZ)) return 0;
-  return CAREER_UNILEVEL_DEPTH[level] || 0;
+  return CAREER_UNILEVEL_DEPTH[level || CAREER_LEVELS.NONE] || 1;
 }
 
 export async function distributeInitialUnilevelBonus({ payerUserId }) {
@@ -47,17 +46,6 @@ export async function distributeInitialUnilevelBonus({ payerUserId }) {
 
   if (!payer?.sponsor) {
     return { skipped: true, reason: "NO_SPONSOR", totalDistributed: 0, beneficiaries: [] };
-  }
-
-  if (payer.unilevelInitialBonusPaidAt) {
-    const existingPayout = await EarningTransaction.exists({
-      sourceType: "unilevel_initial",
-      sourceUser: payer._id,
-      status: { $ne: "cancelled" },
-    });
-    if (existingPayout) {
-      return { skipped: true, reason: "ALREADY_PAID", totalDistributed: 0, beneficiaries: [] };
-    }
   }
 
   const beneficiaries = [];
@@ -75,6 +63,20 @@ export async function distributeInitialUnilevelBonus({ payerUserId }) {
     const rate = UNILEVEL_INITIAL_LICENSE_RATES[depth - 1] || 0;
 
     if (unlockedDepth >= depth && isActiveMember(sponsor) && rate > 0) {
+      const existingPayout = await EarningTransaction.exists({
+        beneficiary: sponsor._id,
+        sourceType: "unilevel_initial",
+        sourceUser: payer._id,
+        depth,
+        status: { $ne: "cancelled" },
+      });
+
+      if (existingPayout) {
+        sponsorId = sponsor.sponsor;
+        depth += 1;
+        continue;
+      }
+
       const amount = roundMoney(INITIAL_LICENSE_BONUS_BASE_TL * rate);
 
       await User.findByIdAndUpdate(sponsor._id, {
