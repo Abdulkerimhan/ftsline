@@ -1082,6 +1082,10 @@
 }
 
 @media (max-width: 560px) {
+  .super-main {
+    padding: 10px;
+  }
+
   .super-stats,
   .super-finance-grid {
     grid-template-columns: 1fr;
@@ -1093,6 +1097,22 @@
 
   .super-topbar h1 {
     font-size: 24px;
+  }
+
+  .super-section,
+  .super-hero {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .super-hero-actions,
+  .super-section-head > div:last-child {
+    width: 100%;
+  }
+
+  .super-hero-actions button,
+  .super-section-head button {
+    width: 100%;
   }
 }
 .super-proof {

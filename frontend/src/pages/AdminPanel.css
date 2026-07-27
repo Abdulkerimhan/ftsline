@@ -630,6 +630,10 @@
 }
 
 @media (max-width: 560px) {
+  .admin-content {
+    padding: 10px;
+  }
+
   .admin-stats,
   .admin-stats.wide {
     grid-template-columns: 1fr;
@@ -648,7 +652,8 @@
   }
 
   .admin-section {
-    padding: 18px;
+    padding: 14px;
+    border-radius: 16px;
   }
 
   .admin-modal-overlay {
@@ -657,6 +662,11 @@
 
   .admin-modal-actions {
     flex-direction: column;
+  }
+
+  .admin-modal-actions button,
+  .finance-head-actions button {
+    width: 100%;
   }
 
   .admin-modal-actions .admin-btn {
