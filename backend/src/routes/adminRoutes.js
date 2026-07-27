@@ -15,6 +15,7 @@ import {
   serializeFinanceOrder,
   serializeFinanceUser,
 } from "../services/financeContractService.js";
+import { restoreOrderStock } from "../services/orderStockService.js";
 
 const router = express.Router();
 
@@ -335,6 +336,19 @@ router.patch(
       const update = buildFinanceOrderUpdate(req.body);
       const previousOrder = await Order.findById(req.params.id);
       if (!previousOrder) return res.status(404).json({ message: "Siparis bulunamadi" });
+      if (previousOrder.status === "cancelled" && update.status && update.status !== "cancelled") {
+        return res.status(409).json({ message: "Iptal edilen siparis yeniden acilamaz" });
+      }
+
+      if (
+        update.status === "cancelled" &&
+        previousOrder.status !== "cancelled" &&
+        !previousOrder.stockRestoredAt &&
+        previousOrder.stockReservations?.length
+      ) {
+        await restoreOrderStock(previousOrder.stockReservations);
+        update.stockRestoredAt = new Date();
+      }
 
       let licenseActivation = null;
       if (

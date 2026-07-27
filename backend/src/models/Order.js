@@ -242,6 +242,30 @@ const orderSchema = new mongoose.Schema(
       trim: true,
       maxlength: 500,
     },
+
+    stockReservations: {
+      type: [
+        {
+          _id: false,
+          productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Product",
+            required: true,
+          },
+          quantity: {
+            type: Number,
+            required: true,
+            min: 1,
+          },
+        },
+      ],
+      default: [],
+    },
+
+    stockRestoredAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

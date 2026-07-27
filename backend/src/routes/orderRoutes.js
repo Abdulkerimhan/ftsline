@@ -10,6 +10,10 @@ import {
   getLicensePlan,
   retryInitialUnilevelForActivatedLicense,
 } from "../services/licensePlanService.js";
+import {
+  reserveOrderStock,
+  restoreOrderStock,
+} from "../services/orderStockService.js";
 
 const router = express.Router();
 
@@ -170,30 +174,39 @@ router.post("/", authOptional, async (req, res) => {
     const finalTotal = calculatedSubtotal + finalShippingPrice;
 
     const trackingCode = await createUniqueTrackingCode();
-    const order = await Order.create({
-      trackingCode,
-      user: req.user?._id || null,
-      items: orderItems,
-      shippingInfo,
-      subtotal: calculatedSubtotal,
-      shippingPrice: finalShippingPrice,
-      total: finalTotal,
-      orderType: isLicenseOrder ? "license" : "product",
-      licensePlan: selectedLicensePlan?.key || "",
-      licenseMonths: selectedLicensePlan?.durationMonths || 0,
-      licenseAmountUsdt: selectedLicensePlan?.priceUsdt || 0,
-      status: "pending",
-      paymentMethod: ["bank_transfer", "cash_on_delivery", "card", "usdt_trc20"].includes(paymentMethod)
-        ? paymentMethod
-        : "bank_transfer",
-      paymentStatus: "pending",
-      paymentProof: ["bank_transfer", "usdt_trc20"].includes(paymentMethod) ? String(paymentProof || "").trim() : "",
-      paymentNetwork: paymentMethod === "usdt_trc20" ? "TRC20" : "",
-      paymentAddress:
-        paymentMethod === "usdt_trc20"
-          ? String(process.env.USDT_TRC20_ADDRESS || "").trim()
-          : "",
-    });
+    const stockReservations = isLicenseOrder ? [] : await reserveOrderStock(orderItems);
+    let order;
+
+    try {
+      order = await Order.create({
+        trackingCode,
+        user: req.user?._id || null,
+        items: orderItems,
+        shippingInfo,
+        subtotal: calculatedSubtotal,
+        shippingPrice: finalShippingPrice,
+        total: finalTotal,
+        orderType: isLicenseOrder ? "license" : "product",
+        licensePlan: selectedLicensePlan?.key || "",
+        licenseMonths: selectedLicensePlan?.durationMonths || 0,
+        licenseAmountUsdt: selectedLicensePlan?.priceUsdt || 0,
+        status: "pending",
+        paymentMethod: ["bank_transfer", "cash_on_delivery", "card", "usdt_trc20"].includes(paymentMethod)
+          ? paymentMethod
+          : "bank_transfer",
+        paymentStatus: "pending",
+        paymentProof: ["bank_transfer", "usdt_trc20"].includes(paymentMethod) ? String(paymentProof || "").trim() : "",
+        paymentNetwork: paymentMethod === "usdt_trc20" ? "TRC20" : "",
+        paymentAddress:
+          paymentMethod === "usdt_trc20"
+            ? String(process.env.USDT_TRC20_ADDRESS || "").trim()
+            : "",
+        stockReservations,
+      });
+    } catch (error) {
+      await restoreOrderStock(stockReservations);
+      throw error;
+    }
 
     return res.status(201).json({
       message: "Siparis basariyla olusturuldu.",
@@ -204,6 +217,9 @@ router.post("/", authOptional, async (req, res) => {
     console.error("Siparis olusturma hatasi:", error);
     if (error.message === "Sipariste gecersiz veya pasif urun var") {
       return res.status(400).json({ message: error.message });
+    }
+    if (error.code === "INSUFFICIENT_STOCK") {
+      return res.status(409).json({ message: error.message });
     }
     return res.status(500).json({
       message: "Siparis olusturulamadi.",
@@ -370,6 +386,14 @@ router.put("/admin/:id/status", authRequired, adminOrSuperadmin, async (req, res
       return res.status(400).json({ message: "Gecersiz siparis durumu" });
     }
 
+    const previousOrder = await Order.findById(req.params.id);
+    if (!previousOrder) {
+      return res.status(404).json({ message: "Siparis bulunamadi" });
+    }
+    if (previousOrder.status === "cancelled" && status !== "cancelled") {
+      return res.status(409).json({ message: "Iptal edilen siparis yeniden acilamaz" });
+    }
+
     const updates = {
       status,
       shippingCarrier: String(shippingCarrier || "").trim(),
@@ -378,6 +402,16 @@ router.put("/admin/:id/status", authRequired, adminOrSuperadmin, async (req, res
 
     if (status === "shipped" && !updates.cargoTrackingNumber) {
       return res.status(400).json({ message: "Kargoya verildi durumunda takip numarasi gereklidir" });
+    }
+
+    if (
+      status === "cancelled" &&
+      previousOrder.status !== "cancelled" &&
+      !previousOrder.stockRestoredAt &&
+      previousOrder.stockReservations?.length
+    ) {
+      await restoreOrderStock(previousOrder.stockReservations);
+      updates.stockRestoredAt = new Date();
     }
 
     const order = await Order.findByIdAndUpdate(req.params.id, updates, {
