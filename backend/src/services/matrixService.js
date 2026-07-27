@@ -103,3 +103,22 @@ export async function ensureUserMatrixPlacement(userId) {
 
   return user;
 }
+
+export async function ensureLicensedUsersMatrixPlacement() {
+  const users = await User.find({
+    role: { $ne: "superadmin" },
+    isActive: true,
+    isLicensed: true,
+    sponsor: { $ne: null },
+    matrixParent: null,
+  })
+    .select("_id")
+    .sort({ createdAt: 1 })
+    .lean();
+
+  for (const user of users) {
+    await ensureUserMatrixPlacement(user._id);
+  }
+
+  return { placed: users.length };
+}

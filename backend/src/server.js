@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 
 import User from "./models/User.js";
 import { processDueLicenseMatrixPayouts } from "./services/licensePlanService.js";
+import { ensureLicensedUsersMatrixPlacement } from "./services/matrixService.js";
 
 import productRoutes from "./routes/productRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -326,6 +327,8 @@ app.get("/api/user/matrix", async (req, res) => {
     if (!rootUser) {
       return res.status(404).json({ message: "Kullanici bulunamadi" });
     }
+
+    await ensureLicensedUsersMatrixPlacement();
 
     const users = await User.find({
       isActive: true,
