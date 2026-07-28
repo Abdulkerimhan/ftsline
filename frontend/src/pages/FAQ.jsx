@@ -63,6 +63,18 @@ const faqContent = {
         a: "Unilevel kazanci ilk lisans bedeli uzerinden tek seferlik hesaplanir. Matrix kazanci ise aylik kullanim bedeli uzerinden, kullanici aktif lisansli kaldigi surece belirlenen derinliklerde aylik olarak islenir.",
       },
       {
+        q: "Indirimli urun alisverisinde Network primi nasil dagitilir?",
+        a: "Aktif lisansli kullanici urunu lisansli indirimli fiyattan aldiginda, odedigi indirimli urun toplam tutarinin %10'u toplam 10 seviyeye dagitilir. Dagitim oranlari 1. seviye %5; 2. ve 3. seviyeler %1; 4. seviye %0,75; 5, 6 ve 7. seviyeler %0,50; 8, 9 ve 10. seviyeler %0,25 seklindedir.",
+      },
+      {
+        q: "Urun indirimsiz normal fiyattan alinirsa Network primi nasil hesaplanir?",
+        a: "Kayitli ve lisanssiz kullanici urunu normal fiyattan aldiginda, normal fiyat ile lisansli fiyat arasindaki fark esas alinir. Farkin %25'i dogrudan sponsora, diger %25'i 2-10. seviyelere dagitilir; kalan %50 ve hak kazanilmayan seviye paylari sirkette kalir.",
+      },
+      {
+        q: "Urun satisi Network primi icin hangi sartlar aranir?",
+        a: "Siparisin hem Odendi hem Tamamlandi durumunda olmasi gerekir. Kazanacak ust hat kullanicisi aktif lisansli olmali ve ilgili derinligi acan kariyere sahip olmalidir. Kariyersiz 1, Bronz 2, Gumus 3, Altin 5, Platin 7, Elmas ve Tac Elmas 10. seviyeye kadar kazanabilir. Hak edilmeyen pay sonraki kisiye aktarilmaz. Siparis iptal veya iade edilirse prim geri alinir.",
+      },
+      {
         q: "Matrix bonus derinligi kariyere gore nasil degisir?",
         a: "Kariyer tanimli degilse matrix bonusu 12 derinlige kadar hesaplanir. Bronz ve Gumus icin 13, Altin ve Platin icin 14, Elmas ve Tac Elmas icin 15 derinlige kadar bonus alani acilir.",
       },
@@ -138,6 +150,18 @@ const faqContent = {
       {
         q: "What is the difference between unilevel and matrix earnings?",
         a: "Unilevel earnings are calculated once from the first license payment. Matrix earnings are calculated monthly from the usage fee while the user remains actively licensed, based on the eligible depth.",
+      },
+      {
+        q: "How is the Network bonus distributed on a discounted product purchase?",
+        a: "When an actively licensed user buys at the discounted licensed price, 10% of the discounted product total is distributed across 10 levels. The rates are 5% at level 1; 1% at levels 2 and 3; 0.75% at level 4; 0.50% at levels 5, 6 and 7; and 0.25% at levels 8, 9 and 10.",
+      },
+      {
+        q: "How is the Network bonus calculated when a product is bought at the normal price?",
+        a: "When a registered unlicensed user buys at the normal price, the difference between the normal and licensed prices is used. 25% of the difference goes to the direct sponsor, another 25% is distributed across levels 2-10, and the remaining 50% plus unqualified shares stays with the company.",
+      },
+      {
+        q: "What are the requirements for a product sale Network bonus?",
+        a: "The order must be both Paid and Completed. Each receiving upline member must have an active license and the career required for that depth. No career opens level 1, Bronze level 2, Silver level 3, Gold level 5, Platinum level 7, and Diamond or Crown Diamond level 10. An unqualified share does not roll up to another member. The bonus is reversed if the order is cancelled or refunded.",
       },
       {
         q: "How does matrix bonus depth change by career?",
