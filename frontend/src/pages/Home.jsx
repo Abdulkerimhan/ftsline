@@ -75,6 +75,30 @@ export default function Home() {
   }, [products, storefront.showcases]);
 
   const licensedAdvantages = storefront.licenseAdvantages || [];
+  const whyFtsline =
+    language === "en"
+      ? [
+          ["ED", "Training from A to Z"],
+          ["OP", "Rewarding income opportunities"],
+          ["24", "Time-independent e-commerce"],
+          ["TE", "Strong technological support"],
+          ["PR", "Advertising and promotion support"],
+          ["SU", "Weekly presentations"],
+          ["BI", "Continuous information flow"],
+          ["AV", "Advantageous products and campaigns"],
+          ["OD", "Rewards that support success"],
+        ]
+      : [
+          ["EĞ", "A’dan Z’ye eğitimler"],
+          ["FR", "Tatmin edici gelir fırsatları"],
+          ["24", "Zamandan bağımsız e-ticaret"],
+          ["TE", "Güçlü teknolojik destek"],
+          ["PR", "Reklam ve tanıtım çalışmaları"],
+          ["SU", "Haftalık sunumlar"],
+          ["Bİ", "Sürekli bilgi akışı"],
+          ["AV", "Avantajlı ürünler ve kampanyalar"],
+          ["ÖD", "Başarıyı destekleyen ödüller"],
+        ];
 
   return (
     <main className="home-page">
@@ -111,6 +135,72 @@ export default function Home() {
             <div className="home-visual-copy">
               <span>FTSLine</span>
               <strong>{storefront.visualText}</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-why">
+        <div className="home-shell home-why-panel">
+          <div className="home-why-content">
+            <span className="home-why-kicker">
+              {language === "en" ? "WHY FTSLINE?" : "NEDEN FTSLINE?"}
+            </span>
+            <h2>
+              {language === "en"
+                ? "Important reasons to choose FTSLine"
+                : "FTSLINE’ı Seçmeniz İçin Önemli Sebepler!"}
+            </h2>
+
+            <div className="home-why-list">
+              {whyFtsline.map(([icon, text]) => (
+                <div className="home-why-item" key={text}>
+                  <span className="home-why-icon" aria-hidden="true">
+                    {icon}
+                  </span>
+                  <strong>{text}</strong>
+                </div>
+              ))}
+            </div>
+
+            <div className="home-why-action">
+              <p>
+                {language === "en"
+                  ? "We thought of everything for you."
+                  : "Sizin İçin Her Şeyi Düşündük!"}
+              </p>
+              <Link to="/register" className="home-primary-action">
+                {language === "en" ? "Join FTSLine" : "FTSLINE’a Katıl"}
+              </Link>
+            </div>
+          </div>
+
+          <div className="home-commerce-visual" aria-hidden="true">
+            <div className="home-commerce-orbit orbit-one">✓</div>
+            <div className="home-commerce-orbit orbit-two">↗</div>
+            <div className="home-commerce-orbit orbit-three">☁</div>
+            <div className="home-commerce-screen">
+              <div className="home-commerce-awning">
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <div className="home-commerce-window">
+                <span className="home-commerce-cart">🛒</span>
+                <div>
+                  <b></b><b></b><b></b>
+                </div>
+              </div>
+              <div className="home-commerce-stand"></div>
+            </div>
+            <div className="home-commerce-phone">
+              <span>FTS</span>
+              <b>🛍</b>
+            </div>
+            <div className="home-commerce-bag">
+              <img src="/ftsline.png" alt="" />
+            </div>
+            <div className="home-commerce-tag">
+              <span>FTSLine</span>
+              <strong>{language === "en" ? "Shape the future" : "Geleceğe yön ver"}</strong>
             </div>
           </div>
         </div>
