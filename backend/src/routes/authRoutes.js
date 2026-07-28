@@ -17,15 +17,24 @@ function signToken(user) {
   );
 }
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT || 587),
-  secure: false,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
+function createMailTransporter() {
+  const { MAIL_HOST, MAIL_USER, MAIL_PASS } = process.env;
+
+  if (!MAIL_HOST || !MAIL_USER || !MAIL_PASS) {
+    throw new Error("E-posta sunucusu ayarlari eksik");
+  }
+
+  const port = Number(process.env.MAIL_PORT || 587);
+  return nodemailer.createTransport({
+    host: MAIL_HOST,
+    port,
+    secure: port === 465,
+    auth: {
+      user: MAIL_USER,
+      pass: MAIL_PASS,
+    },
+  });
+}
 
 function generateResetCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -225,6 +234,7 @@ router.post("/forgot-password", async (req, res) => {
     user.resetCodeExpiresAt = expiresAt;
     await user.save();
 
+    const transporter = createMailTransporter();
     await transporter.sendMail({
       from: process.env.MAIL_FROM || process.env.MAIL_USER,
       to: user.email,

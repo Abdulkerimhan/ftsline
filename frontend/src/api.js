@@ -71,6 +71,26 @@ export async function loginUser(data) {
   }
 }
 
+export async function requestPasswordReset(email) {
+  const res = await fetch(`${API}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
+  return parseResponse(res);
+}
+
+export async function resetPassword(data) {
+  const res = await fetch(`${API}/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(res);
+}
+
 /* ================= USER ================= */
 
 export async function getMe() {
@@ -87,6 +107,19 @@ export async function getMe() {
     console.error("Get me API hata:", error);
     return null;
   }
+}
+
+export async function updateMyProfile(data) {
+  const res = await fetch(`${API}/user/me`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(res);
 }
 
 export async function getReferrals() {

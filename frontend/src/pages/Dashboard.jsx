@@ -6,6 +6,7 @@ import {
   getMyEarnings,
   getMyWithdrawals,
   getReferrals,
+  updateMyProfile,
 } from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import FAQ from "./FAQ.jsx";
@@ -105,6 +106,8 @@ export default function Dashboard({ initialSection = "overview" }) {
     address: "",
     password: "",
   });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
 
   const unilevelTree = useMemo(() => {
     const childrenBySponsor = new Map();
@@ -313,8 +316,10 @@ export default function Dashboard({ initialSection = "overview" }) {
             fullName: data?.fullName || "",
             email: data?.email || "",
             phone: data?.phone || "",
-            city: data?.city || "",
-            address: data?.address || "",
+            city: data?.address?.city || data?.city || "",
+            address:
+              data?.address?.addressLine ||
+              (typeof data?.address === "string" ? data.address : ""),
             password: "",
           });
 
@@ -399,10 +404,39 @@ export default function Dashboard({ initialSection = "overview" }) {
     }));
   };
 
-  const handleProfileSave = (e) => {
+  const handleProfileSave = async (e) => {
     e.preventDefault();
-    console.log("Profil kaydet:", profileForm);
-    alert(safeText(profileT?.saveAlert, "Profil bilgileri kaydedildi"));
+    setProfileSaving(true);
+    setProfileMessage("");
+
+    try {
+      const updatedUser = await updateMyProfile({
+        fullName: profileForm.fullName,
+        email: profileForm.email,
+        phone: profileForm.phone,
+        city: profileForm.city,
+        address: profileForm.address,
+        password: profileForm.password,
+      });
+
+      setUser(updatedUser);
+      setProfileForm({
+        fullName: updatedUser?.fullName || "",
+        email: updatedUser?.email || "",
+        phone: updatedUser?.phone || "",
+        city: updatedUser?.address?.city || "",
+        address: updatedUser?.address?.addressLine || "",
+        password: "",
+      });
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
+      setProfileMessage(
+        safeText(profileT?.saveAlert, "Profil bilgileri kaydedildi")
+      );
+    } catch (error) {
+      setProfileMessage(error.message || "Profil bilgileri kaydedilemedi");
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const getStatusText = (status) => {
@@ -1144,9 +1178,15 @@ export default function Dashboard({ initialSection = "overview" }) {
             <button
               type="submit"
               className="dashboard-btn-primary dashboard-btn-full"
+              disabled={profileSaving}
             >
-              {safeText(profileT?.saveProfile, "Profili Kaydet")}
+              {profileSaving
+                ? "Kaydediliyor..."
+                : safeText(profileT?.saveProfile, "Profili Kaydet")}
             </button>
+            {profileMessage && (
+              <div className="dashboard-profile-message">{profileMessage}</div>
+            )}
           </form>
         </div>
       </div>

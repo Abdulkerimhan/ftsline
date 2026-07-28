@@ -16,6 +16,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import superadminRoutes from "./routes/superadminRoutes.js";
 import earningRoutes from "./routes/earningRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
@@ -228,6 +229,10 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+// Register/login are kept above for backward compatibility. The router also
+// provides password reset endpoints used by the public forgot-password flow.
+app.use("/api/auth", authRoutes);
+
 /* ================= USER ================= */
 
 app.get("/api/user/me", async (req, res) => {
@@ -253,6 +258,78 @@ app.get("/api/user/me", async (req, res) => {
     res.json(user);
   } catch {
     res.status(401).json({ message: "Geçersiz token" });
+  }
+});
+
+app.patch("/api/user/me", async (req, res) => {
+  const auth = req.headers.authorization;
+
+  if (!auth || !auth.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Token yok" });
+  }
+
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id).select("+passwordHash");
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    const fullName = String(req.body?.fullName || "").trim();
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const phone = String(req.body?.phone || "").trim();
+    const city = String(req.body?.city || "").trim();
+    const addressLine = String(req.body?.address || "").trim();
+    const password = String(req.body?.password || "");
+
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ message: "Geçerli bir e-posta girin" });
+    }
+
+    const emailOwner = await User.findOne({
+      email,
+      _id: { $ne: user._id },
+    }).select("_id");
+
+    if (emailOwner) {
+      return res.status(409).json({ message: "Bu e-posta başka bir kullanıcıya ait" });
+    }
+
+    if (password && password.length < 6) {
+      return res.status(400).json({ message: "Yeni şifre en az 6 karakter olmalı" });
+    }
+
+    user.fullName = fullName;
+    user.email = email;
+    user.phone = phone;
+    user.address = {
+      ...(user.address?.toObject?.() || user.address || {}),
+      city,
+      addressLine,
+    };
+
+    if (password) {
+      user.passwordHash = await bcrypt.hash(password, 10);
+    }
+
+    await user.save();
+
+    const updatedUser = await User.findById(user._id).populate(
+      "sponsor",
+      "username email fullName"
+    );
+
+    return res.json(updatedUser);
+  } catch (error) {
+    console.error("Profil güncelleme hatası:", error);
+
+    if (error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Geçersiz token" });
+    }
+
+    return res.status(500).json({ message: "Profil bilgileri kaydedilemedi" });
   }
 });
 
