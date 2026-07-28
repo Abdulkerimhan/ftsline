@@ -104,6 +104,7 @@ async function normalizeOrderItems(items = [], isLicensed = false, hasRegistered
     const licensedPrice = Number(product.priceLicensed || 0);
     const normalPrice = Number(product.priceNormal || 0);
     const isNormalPriceOrder = hasRegisteredBuyer && !isLicensed;
+    const isLicensedPriceOrder = hasRegisteredBuyer && isLicensed;
 
     return {
       productId: product._id,
@@ -115,6 +116,8 @@ async function normalizeOrderItems(items = [], isLicensed = false, hasRegistered
       networkBonusBase:
         isNormalPriceOrder && licensedPrice > 0 && normalPrice > licensedPrice
           ? normalPrice - licensedPrice
+          : isLicensedPriceOrder && licensedPrice > 0
+            ? licensedPrice
           : 0,
       quantity,
     };
@@ -212,10 +215,15 @@ router.post("/", authOptional, async (req, res) => {
         paymentStatus: "pending",
         paymentProof: ["bank_transfer", "usdt_trc20"].includes(paymentMethod) ? String(paymentProof || "").trim() : "",
         paymentNetwork: paymentMethod === "usdt_trc20" ? "TRC20" : "",
-        paymentAddress:
+      paymentAddress:
           paymentMethod === "usdt_trc20"
             ? String(process.env.USDT_TRC20_ADDRESS || "").trim()
             : "",
+        productNetworkMode: !req.user?._id
+          ? ""
+          : req.user.isLicensed
+            ? "licensed_sale"
+            : "normal_gap",
         stockReservations,
       });
     } catch (error) {

@@ -290,6 +290,12 @@ const orderSchema = new mongoose.Schema(
       default: null,
     },
 
+    productNetworkMode: {
+      type: String,
+      enum: ["", "normal_gap", "licensed_sale"],
+      default: "",
+    },
+
     productNetworkCancelledAt: {
       type: Date,
       default: null,

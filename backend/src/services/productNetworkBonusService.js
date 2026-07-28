@@ -26,18 +26,18 @@ export async function distributeProductNetworkBonus(orderId) {
     return { skipped: true, reason: "NO_SPONSOR", totalDistributed: 0, beneficiaries: [] };
   }
 
-  const priceDifference = roundProductNetworkMoney(
+  const bonusBase = roundProductNetworkMoney(
     (order.items || []).reduce(
       (sum, item) =>
         sum + Number(item.networkBonusBase || 0) * Number(item.quantity || 1),
       0
     )
   );
-  if (priceDifference <= 0) {
-    return { skipped: true, reason: "NO_NORMAL_PRICE_DIFFERENCE", totalDistributed: 0, beneficiaries: [] };
+  if (bonusBase <= 0 || !["normal_gap", "licensed_sale"].includes(order.productNetworkMode)) {
+    return { skipped: true, reason: "NO_PRODUCT_NETWORK_BASE", totalDistributed: 0, beneficiaries: [] };
   }
 
-  const amounts = calculateProductNetworkAmounts(priceDifference);
+  const amounts = calculateProductNetworkAmounts(bonusBase, order.productNetworkMode);
   const beneficiaries = [];
   let sponsorId = buyer.sponsor;
 
@@ -67,11 +67,15 @@ export async function distributeProductNetworkBonus(orderId) {
             amount: payout.amount,
             currency: "TL",
             rate: payout.rate,
-            description: `${buyer.username} normal fiyatli urun siparisi - Network ${payout.depth}. seviye`,
+            description:
+              order.productNetworkMode === "licensed_sale"
+                ? `${buyer.username} indirimli urun siparisi - Network ${payout.depth}. seviye`
+                : `${buyer.username} normal fiyatli urun siparisi - Network ${payout.depth}. seviye`,
             status: "earned",
             metadata: {
               trackingCode: order.trackingCode,
-              priceDifference,
+              bonusBase,
+              mode: order.productNetworkMode,
             },
           },
         },
@@ -105,7 +109,8 @@ export async function distributeProductNetworkBonus(orderId) {
 
   return {
     skipped: false,
-    priceDifference,
+    bonusBase,
+    mode: order.productNetworkMode,
     totalDistributed: roundProductNetworkMoney(
       beneficiaries.reduce((sum, item) => sum + item.amount, 0)
     ),
