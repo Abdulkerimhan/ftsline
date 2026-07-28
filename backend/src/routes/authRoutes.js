@@ -40,6 +40,59 @@ function generateResetCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+function getSender() {
+  const from = String(process.env.MAIL_FROM || "FTSLine <no-reply@ftsline.net>");
+  const match = from.match(/^(.*?)\s*<([^>]+)>$/);
+
+  return match
+    ? { name: match[1].trim() || "FTSLine", email: match[2].trim() }
+    : { name: process.env.MAIL_FROM_NAME || "FTSLine", email: from.trim() };
+}
+
+async function sendPasswordResetEmail({ to, code }) {
+  const subject = "FTSLine Şifre Sıfırlama Kodu";
+  const htmlContent = `
+    <div style="font-family:Arial,sans-serif;padding:20px;">
+      <h2>FTSLine Şifre Sıfırlama</h2>
+      <p>Şifre sıfırlama kodunuz:</p>
+      <div style="font-size:32px;font-weight:bold;letter-spacing:6px;color:#1d4ed8;">${code}</div>
+      <p>Bu kod 5 dakika boyunca geçerlidir.</p>
+    </div>
+  `;
+
+  if (process.env.BREVO_API_KEY) {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: getSender(),
+        to: [{ email: to }],
+        subject,
+        htmlContent,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.message || `Brevo API hatası (${response.status})`);
+    }
+    return;
+  }
+
+  const transporter = createMailTransporter();
+  await transporter.sendMail({
+    from: process.env.MAIL_FROM || process.env.MAIL_USER,
+    to,
+    subject,
+    html: htmlContent,
+  });
+}
+
 router.post("/register", async (req, res) => {
   try {
     let { username, fullName, email, password, sponsor } = req.body || {};
@@ -234,8 +287,11 @@ router.post("/forgot-password", async (req, res) => {
     user.resetCodeExpiresAt = expiresAt;
     await user.save();
 
-    const transporter = createMailTransporter();
-    await transporter.sendMail({
+    if (process.env.BREVO_API_KEY) {
+      await sendPasswordResetEmail({ to: user.email, code });
+    } else {
+      const transporter = createMailTransporter();
+      await transporter.sendMail({
       from: process.env.MAIL_FROM || process.env.MAIL_USER,
       to: user.email,
       subject: "FTSLine Şifre Sıfırlama Kodu",
@@ -249,7 +305,8 @@ router.post("/forgot-password", async (req, res) => {
           <p>Bu kod 5 dakika boyunca geçerlidir.</p>
         </div>
       `,
-    });
+      });
+    }
 
     return res.json({
       message: "Kod gönderildi. Lütfen e-posta kutunuzu kontrol edin.",
