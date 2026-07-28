@@ -507,35 +507,6 @@ export default function Payment() {
               </div>
             </div>
 
-            {cart.length === 0 && (
-              <div className="payment-card">
-                <h2>{t.licensePlansTitle}</h2>
-                <p className="payment-license-info">{t.licensePlanInfo}</p>
-
-                <div className="payment-license-plans">
-                  {LICENSE_PLANS.map((plan) => (
-                    <label
-                      key={plan.key}
-                      className={`payment-license-plan ${selectedLicensePlan === plan.key ? "active" : ""}`}
-                    >
-                      <input
-                        type="radio"
-                        name="licensePlan"
-                        value={plan.key}
-                        checked={selectedLicensePlan === plan.key}
-                        onChange={(event) => setSelectedLicensePlan(event.target.value)}
-                      />
-                      <span>{getLicensePlanLabel(plan.key)}</span>
-                      <strong>{plan.price} USDT</strong>
-                      <small>
-                        {t.licenseDuration}: {plan.months} {t.month}
-                      </small>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="payment-card">
               <h2>{t.paymentTitle}</h2>
 
@@ -739,6 +710,35 @@ export default function Payment() {
                   {formatPrice(total)} {displayCurrency}
                 </strong>
               </div>
+
+              {cart.length === 0 && (
+                <div className="payment-summary-license">
+                  <h3>{t.licensePlansTitle}</h3>
+                  <p className="payment-license-info">{t.licensePlanInfo}</p>
+
+                  <div className="payment-license-plans">
+                    {LICENSE_PLANS.map((plan) => (
+                      <label
+                        key={plan.key}
+                        className={`payment-license-plan ${selectedLicensePlan === plan.key ? "active" : ""}`}
+                      >
+                        <input
+                          type="radio"
+                          name="licensePlan"
+                          value={plan.key}
+                          checked={selectedLicensePlan === plan.key}
+                          onChange={(event) => setSelectedLicensePlan(event.target.value)}
+                        />
+                        <span>{getLicensePlanLabel(plan.key)}</span>
+                        <strong>{plan.price} USDT</strong>
+                        <small>
+                          {t.licenseDuration}: {plan.months} {t.month}
+                        </small>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <Link to="/cart" className="payment-cart-link">
                 {t.backToCart}

@@ -231,6 +231,42 @@
   color: #0f172a;
 }
 
+.payment-summary-license {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.payment-summary-license h3 {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.payment-summary-license .payment-license-info {
+  margin: 0 0 14px;
+}
+
+.payment-summary-license .payment-license-plans {
+  grid-template-columns: 1fr;
+  margin-bottom: 18px;
+}
+
+.payment-summary-license .payment-license-plan {
+  min-height: auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 13px;
+}
+
+.payment-summary-license .payment-license-plan strong {
+  font-size: 18px;
+}
+
+.payment-summary-license .payment-license-plan small {
+  grid-column: 2 / -1;
+}
+
 .payment-error {
   margin-bottom: 14px;
   background: #fef2f2;
