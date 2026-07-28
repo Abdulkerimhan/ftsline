@@ -25,6 +25,24 @@ const orderItemSchema = new mongoose.Schema(
       min: 0,
     },
 
+    normalPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    licensedPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    networkBonusBase: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     quantity: {
       type: Number,
       required: true,
@@ -263,6 +281,16 @@ const orderSchema = new mongoose.Schema(
     },
 
     stockRestoredAt: {
+      type: Date,
+      default: null,
+    },
+
+    productNetworkDistributedAt: {
+      type: Date,
+      default: null,
+    },
+
+    productNetworkCancelledAt: {
       type: Date,
       default: null,
     },

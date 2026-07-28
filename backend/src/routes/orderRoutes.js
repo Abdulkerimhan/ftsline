@@ -14,6 +14,10 @@ import {
   reserveOrderStock,
   restoreOrderStock,
 } from "../services/orderStockService.js";
+import {
+  cancelProductNetworkBonus,
+  distributeProductNetworkBonus,
+} from "../services/productNetworkBonusService.js";
 
 const router = express.Router();
 
@@ -79,7 +83,7 @@ function adminOrSuperadmin(req, res, next) {
 
 /* ================= HELPERS ================= */
 
-async function normalizeOrderItems(items = [], isLicensed = false) {
+async function normalizeOrderItems(items = [], isLicensed = false, hasRegisteredBuyer = false) {
   const requested = items.map((item) => ({
     productId: String(item.productId || item._id || "").trim(),
     quantity: Math.max(1, Math.floor(Number(item.quantity || 1))),
@@ -99,12 +103,19 @@ async function normalizeOrderItems(items = [], isLicensed = false) {
     const product = productMap.get(productId);
     const licensedPrice = Number(product.priceLicensed || 0);
     const normalPrice = Number(product.priceNormal || 0);
+    const isNormalPriceOrder = hasRegisteredBuyer && !isLicensed;
 
     return {
       productId: product._id,
       name: product.nameTr || product.name || "Urun",
       image: product.image || product.images?.[0] || "",
       price: isLicensed && licensedPrice > 0 ? licensedPrice : normalPrice,
+      normalPrice,
+      licensedPrice,
+      networkBonusBase:
+        isNormalPriceOrder && licensedPrice > 0 && normalPrice > licensedPrice
+          ? normalPrice - licensedPrice
+          : 0,
       quantity,
     };
   });
@@ -164,7 +175,11 @@ router.post("/", authOptional, async (req, res) => {
             quantity: 1,
           },
         ]
-      : await normalizeOrderItems(items, req.user?.isLicensed === true);
+      : await normalizeOrderItems(
+          items,
+          req.user?.isLicensed === true,
+          Boolean(req.user?._id)
+        );
 
     const calculatedSubtotal = orderItems.reduce((sum, item) => {
       return sum + Number(item.price || 0) * Number(item.quantity || 1);
@@ -367,7 +382,15 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
       .populate("user", "username fullName email role")
       .lean();
 
-    return res.json({ ...finalOrder, licenseActivation });
+    let productNetworkBonus = null;
+    if (finalOrder.orderType === "product") {
+      productNetworkBonus =
+        finalOrder.paymentStatus === "refunded" || finalOrder.status === "cancelled"
+          ? await cancelProductNetworkBonus(finalOrder._id)
+          : await distributeProductNetworkBonus(finalOrder._id);
+    }
+
+    return res.json({ ...finalOrder, licenseActivation, productNetworkBonus });
   } catch (error) {
     console.error("Odeme durumu guncelleme hatasi:", error);
     return res.status(500).json({ message: "Odeme durumu guncellenemedi" });
@@ -424,7 +447,14 @@ router.put("/admin/:id/status", authRequired, adminOrSuperadmin, async (req, res
       return res.status(404).json({ message: "Siparis bulunamadi" });
     }
 
-    return res.json(order);
+    const productNetworkBonus =
+      order.orderType === "product"
+        ? status === "cancelled"
+          ? await cancelProductNetworkBonus(order._id)
+          : await distributeProductNetworkBonus(order._id)
+        : null;
+
+    return res.json({ ...order, productNetworkBonus });
   } catch (error) {
     console.error("Siparis durumu guncelleme hatasi:", error);
     return res.status(500).json({ message: "Siparis durumu guncellenemedi" });

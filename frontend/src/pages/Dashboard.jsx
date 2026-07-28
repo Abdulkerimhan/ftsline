@@ -154,6 +154,7 @@ export default function Dashboard({ initialSection = "overview" }) {
   const earningTypeLabels = {
     unilevel_initial: "Ilk ay unilevel hak edisi",
     matrix_monthly: "Aylik matrix hak edisi",
+    product_network: "Urun satisi network primi",
     career_bonus: "Kariyer bonusu",
     pool_bonus: "Havuz bonusu",
     manual_adjustment: "Manuel duzeltme",

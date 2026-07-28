@@ -68,6 +68,7 @@ function formatEarningType(type) {
   const labels = {
     unilevel_initial: "İlk ay ünilevel hak edişi",
     matrix_monthly: "Aylık matrix hak edişi",
+    product_network: "Ürün satışı network primi",
     career_bonus: "Kariyer bonusu",
     pool_bonus: "Havuz bonusu",
     manual_adjustment: "Manuel düzeltme",

@@ -44,6 +44,7 @@ const emptyFinanceData = {
 const earningSourceLabels = {
   unilevel_initial: "İlk satış unilevel",
   matrix_monthly: "Aylık matrix",
+  product_network: "Ürün satışı network primi",
   career_bonus: "Kariyer bonusu",
   pool_bonus: "Havuz bonusu",
   manual_adjustment: "Manuel düzeltme",

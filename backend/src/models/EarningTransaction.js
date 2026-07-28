@@ -5,11 +5,12 @@ const earningTransactionSchema = new mongoose.Schema(
     beneficiary: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     sourceType: {
       type: String,
-      enum: ["unilevel_initial", "matrix_monthly", "career_bonus", "pool_bonus", "manual_adjustment"],
+      enum: ["unilevel_initial", "matrix_monthly", "career_bonus", "pool_bonus", "product_network", "manual_adjustment"],
       required: true,
       index: true,
     },
     sourceUser: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    sourceOrder: { type: mongoose.Schema.Types.ObjectId, ref: "Order", default: null, index: true },
     sourceUsername: { type: String, default: "" },
     amount: { type: Number, required: true, min: 0 },
     currency: { type: String, default: "TL" },
@@ -24,5 +25,9 @@ const earningTransactionSchema = new mongoose.Schema(
 
 earningTransactionSchema.index({ beneficiary: 1, createdAt: -1 });
 earningTransactionSchema.index({ beneficiary: 1, sourceType: 1 });
+earningTransactionSchema.index(
+  { beneficiary: 1, sourceType: 1, sourceOrder: 1, depth: 1 },
+  { unique: true, partialFilterExpression: { sourceType: "product_network" } }
+);
 
 export default mongoose.model("EarningTransaction", earningTransactionSchema);

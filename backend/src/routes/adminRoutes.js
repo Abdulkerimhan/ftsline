@@ -16,6 +16,10 @@ import {
   serializeFinanceUser,
 } from "../services/financeContractService.js";
 import { restoreOrderStock } from "../services/orderStockService.js";
+import {
+  cancelProductNetworkBonus,
+  distributeProductNetworkBonus,
+} from "../services/productNetworkBonusService.js";
 
 const router = express.Router();
 
@@ -377,10 +381,17 @@ router.patch(
       }).populate("user", "username fullName email phone").lean();
 
       if (!order) return res.status(404).json({ message: "Siparis bulunamadi" });
+      const productNetworkBonus =
+        order.orderType === "product"
+          ? order.paymentStatus === "refunded" || order.status === "cancelled"
+            ? await cancelProductNetworkBonus(order._id)
+            : await distributeProductNetworkBonus(order._id)
+          : null;
       res.json({
         message: "Finans kaydi guncellendi",
         order: serializeFinanceOrder(order),
         licenseActivation,
+        productNetworkBonus,
       });
     } catch (error) {
       console.error("Finans siparis guncelleme hatasi:", error);
