@@ -1381,6 +1381,16 @@ export default function Dashboard({ initialSection = "overview" }) {
                 <span>{safeText(sectionsT?.settings, "Ayarlar")}</span>
               )}
             </button>
+
+            <a
+              className="dashboard-side-link dashboard-presentation-link"
+              href="/downloads/FTSLine-Detayli-Sunum.pptx"
+              download="FTSLine-Detayli-Sunum.pptx"
+              title="FTSLine sunumunu indir"
+            >
+              <span className="dashboard-side-icon">S</span>
+              {sidebarOpen && <span>FTSLine Sunumu</span>}
+            </a>
           </nav>
         </div>
 

@@ -82,6 +82,19 @@
   color: #fff;
 }
 
+.admin-presentation-link {
+  display: block;
+  text-decoration: none;
+  color: #bae6fd;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.admin-presentation-link:hover {
+  color: #ffffff;
+  background: rgba(56, 189, 248, 0.17);
+}
+
 .admin-menu.logout {
   margin-top: 24px;
   color: #fecaca;
