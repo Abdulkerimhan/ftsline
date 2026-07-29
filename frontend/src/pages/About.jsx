@@ -20,11 +20,6 @@ const text = {
       { title: "Strateji", desc: "Kazanc modelini yoneten ekip" },
       { title: "Topluluk", desc: "Kullanici deneyimini yoneten ekip" },
     ],
-    planTitle: "Kazanc Plani",
-    plans: [
-      { title: "Unilevel", items: ["Direkt kazanc", "Kariyer bonuslari", "Derinlik sistemi"] },
-      { title: "Matrix", items: ["2x15 sistem", "Aylik uyelik modeli", "Kazanc dagilimi"] },
-    ],
     ctaTitle: "Gelecegi birlikte kur",
     ctaDesc: "FTSLine sadece kazanc degil, dijital bir yasam modeli sunar.",
   },
@@ -45,11 +40,6 @@ const text = {
       { title: "Software", desc: "The team developing the platform infrastructure" },
       { title: "Strategy", desc: "The team managing the earning model" },
       { title: "Community", desc: "The team managing user experience" },
-    ],
-    planTitle: "Earning Plan",
-    plans: [
-      { title: "Unilevel", items: ["Direct earnings", "Career bonuses", "Depth system"] },
-      { title: "Matrix", items: ["2x15 system", "Monthly membership model", "Earning distribution"] },
     ],
     ctaTitle: "Build the future together",
     ctaDesc: "FTSLine offers not only earnings, but a digital lifestyle model.",
@@ -90,18 +80,6 @@ export default function About() {
               <div className="about-card" key={card.title}>
                 <h3>{card.title}</h3>
                 <p>{card.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="about-section">
-          <h2>{tt.planTitle}</h2>
-          <div className="about-grid">
-            {tt.plans.map((plan) => (
-              <div className="about-gain" key={plan.title}>
-                <h3>{plan.title}</h3>
-                <ul>{plan.items.map((item) => <li key={item}>{item}</li>)}</ul>
               </div>
             ))}
           </div>
