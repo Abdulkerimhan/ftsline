@@ -17,6 +17,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import superadminRoutes from "./routes/superadminRoutes.js";
 import earningRoutes from "./routes/earningRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import registrationRoutes from "./routes/registrationRoutes.js";
 
 dotenv.config();
 
@@ -87,6 +88,8 @@ mongoose
   });
 
 /* ================= AUTH ================= */
+
+app.use("/api/auth", registrationRoutes);
 
 app.post("/api/auth/register", async (req, res) => {
   const { username, fullName, email, password, sponsor } = req.body;

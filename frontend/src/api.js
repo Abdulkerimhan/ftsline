@@ -71,6 +71,16 @@ export async function loginUser(data) {
   }
 }
 
+export async function verifyRegistration(data) {
+  const res = await fetch(`${API}/auth/verify-registration`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(res);
+}
+
 export async function requestPasswordReset(email) {
   const res = await fetch(`${API}/auth/forgot-password`, {
     method: "POST",
