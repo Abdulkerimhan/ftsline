@@ -14,6 +14,11 @@ import {
 } from "../services/unilevelBonusService.js";
 import { ensureUserMatrixPlacement } from "../services/matrixService.js";
 import { buildUserEarningSummary } from "../services/earningSummaryService.js";
+import {
+  executeLiveDataReset,
+  getLiveResetScope,
+  LIVE_RESET_CONFIRMATION,
+} from "../services/liveDataResetService.js";
 
 const router = express.Router();
 
@@ -293,6 +298,29 @@ router.post("/pools/calculate", authRequired, superAdminOnly, async (req, res) =
     res.json(result);
   } catch (error) {
     res.status(400).json({ message: error.message || "Havuz hesaplanamadi" });
+  }
+});
+
+router.get("/data-reset/preview", authRequired, superAdminOnly, async (req, res) => {
+  try {
+    const scope = await getLiveResetScope();
+    res.json(scope);
+  } catch (error) {
+    res.status(409).json({ message: error.message });
+  }
+});
+
+router.post("/data-reset/execute", authRequired, superAdminOnly, async (req, res) => {
+  try {
+    if (req.body?.confirmation !== LIVE_RESET_CONFIRMATION) {
+      return res.status(400).json({ message: "Gecersiz temizleme onayi." });
+    }
+
+    const result = await executeLiveDataReset(req.body.confirmation);
+    res.json({ message: "Canli veri temizligi tamamlandi.", ...result });
+  } catch (error) {
+    console.error("LIVE_DATA_RESET_ERR:", error);
+    res.status(409).json({ message: error.message });
   }
 });
 export default router;
