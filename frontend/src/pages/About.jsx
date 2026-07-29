@@ -6,7 +6,7 @@ const text = {
     badge: "DIJITAL CAGDA",
     title: "Erken dijitallesen, yol alir.",
     quote: "DIJITAL DUNYAYA ACILAN KAPI.",
-    desc: "FTSLine, dijital dunyada bireylerin gelir elde edebilecegi yenilikci ve adil bir network marketing platformudur. Guvene ve surdurulebilir bir sisteme dayanan modern bir deneyim sunar.",
+    desc: "FTSLine, dijital dunyada bireylerin gelir elde edebilecegi yenilikci ve adil bir e-ticaret ve eğitim platformudur. Guvene ve surdurulebilir bir sisteme dayanan modern bir deneyim sunar.",
     whoTitle: "Biz Kimiz?",
     whoDesc: "Teknolojiyi, insan potansiyelini ve paylasimi bir araya getirerek kazanci buyuten bir sistem kurduk. Amacimiz sadece kazanc degil, birlikte buyuyen guclu bir topluluk olusturmaktir.",
     cards: [
@@ -27,7 +27,7 @@ const text = {
     badge: "IN THE DIGITAL AGE",
     title: "Those who go digital early move ahead.",
     quote: "THE GATEWAY TO THE DIGITAL WORLD.",
-    desc: "FTSLine is an innovative and fair network marketing platform where people can build income in the digital world. It offers a modern experience based on trust and a sustainable system.",
+    desc: "FTSLine is an innovative and fair e-commerce and education platform where people can build income in the digital world. It offers a modern experience based on trust and a sustainable system.",
     whoTitle: "Who Are We?",
     whoDesc: "We built a system that combines technology, human potential and sharing to grow value. Our goal is not only income, but a strong community that grows together.",
     cards: [
