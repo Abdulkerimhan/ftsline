@@ -11,7 +11,7 @@ const text = {
     whoDesc: "Teknolojiyi, insan potansiyelini ve paylasimi bir araya getirerek kazanci buyuten bir sistem kurduk. Amacimiz sadece kazanc degil, birlikte buyuyen guclu bir topluluk olusturmaktir.",
     cards: [
       { title: "Misyonumuz", desc: "Her bireyin dijitalde kendi ekonomisini kurmasini saglamak." },
-      { title: "Vizyonumuz", desc: "Global olcekte lider bir dijital network agi olmak." },
+      { title: "Vizyonumuz", desc: "Global ölçekte lider bir dijital eco sistem ağı olmak." },
       { title: "Temel Gucumuz", desc: "Teknoloji, sistem ve topluluk birlesimi." },
     ],
     teamTitle: "Ekibimiz",
