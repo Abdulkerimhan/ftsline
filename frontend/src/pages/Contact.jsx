@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import "./Contact.css";
 
+const API = import.meta.env.VITE_API_URL || "/api";
+
 const text = {
   tr: {
     title: "İletişim",
@@ -55,7 +57,7 @@ export default function Contact() {
     setStatus({ type: "", message: "" });
 
     try {
-      const response = await fetch("/api/contact", {
+      const response = await fetch(`${API}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
