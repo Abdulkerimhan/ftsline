@@ -15,7 +15,7 @@ export async function distributeProductNetworkBonus(orderId) {
     !order ||
     order.orderType !== "product" ||
     order.paymentStatus !== "paid" ||
-    order.status !== "completed" ||
+    order.status === "cancelled" ||
     !order.user
   ) {
     return { skipped: true, totalDistributed: 0, beneficiaries: [] };
