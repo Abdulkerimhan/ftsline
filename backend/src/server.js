@@ -18,6 +18,7 @@ import superadminRoutes from "./routes/superadminRoutes.js";
 import earningRoutes from "./routes/earningRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import registrationRoutes from "./routes/registrationRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 
 dotenv.config();
 
@@ -473,6 +474,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/superadmin", superadminRoutes);
 app.use("/api/earnings", earningRoutes);
+app.use("/api/contact", contactRoutes);
 
 /* ================= TEST ================= */
 

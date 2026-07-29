@@ -3,6 +3,10 @@ import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import User from "../models/User.js";
 import PendingRegistration from "../models/PendingRegistration.js";
+import {
+  notifyNewRegistration,
+  reportNotificationError,
+} from "../services/adminNotificationService.js";
 
 const router = express.Router();
 const USERNAME_REGEX = /^[a-z0-9_.]{3,20}$/;
@@ -177,7 +181,7 @@ router.post("/verify-registration", async (req, res) => {
       return res.status(400).json({ message: "Geçersiz sponsor kodu" });
     }
 
-    await User.create({
+    const user = await User.create({
       username: pending.username,
       fullName: pending.fullName,
       email: pending.email,
@@ -188,6 +192,10 @@ router.post("/verify-registration", async (req, res) => {
     });
     await User.findByIdAndUpdate(sponsorUser._id, { $inc: { teamCount: 1 } });
     await PendingRegistration.deleteOne({ _id: pending._id });
+
+    notifyNewRegistration({ user, sponsor: sponsorUser }).catch((error) =>
+      reportNotificationError("REGISTRATION", error)
+    );
 
     return res.status(201).json({
       message: "E-posta doğrulandı, kayıt başarıyla tamamlandı",

@@ -18,6 +18,11 @@ import {
   cancelProductNetworkBonus,
   distributeProductNetworkBonus,
 } from "../services/productNetworkBonusService.js";
+import {
+  notifyNewOrder,
+  notifyPaymentUpdate,
+  reportNotificationError,
+} from "../services/adminNotificationService.js";
 
 const router = express.Router();
 
@@ -231,6 +236,13 @@ router.post("/", authOptional, async (req, res) => {
       throw error;
     }
 
+    const buyer = req.user?._id
+      ? await User.findById(req.user._id).select("username").lean()
+      : null;
+    notifyNewOrder({ order, username: buyer?.username }).catch((error) =>
+      reportNotificationError("ORDER", error)
+    );
+
     return res.status(201).json({
       message: "Siparis basariyla olusturuldu.",
       trackingCode: order.trackingCode,
@@ -389,6 +401,12 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
     const finalOrder = await Order.findById(order._id)
       .populate("user", "username fullName email role")
       .lean();
+
+    if (paymentStatus && previousOrder.paymentStatus !== finalOrder.paymentStatus) {
+      notifyPaymentUpdate({ order: finalOrder }).catch((error) =>
+        reportNotificationError("PAYMENT", error)
+      );
+    }
 
     let productNetworkBonus = null;
     if (finalOrder.orderType === "product") {
