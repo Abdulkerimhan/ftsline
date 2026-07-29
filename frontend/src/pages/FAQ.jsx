@@ -27,10 +27,6 @@ const faqContent = {
         a: "Kullanici panelindeki Siparisler bolumunde Odeme Bekliyor, Odendi, Basarisiz veya Iade durumlarini gorebilirsin.",
       },
       {
-        q: "Admin yetkileri nasil kisitlanir?",
-        a: "Super Admin panelinde admin kullanicilar icin Kullanicilar, Urunler, Finans ve Ayarlar alanlari ayri ayri acilip kapatilabilir.",
-      },
-      {
         q: "FTSLine kariyer seviyeleri nelerdir?",
         a: "Kariyer seviyeleri Bronz, Gumus, Altin, Platin, Elmas ve Tac Elmas olarak ilerler. Her seviye; direkt aktif uye sayisi, toplam ekip aktifligi, belirli kariyer kollarina sahip olma ve kol limiti gibi sartlara gore hesaplanir.",
       },
@@ -106,10 +102,6 @@ const faqContent = {
       {
         q: "Where can I see my order payment status?",
         a: "In the Orders section of your dashboard, you can see Payment Pending, Paid, Failed or Refunded status.",
-      },
-      {
-        q: "How are admin permissions restricted?",
-        a: "In the Super Admin panel, Users, Products, Finance and Settings sections can be enabled or disabled for each admin.",
       },
       {
         q: "What are the FTSLine career levels?",

@@ -34,14 +34,7 @@ export default function Payment() {
         bankProofPlaceholder: "Ornek: EFT referans no veya dekont notu",
         copyIban: "IBAN Kopyala",
         bankUnavailable: "IBAN bilgisi henuz tanimlanmamis. Lutfen diger odeme yontemini secin.",
-        usdtTrc20: "USDT TRC20",
-        usdtAddress: "USDT TRC20 Cuzdan Adresi",
-        usdtNetwork: "Ag",
-        txId: "Transfer Hash / TxID",
-        txIdPlaceholder: "Ornek: 8f3a... veya Tronscan islem hash'i",
-        copyAddress: "Adresi Kopyala",
         copied: "Kopyalandi",
-        usdtUnavailable: "USDT adresi henuz tanimlanmamis. Lutfen diger odeme yontemini secin.",
         paymentInfoText:
           "Bu ekranda kart bilgisi alinmaz. Siparis olustuktan sonra odeme durumu admin panelinde Odeme Bekliyor olarak gorunur ve manuel onaylanir.",
         licensePlansTitle: "Lisans Plani",
@@ -82,7 +75,6 @@ export default function Payment() {
         requiredDistrict: "Ilce zorunludur.",
         requiredAddress: "Adres zorunludur.",
         agreementRequired: "Satis sozlesmesini onaylamalisiniz.",
-        txIdRequired: "USDT odemesi icin TxID zorunludur.",
         loginRequired: "Lisans siparisi olusturmak icin giris yapmalisiniz.",
         serverError: "Siparis olusturulurken bir hata olustu.",
       },
@@ -102,14 +94,7 @@ export default function Payment() {
         bankProofPlaceholder: "Example: EFT reference number or receipt note",
         copyIban: "Copy IBAN",
         bankUnavailable: "Bank transfer details are not configured yet. Please choose another payment method.",
-        usdtTrc20: "USDT TRC20",
-        usdtAddress: "USDT TRC20 Wallet Address",
-        usdtNetwork: "Network",
-        txId: "Transfer Hash / TxID",
-        txIdPlaceholder: "Example: 8f3a... or Tronscan transaction hash",
-        copyAddress: "Copy Address",
         copied: "Copied",
-        usdtUnavailable: "USDT address is not configured yet. Please choose another payment method.",
         paymentInfoText:
           "Card details are not collected on this screen. After the order is created, its payment status appears as Pending in the admin panel and can be approved manually.",
         licensePlansTitle: "License Plan",
@@ -149,7 +134,6 @@ export default function Payment() {
         requiredDistrict: "District is required.",
         requiredAddress: "Address is required.",
         agreementRequired: "You must accept the agreement.",
-        txIdRequired: "TxID is required for USDT payment.",
         loginRequired: "You must log in to create a license order.",
         serverError: "An error occurred while creating the order.",
       },
@@ -191,7 +175,7 @@ export default function Payment() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [guestTrackingCode, setGuestTrackingCode] = useState("");
-  const [publicConfig, setPublicConfig] = useState({ bank: { iban: "", accountName: "", bankName: "", enabled: false }, usdt: { trc20Address: "", network: "TRC20", enabled: false } });
+  const [publicConfig, setPublicConfig] = useState({ bank: { iban: "", accountName: "", bankName: "", enabled: false } });
   const [copyMsg, setCopyMsg] = useState("");
 
   const subtotal = isLicenseOrder
@@ -210,7 +194,7 @@ export default function Payment() {
 
   const shipping = 0;
   const total = subtotal + shipping;
-  const displayCurrency = isLicenseOrder ? "USDT" : t.currency;
+  const displayCurrency = isLicenseOrder ? "" : t.currency;
   useEffect(() => {
     let alive = true;
 
@@ -218,12 +202,12 @@ export default function Payment() {
       try {
         const res = await fetch(`${API}/public/config`);
         const data = await res.json().catch(() => ({}));
-        if (alive && (data?.bank || data?.usdt)) {
+        if (alive && data?.bank) {
           setPublicConfig(data);
         }
       } catch {
         if (alive) {
-          setPublicConfig({ bank: { iban: "", accountName: "", bankName: "", enabled: false }, usdt: { trc20Address: "", network: "TRC20", enabled: false } });
+          setPublicConfig({ bank: { iban: "", accountName: "", bankName: "", enabled: false } });
         }
       }
     }
@@ -258,7 +242,6 @@ export default function Payment() {
     if (!form.city.trim()) return t.requiredCity;
     if (!form.district.trim()) return t.requiredDistrict;
     if (!form.address.trim()) return t.requiredAddress;
-    if (form.paymentMethod === "usdt_trc20" && !form.paymentProof.trim()) return t.txIdRequired;
     if (!form.agreement) return t.agreementRequired;
 
     return "";
@@ -327,9 +310,6 @@ export default function Payment() {
     copyPaymentValue(publicConfig?.bank?.iban || "");
   }
 
-  function copyUsdtAddress() {
-    copyPaymentValue(publicConfig?.usdt?.trc20Address || "");
-  }
   async function createOrder() {
     const token = sessionStorage.getItem("accessToken");
 
@@ -354,7 +334,7 @@ export default function Payment() {
       orderType: isLicenseOrder ? "license" : "product",
       licensePlan: isLicenseOrder ? selectedLicensePlan : "",
       paymentMethod: form.paymentMethod,
-      paymentProof: ["bank_transfer", "usdt_trc20"].includes(form.paymentMethod) ? form.paymentProof.trim() : "",
+      paymentProof: form.paymentMethod === "bank_transfer" ? form.paymentProof.trim() : "",
     };
 
     const res = await fetch(`${API}/orders`, {
@@ -522,16 +502,6 @@ export default function Payment() {
                   <span>{t.bankTransfer}</span>
                 </label>
 
-                <label className={`payment-method ${form.paymentMethod === "usdt_trc20" ? "active" : ""}`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="usdt_trc20"
-                    checked={form.paymentMethod === "usdt_trc20"}
-                    onChange={handleChange}
-                  />
-                  <span>{t.usdtTrc20}</span>
-                </label>
               </div>
 
               <div className="payment-manual-box">
@@ -573,38 +543,6 @@ export default function Payment() {
                     </>
                   ) : (
                     <div className="payment-error">{t.bankUnavailable}</div>
-                  )}
-                </div>
-              )}
-              {form.paymentMethod === "usdt_trc20" && (
-                <div className="payment-usdt-box">
-                  {publicConfig?.usdt?.trc20Address ? (
-                    <>
-                      <div className="payment-usdt-row">
-                        <span>{t.usdtNetwork}</span>
-                        <strong>{publicConfig.usdt.network || "TRC20"}</strong>
-                      </div>
-
-                      <div className="payment-usdt-address">
-                        <span>{t.usdtAddress}</span>
-                        <code>{publicConfig.usdt.trc20Address}</code>
-                        <button type="button" onClick={copyUsdtAddress}>{t.copyAddress}</button>
-                        {copyMsg && <small>{copyMsg}</small>}
-                      </div>
-
-                      <div className="payment-group">
-                        <label>{t.txId}</label>
-                        <input
-                          type="text"
-                          name="paymentProof"
-                          value={form.paymentProof}
-                          onChange={handleChange}
-                          placeholder={t.txIdPlaceholder}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="payment-error">{t.usdtUnavailable}</div>
                   )}
                 </div>
               )}
@@ -730,7 +668,7 @@ export default function Payment() {
                           onChange={(event) => setSelectedLicensePlan(event.target.value)}
                         />
                         <span>{getLicensePlanLabel(plan.key)}</span>
-                        <strong>{plan.price} USDT</strong>
+                        <strong>{plan.price}</strong>
                         <small>
                           {t.licenseDuration}: {plan.months} {t.month}
                         </small>
