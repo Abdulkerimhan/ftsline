@@ -4,6 +4,7 @@ import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import User from "../models/User.js";
 import EarningTransaction from "../models/EarningTransaction.js";
+import WithdrawalRequest from "../models/WithdrawalRequest.js";
 import { authRequired } from "../middleware/authMiddleware.js";
 import { uploadProductImages } from "../utils/cloudinaryUpload.js";
 import {
@@ -229,7 +230,7 @@ router.get(
   requireAdminPermission("finance"),
   async (req, res) => {
     try {
-      const [orders, products, users, transactions] = await Promise.all([
+      const [orders, products, users, transactions, withdrawals] = await Promise.all([
         Order.find()
           .sort({ createdAt: -1 })
           .populate("user", "username fullName email phone")
@@ -244,6 +245,11 @@ router.get(
           .limit(1000)
           .populate("beneficiary", "username fullName email")
           .populate("sourceUser", "username fullName")
+          .lean(),
+        WithdrawalRequest.find()
+          .sort({ createdAt: -1 })
+          .populate("user", "username fullName email")
+          .populate("reviewedBy", "username fullName")
           .lean(),
       ]);
 
@@ -306,6 +312,10 @@ router.get(
           invoicePending,
           totalEarnings: transactions.reduce((sum, item) => sum + Number(item.amount || 0), 0),
           orderCount: orders.length,
+          pendingPayoutCount: withdrawals.filter((item) => item.status === "pending").length,
+          pendingPayoutAmount: withdrawals
+            .filter((item) => item.status === "pending")
+            .reduce((sum, item) => sum + Number(item.amount || 0), 0),
         },
         orders: orders.map(serializeFinanceOrder),
         products: products.map((product) => ({
@@ -322,10 +332,62 @@ router.get(
           })
         ),
         transactions,
+        withdrawals,
       });
     } catch (error) {
       console.error("Finans ozeti alinamadi:", error);
       res.status(500).json({ message: "Finans verileri alinamadi" });
+    }
+  }
+);
+
+router.patch(
+  "/finance/withdrawals/:id",
+  authRequired,
+  adminOrSuperadmin,
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const status = String(req.body?.status || "");
+      const note = String(req.body?.note || "").trim();
+      if (!["approved", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Geçersiz hak ediş talebi durumu" });
+      }
+
+      const request = await WithdrawalRequest.findOneAndUpdate(
+        { _id: req.params.id, status: "pending" },
+        {
+          $set: {
+            status,
+            note,
+            reviewedBy: req.user._id,
+            reviewedAt: new Date(),
+          },
+        },
+        { new: true }
+      ).populate("user", "username fullName email");
+
+      if (!request) {
+        return res.status(409).json({ message: "Talep bulunamadı veya daha önce sonuçlandırıldı" });
+      }
+
+      if (status === "rejected") {
+        await User.findByIdAndUpdate(request.user._id, {
+          $inc: { walletBalance: request.amount },
+        });
+      } else {
+        await User.findByIdAndUpdate(request.user._id, {
+          $inc: { totalWithdrawn: request.amount },
+        });
+      }
+
+      return res.json({
+        message: status === "approved" ? "Hak ediş ödendi olarak işaretlendi" : "Talep reddedildi ve tutar bakiyeye iade edildi",
+        request,
+      });
+    } catch (error) {
+      console.error("Hak edis talebi guncelleme hatasi:", error);
+      return res.status(500).json({ message: "Hak ediş talebi güncellenemedi" });
     }
   }
 );

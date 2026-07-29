@@ -10,6 +10,9 @@ const withdrawalRequestSchema = new mongoose.Schema(
     },
     amount: { type: Number, required: true, min: 5000 },
     currency: { type: String, default: "TL" },
+    accountHolder: { type: String, required: true, trim: true, maxlength: 120 },
+    iban: { type: String, required: true, trim: true, uppercase: true },
+    bankName: { type: String, required: true, trim: true, maxlength: 120 },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],

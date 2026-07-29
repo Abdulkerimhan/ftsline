@@ -94,6 +94,11 @@ export default function Dashboard({ initialSection = "overview" }) {
   });
   const [withdrawalData, setWithdrawalData] = useState({ minimumAmount: 5000, requests: [] });
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
+  const [payoutBank, setPayoutBank] = useState({
+    accountHolder: "",
+    bankName: "",
+    iban: "",
+  });
   const [withdrawalSubmitting, setWithdrawalSubmitting] = useState(false);
   const [withdrawalMessage, setWithdrawalMessage] = useState("");
   const earningsChart = earningData.chart || [];
@@ -290,8 +295,14 @@ export default function Dashboard({ initialSection = "overview" }) {
     setWithdrawalMessage("");
     setWithdrawalSubmitting(true);
     try {
-      const result = await createWithdrawalRequest(Number(withdrawalAmount));
+      const result = await createWithdrawalRequest({
+        amount: Number(withdrawalAmount),
+        accountHolder: payoutBank.accountHolder.trim(),
+        bankName: payoutBank.bankName.trim(),
+        iban: payoutBank.iban.trim(),
+      });
       setWithdrawalAmount("");
+      setPayoutBank({ accountHolder: "", bankName: "", iban: "" });
       setWithdrawalMessage(result.message || "Cekim talebiniz alindi");
       await fetchEarnings();
     } catch (error) {
@@ -701,6 +712,32 @@ export default function Dashboard({ initialSection = "overview" }) {
             </p>
           </div>
           <form className="dashboard-withdrawal-form" onSubmit={submitWithdrawal}>
+            <strong style={{ flexBasis: "100%" }}>Banka ile Hak Ediş Ödeme Talebi</strong>
+            <input
+              type="text"
+              value={payoutBank.accountHolder}
+              onChange={(event) => setPayoutBank((previous) => ({ ...previous, accountHolder: event.target.value }))}
+              placeholder="Hesap sahibinin adı soyadı"
+              disabled={summary.balance < withdrawalData.minimumAmount || withdrawalSubmitting}
+              required
+            />
+            <input
+              type="text"
+              value={payoutBank.bankName}
+              onChange={(event) => setPayoutBank((previous) => ({ ...previous, bankName: event.target.value }))}
+              placeholder="Banka adı"
+              disabled={summary.balance < withdrawalData.minimumAmount || withdrawalSubmitting}
+              required
+            />
+            <input
+              type="text"
+              value={payoutBank.iban}
+              onChange={(event) => setPayoutBank((previous) => ({ ...previous, iban: event.target.value.toUpperCase() }))}
+              placeholder="TR ile başlayan IBAN"
+              maxLength={32}
+              disabled={summary.balance < withdrawalData.minimumAmount || withdrawalSubmitting}
+              required
+            />
             <input
               type="number"
               min={withdrawalData.minimumAmount}

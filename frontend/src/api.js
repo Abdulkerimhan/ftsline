@@ -178,11 +178,11 @@ export async function getMyWithdrawals() {
   return parseResponse(res);
 }
 
-export async function createWithdrawalRequest(amount) {
+export async function createWithdrawalRequest(data) {
   const res = await fetch(`${API}/earnings/withdrawals`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...getAuthHeader() },
-    body: JSON.stringify({ amount }),
+    body: JSON.stringify(data),
   });
   return parseResponse(res);
 }

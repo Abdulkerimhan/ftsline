@@ -28,10 +28,18 @@ router.get("/withdrawals/me", authRequired, async (req, res) => {
 
 router.post("/withdrawals", authRequired, async (req, res) => {
   const amount = Math.round(Number(req.body.amount || 0) * 100) / 100;
+  const accountHolder = String(req.body.accountHolder || "").trim();
+  const bankName = String(req.body.bankName || "").trim();
+  const iban = String(req.body.iban || "").replace(/\s+/g, "").toUpperCase();
 
   if (!Number.isFinite(amount) || amount < MIN_WITHDRAWAL_AMOUNT) {
     return res.status(400).json({
       message: `Minimum cekim tutari ${MIN_WITHDRAWAL_AMOUNT} TL'dir`,
+    });
+  }
+  if (!accountHolder || !bankName || !/^TR\d{24}$/.test(iban)) {
+    return res.status(400).json({
+      message: "Ad soyad, banka adı ve geçerli bir Türkiye IBAN bilgisi zorunludur",
     });
   }
 
@@ -58,9 +66,12 @@ router.post("/withdrawals", authRequired, async (req, res) => {
       const request = await WithdrawalRequest.create({
         user: req.user._id,
         amount,
+        accountHolder,
+        bankName,
+        iban,
       });
       return res.status(201).json({
-        message: "Cekim talebiniz alindi",
+        message: "Hak ediş ödeme talebiniz alındı",
         minimumAmount: MIN_WITHDRAWAL_AMOUNT,
         availableBalance: user.walletBalance,
         request,
