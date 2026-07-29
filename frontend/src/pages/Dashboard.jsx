@@ -10,6 +10,7 @@ import {
 } from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import FAQ from "./FAQ.jsx";
+import Academy from "./Academy.jsx";
 import "./Dashboard.css";
 
 const API = import.meta.env.VITE_API_URL || "/api";
@@ -1298,6 +1299,8 @@ export default function Dashboard({ initialSection = "overview" }) {
         return renderOverview();
       case "earnings":
         return renderEarnings();
+      case "academy":
+        return <Academy language={language} />;
       case "unilevel":
         return renderUnilevel();
       case "matrix":
@@ -1366,6 +1369,17 @@ export default function Dashboard({ initialSection = "overview" }) {
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.overview, "Genel BakÄ±ÅŸ")}</span>
               )}
+            </button>
+
+            <button
+              type="button"
+              className={`dashboard-side-link ${
+                activeSection === "academy" ? "active" : ""
+              }`}
+              onClick={() => selectSection("academy")}
+            >
+              <span className="dashboard-side-icon">E</span>
+              {sidebarOpen && <span>{language === "en" ? "Academy" : "Akademi"}</span>}
             </button>
 
             <button

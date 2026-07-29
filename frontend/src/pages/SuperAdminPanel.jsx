@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import "./SuperAdminPanel.css";
+import AcademyAdmin from "./AcademyAdmin.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -1362,6 +1363,7 @@ export default function SuperAdminPanel() {
     if (activeMenu === "products") return renderProducts();
     if (activeMenu === "orders") return renderOrders();
     if (activeMenu === "finance") return renderFinance();
+    if (activeMenu === "academy") return <AcademyAdmin onMessage={setMessage} />;
 
     return renderOverview();
   }
@@ -1407,6 +1409,13 @@ export default function SuperAdminPanel() {
           onClick={() => menuClick("finance")}
         >
           Finans
+        </button>
+
+        <button
+          className={activeMenu === "academy" ? "active" : ""}
+          onClick={() => menuClick("academy")}
+        >
+          Akademi
         </button>
 
         <button className="logout" onClick={logout}>
