@@ -23,10 +23,6 @@ const faqContent = {
         a: "Havale / EFT secenegiyle siparis olusturursun. Odeme bankadan kontrol edildikten sonra admin panelinde manuel olarak Odendi yapilir.",
       },
       {
-        q: "USDT TRC20 odemesi otomatik onaylanir mi?",
-        a: "Hayir. TxID bilgisi siparise eklenir, admin odemeyi kontrol ettikten sonra manuel onaylar.",
-      },
-      {
         q: "Siparisimin odeme durumunu nereden gorurum?",
         a: "Kullanici panelindeki Siparisler bolumunde Odeme Bekliyor, Odendi, Basarisiz veya Iade durumlarini gorebilirsin.",
       },
@@ -86,10 +82,6 @@ const faqContent = {
         q: "Sozlesmeli Elmas havuzu nedir?",
         a: "Altin kariyerindeyken sirket ile sozlesme imzalayan ve sonrasinda Elmas olan kullanicilar icin ayrilan ek havuzdur. Bu havuz, sartlari saglayan Elmas kullanicilar arasinda pay edilir.",
       },
-      {
-        q: "USDT TRC20 adresimi yanlis girersem ne olur?",
-        a: "USDT transferleri TRC20 agi uzerinden yapilir. Kullanici kendi TRC20 adresini dogru girmekten sorumludur; yanlis adres nedeniyle olusabilecek kayiplar kullanici sorumlulugundadir.",
-      },
     ],
   },
   en: {
@@ -110,10 +102,6 @@ const faqContent = {
       {
         q: "How is IBAN payment approved?",
         a: "Create an order with Bank Transfer. After the bank payment is checked, an admin manually marks the payment as paid.",
-      },
-      {
-        q: "Is USDT TRC20 payment approved automatically?",
-        a: "No. The TxID is saved with the order, then an admin checks and approves the payment manually.",
       },
       {
         q: "Where can I see my order payment status?",
@@ -174,10 +162,6 @@ const faqContent = {
       {
         q: "What is the contracted Diamond pool?",
         a: "It is an additional pool for users who signed a company contract while at Gold career level and later became Diamond. This pool is shared among Diamond users who meet the required conditions.",
-      },
-      {
-        q: "What happens if I enter the wrong USDT TRC20 address?",
-        a: "USDT transfers are made on the TRC20 network. Users are responsible for entering their own TRC20 address correctly; losses caused by an incorrect address are the user's responsibility.",
       },
     ],
   },
