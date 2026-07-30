@@ -1,0 +1,126 @@
+{
+  "title": "Sipariş ve Müşteri Yönetimi",
+  "description": "Siparişin alınmasından teslimat ve satış sonrası desteğe kadar hatasız operasyon, güçlü iletişim ve sadık müşteri deneyimi oluşturmak için uygulamalı eğitim.",
+  "lessons": [
+    {
+      "title": "Sipariş Akışı ve Sorumluluklar",
+      "description": "Siparişin her aşamasını, sorumlusunu ve kontrol noktasını açıkça belirleyin.",
+      "content": "İyi sipariş yönetimi, sipariş geldiğinde ne yapılacağını önceden tanımlamakla başlar. Ödeme kontrolü, stok ayırma, hazırlama, fatura, paketleme, kargoya teslim, takip ve teslimat adımları tek akışta görünmelidir.\n\nHer aşamada sorumlu kişi, hedef süre ve tamamlanma kanıtı bulunmalıdır. Küçük işletmede bütün işleri bir kişi yapsa bile kontrol listesi hatayı azaltır.\n\nSipariş numarası bütün iletişim ve belgelerde ortak referans olmalıdır. Müşterinin adres, telefon ve sipariş bilgileri yalnız yetkili kişilerce ve gerekli süre boyunca işlenmelidir.",
+      "keyPoints": [
+        "Ödeme doğrulanmadan ürünü sevke hazırlamayın.",
+        "Stok ayırma ile fiziksel stok düşümünü karıştırmayın.",
+        "Sipariş durumlarını müşterinin anlayacağı sade ifadelerle gösterin.",
+        "Kişisel verileri gereksiz kopyalamayın veya paylaşmayın."
+      ],
+      "checklist": [
+        "Sipariş aşamalarını baştan sona yazdım.",
+        "Her aşamanın sorumlusunu ve hedef süresini belirledim.",
+        "Sipariş numarasını ortak referans yaptım.",
+        "Ödeme, stok ve fatura kontrol noktalarını oluşturdum.",
+        "Yetki ve kişisel veri erişimini sınırlandırdım."
+      ],
+      "durationMinutes": 20,
+      "order": 0
+    },
+    {
+      "title": "Sipariş Hazırlama ve Kargo",
+      "description": "Doğru ürünü, doğru adrese, güvenli ambalajla ve zamanında gönderin.",
+      "content": "Hazırlama sırasında ürün kodu, varyant, adet ve müşteri notu sipariş kaydıyla karşılaştırılmalıdır. Paket kapanmadan önce ikinci kontrol veya fotoğraflı kayıt uygulanabilir.\n\nAmbalaj ürünü korumalı, gereksiz hacim oluşturmamalı ve müşterinin açma deneyimini kolaylaştırmalıdır. Kırılabilir, sıvı, gıda veya özel koşul gerektiren ürünlerde ilgili taşıma kurallarına uyulmalıdır.\n\nKargo firması seçilirken yalnız fiyat değil; bölgesel teslimat başarısı, hasar oranı, takip kalitesi, müşteri desteği ve tazmin süreci değerlendirilmelidir.",
+      "keyPoints": [
+        "Paket kapanmadan ürün ve adres kontrolü yapın.",
+        "Kargo takip numarasını gecikmeden müşteriye iletin.",
+        "Hasar ve kayıp durumları için kayıt ve tazmin prosedürü oluşturun.",
+        "Gerçekçi olmayan teslimat sözü vermeyin."
+      ],
+      "checklist": [
+        "Ürün, varyant ve adet kontrolü yaptım.",
+        "Ambalaj standardını ürün grubuna göre belirledim.",
+        "Paketleme ve sevk kanıtını kaydediyorum.",
+        "Kargo takip mesajını otomatik veya düzenli gönderiyorum.",
+        "Kayıp ve hasar prosedürünü yazdım."
+      ],
+      "durationMinutes": 22,
+      "order": 1
+    },
+    {
+      "title": "Müşteri İletişimi ve Hizmet Standardı",
+      "description": "Sipariş öncesi ve sonrasında hızlı, açık ve tutarlı iletişim kurun.",
+      "content": "Müşteri iletişimi satış öncesi soruyla başlar ve teslimat sonrasında devam eder. İletişim kanalları, çalışma saatleri ve hedef yanıt süresi açıkça belirtilmelidir.\n\nHazır yanıtlar hız kazandırır; fakat müşterinin sorusunu okumadan gönderilen kalıp mesaj güveni azaltır. Mesajda müşterinin adı, sipariş numarası, durum, yapılacak işlem ve beklenen süre bulunmalıdır.\n\nGecikme veya hata oluştuğunda müşteri sormadan bilgi vermek güveni korur. Kesinleşmemiş tarih ve sonucu kesinmiş gibi yazmayın.",
+      "keyPoints": [
+        "Müşteriyi aynı bilgiyi tekrar tekrar anlatmak zorunda bırakmayın.",
+        "Kişisel bilgileri açık yorumlarda istemeyin.",
+        "Yanıt süresi ile çözüm süresini ayrı takip edin.",
+        "Hata durumunda savunmaya geçmeden kayıt ve çözüm sunun."
+      ],
+      "checklist": [
+        "İletişim kanalları ve çalışma saatlerini yayımladım.",
+        "Hedef ilk yanıt ve çözüm süresi belirledim.",
+        "Sık sorular için düzenlenebilir yanıt şablonları hazırladım.",
+        "Gecikme bildirim mesajını oluşturdum.",
+        "Müşteri iletişim kayıtlarını güvenli biçimde tutuyorum."
+      ],
+      "durationMinutes": 20,
+      "order": 2
+    },
+    {
+      "title": "İptal, İade ve Şikâyet Yönetimi",
+      "description": "Sorunları mevzuata ve şirket politikasına uygun, hızlı ve kayıtlı biçimde çözün.",
+      "content": "İade ve iptal süreci müşterinin kolay bulabileceği şekilde açıklanmalıdır. Başvuru tarihi, ürün durumu, gerekçe, kargo, inceleme, karar ve ödeme adımları kayıt altına alınmalıdır.\n\nŞikâyeti kişisel tartışma olarak değil süreç iyileştirme verisi olarak görün. Önce müşteriyi dinleyin, olayı özetleyin, kanıtları inceleyin ve çözüm seçeneklerini net süreyle sunun.\n\nYasal cayma, iade, garanti ve ödeme süreleri ürün ve satış yöntemine göre değişebilir. Metin ve uygulamalar işletmeye özel olarak hukuk ve mali müşavir desteğiyle doğrulanmalıdır.",
+      "keyPoints": [
+        "Yasal hakları şirket politikasıyla daraltmayın.",
+        "İade ürününü incelemeden yeniden satışa açmayın.",
+        "Ücret iadesi ve muhasebe kaydını birlikte takip edin.",
+        "Tekrarlanan şikâyetleri kök neden analizi için gruplayın."
+      ],
+      "checklist": [
+        "İade ve iptal adımlarını müşteriye açık biçimde yayımladım.",
+        "Başvuru ve inceleme formu oluşturdum.",
+        "Ücret iadesi sorumlusu ve hedef süresini belirledim.",
+        "Şikâyetleri neden kodlarıyla kaydediyorum.",
+        "Hukuki ve mali metinleri uzmanlarla kontrol ettim."
+      ],
+      "durationMinutes": 25,
+      "order": 3
+    },
+    {
+      "title": "Müşteri Sadakati ve Tekrar Satış",
+      "description": "Teslimat sonrası deneyimi güven, tavsiye ve tekrar alışverişe dönüştürün.",
+      "content": "Sadakat yalnız indirim vermek değildir. Doğru ürün, zamanında teslimat, ulaşılabilir destek ve müşteriyi hatırlayan iletişim tekrar satışın temelidir.\n\nTeslimattan sonra kullanım bilgisi, bakım önerisi veya memnuniyet kontrolü gönderin. Yorum istemek için müşteriye ürünü deneyimleyecek makul süre tanıyın ve olumlu yorum karşılığında yanıltıcı teşvik sunmayın.\n\nMüşterileri izinli iletişim tercihine, satın aldığı ürün grubuna ve ihtiyaç dönemine göre sınıflandırın. Gereksiz ve sık mesaj göndermek sadakati azaltır.",
+      "keyPoints": [
+        "Pazarlama iletileri için gerekli izin ve çıkış seçeneğini sağlayın.",
+        "Müşteriye ihtiyacı olmayan ürünü sürekli önermeyin.",
+        "Sadakati yalnız kupon kullanımına göre ölçmeyin.",
+        "Yorumları değiştirmeyin veya yalnız olumlu yorumları seçmeyin."
+      ],
+      "checklist": [
+        "Teslimat sonrası bilgilendirme mesajı hazırladım.",
+        "Memnuniyet ve yorum isteme zamanını belirledim.",
+        "Müşteri segmentlerini ihtiyaç ve izin durumuna göre ayırdım.",
+        "Tekrar satış ve tavsiye göstergelerini takip ediyorum.",
+        "İletişimden çıkış taleplerini uyguluyorum."
+      ],
+      "durationMinutes": 20,
+      "order": 4
+    },
+    {
+      "title": "Operasyon Metrikleri ve İyileştirme",
+      "description": "Sipariş ve müşteri deneyimini ölçerek darboğazları düzenli biçimde giderin.",
+      "content": "Operasyonun yalnız satış sayısını değil; hazırlama süresi, zamanında sevk, zamanında teslim, yanlış ürün, hasar, iptal, iade, ilk yanıt, çözüm süresi ve memnuniyet göstergelerini izleyin.\n\nHer hafta sapmaları inceleyin. Örneğin iade artışı ürün açıklaması, kalite veya yanlış gönderimden kaynaklanabilir. Önce kök nedeni belirleyin; yalnız sonucu düzeltmek aynı hatanın tekrarlanmasını engellemez.\n\nİyileştirme planında sorun, kanıt, kök neden, düzeltici işlem, sorumlu, tarih ve sonuç bulunmalıdır. Aynı anda çok sayıda değişiklik yerine en yüksek müşteri ve maliyet etkisine sahip alanla başlayın.",
+      "keyPoints": [
+        "Oranları adetlerle birlikte değerlendirin.",
+        "İade ve şikâyet nedenlerini standart kodlarla kaydedin.",
+        "Hedefleri gerçek kapasite ve geçmiş veriye göre belirleyin.",
+        "İyileştirme sonucunu değişiklik öncesi dönemle karşılaştırın."
+      ],
+      "checklist": [
+        "Haftalık operasyon göstergelerini seçtim.",
+        "İade ve şikâyet neden kodlarını oluşturdum.",
+        "En büyük üç darboğazı belirledim.",
+        "Sorumlu ve tarih içeren iyileştirme planı hazırladım.",
+        "Sonuçları önceki dönemle karşılaştırıyorum."
+      ],
+      "durationMinutes": 24,
+      "order": 5
+    }
+  ]
+}
