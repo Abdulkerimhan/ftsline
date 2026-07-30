@@ -1,0 +1,127 @@
+{
+  "title": "Doğru Ürün ve Tedarikçi Bulma",
+  "description": "Satılabilir ürün fikirlerini veriye göre elemek, güvenilir tedarikçiyi ölçülebilir kriterlerle seçmek ve numuneden ilk siparişe kadar riski yönetmek için uygulamalı eğitim.",
+  "lessons": [
+    {
+      "title": "Satılabilir Ürünün Özellikleri",
+      "description": "Bir ürün fikrini heyecanla değil, müşteri ihtiyacı ve iş ekonomisiyle değerlendirin.",
+      "content": "Doğru ürün, yalnızca çok aranan ürün değildir. Belirgin bir ihtiyacı çözer, anlaşılır bir fayda sunar, taşınabilir ve teslim edilebilir yapıdadır, yeterli katkı payı bırakır ve satış sonrasında yönetilemeyecek sorunlar üretmez.\n\nİlk elemede şu beş alanı birlikte inceleyin: talep, rekabet, brüt katkı, operasyon kolaylığı ve risk. Tek bir alanda çok güçlü olmak diğer alanlardaki ciddi zayıflığı kapatmaz. Örneğin yüksek talep gören fakat yoğun iade alan, kırılgan veya mevzuata tabi bir ürün yeni başlayan işletme için uygun olmayabilir.\n\nÜrün fikrini puanlarken kişisel beğeninizi müşteri kanıtından ayırın. Müşterinin hangi sorunu çözmek için para ödediğini tek cümleyle açıklayamıyorsanız araştırma henüz tamamlanmamıştır.",
+      "keyPoints": [
+        "Talep tek başına ürün seçmek için yeterli değildir.",
+        "Kargo, iade ve hasar riski ürünün gerçek kârlılığını değiştirir.",
+        "Kanıtlanamayan sağlık, performans veya kazanç iddialarından kaçının.",
+        "Yeni başlayanlar için sade, anlatılabilir ve test edilebilir ürünler daha uygundur."
+      ],
+      "checklist": [
+        "Ürünün çözdüğü sorunu tek cümleyle yazdım.",
+        "Hedef müşteriyi ve satın alma nedenini belirledim.",
+        "Tahmini satış fiyatı ile toplam maliyeti karşılaştırdım.",
+        "Kırılma, bozulma, iade ve mevzuat riskini kontrol ettim.",
+        "Ürünü küçük miktarla test edebileceğimi doğruladım."
+      ],
+      "durationMinutes": 18,
+      "order": 0
+    },
+    {
+      "title": "Talep ve Rekabet Araştırması",
+      "description": "Pazarda gerçek talep olup olmadığını ve rekabette nerede konumlanacağınızı araştırın.",
+      "content": "Talebi anlamak için tek bir kaynağa güvenmeyin. Pazar yerlerindeki satış göstergeleri ve yorumlar, arama eğilimleri, sosyal medya soruları, forumlar, rakip mağazalar ve müşterilerle yapılan kısa görüşmeler birlikte değerlendirilmelidir.\n\nRakip analizinde yalnız fiyatı kaydetmek eksik sonuç verir. Ürün çeşidi, teslimat süresi, görsel kalitesi, müşteri yorumları, şikâyetler, garanti ve iade yaklaşımı ile iletişim hızını karşılaştırın. Tekrarlanan olumsuz yorumlar, pazarda çözebileceğiniz boşluğu gösterir.\n\nAraştırmanın sonunda ürününüzü dört alandan birine yerleştirin: yüksek talep–düşük rekabet, yüksek talep–yüksek rekabet, düşük talep–düşük rekabet veya düşük talep–yüksek rekabet. İlk test için güçlü talep ve yönetilebilir rekabet arayın.",
+      "keyPoints": [
+        "Bir günlük popülerliği kalıcı talep sanmayın.",
+        "Yorum sayısına değil, yorumların içeriğine ve tekrar eden sorunlara bakın.",
+        "Rakibi kopyalamak yerine çözülmemiş müşteri sorununu bulun.",
+        "Sezonluk ürünlerde stok ve nakit planını sezona göre yapın."
+      ],
+      "checklist": [
+        "En az üç farklı kaynaktan talep kanıtı topladım.",
+        "En az beş rakibi karşılaştırdım.",
+        "Olumsuz yorumlardan tekrar eden üç sorunu çıkardım.",
+        "Ürünün sezonluk olup olmadığını kontrol ettim.",
+        "Pazardaki farklılaşma cümlemi yazdım."
+      ],
+      "durationMinutes": 24,
+      "order": 1
+    },
+    {
+      "title": "Ürünü Küçük Testle Doğrulama",
+      "description": "Büyük stok almadan önce numune ve pilot satışla varsayımlarınızı sınayın.",
+      "content": "Araştırma olumlu görünse bile ürün henüz doğrulanmış değildir. Önce numune alın; işçilik, ölçü, renk, koku, ambalaj, kullanım kolaylığı ve dayanıklılık gibi müşterinin göreceği her noktayı test edin. Mümkünse ürünü hedef müşteri profiline uygun birkaç kişiye kullandırın.\n\nPilot satışta sınırlı stok, tek bir teklif ve ölçülebilir bir dönem kullanın. Ziyaret, ürün sayfası etkileşimi, sepete ekleme, satış, müşteri soruları, iade nedeni ve sipariş başına katkı payını kaydedin.\n\nTestin amacı ürünü haklı çıkarmak değil, yanlış varsayımı ucuza bulmaktır. Sonuç zayıfsa fiyat, teklif, sayfa veya ürün kaynaklı nedeni ayırın; aynı anda her şeyi değiştirmeyin.",
+      "keyPoints": [
+        "Numune onayı olmadan yüksek adetli sipariş vermeyin.",
+        "Aile ve arkadaş beğenisini pazar doğrulaması saymayın.",
+        "Pilot testte kâr kadar iade ve müşteri sorularını da ölçün.",
+        "Test için önceden başarı ve durdurma sınırı belirleyin."
+      ],
+      "checklist": [
+        "Numune kontrol formunu doldurdum.",
+        "Hedef müşteriden yapılandırılmış geri bildirim aldım.",
+        "Pilot stok ve test bütçesi belirledim.",
+        "Ölçeceğim göstergeleri test başlamadan yazdım.",
+        "Devam, düzeltme veya vazgeçme karar ölçütünü belirledim."
+      ],
+      "durationMinutes": 20,
+      "order": 2
+    },
+    {
+      "title": "Tedarikçi Bulma ve Ön Eleme",
+      "description": "Üretici, distribütör ve toptancıları güvenilirlik açısından ön elemeden geçirin.",
+      "content": "Tedarikçi ararken üretici, yetkili distribütör ve toptancı arasındaki farkı bilin. Her seçenek fiyat, minimum sipariş, özelleştirme, teslim süresi ve garanti bakımından farklı avantajlar sunar.\n\nİlk görüşmede şirket unvanı, vergi ve kayıt bilgileri, üretim veya dağıtım yetkisi, adres, referanslar, minimum sipariş, ödeme koşulları, kapasite ve kusurlu ürün prosedürünü yazılı isteyin. Yalnız mesajlaşma uygulaması kullanan, kurumsal bilgilerini paylaşmayan veya acele ödeme isteyen taraflara karşı dikkatli olun.\n\nBelgelerin varlığı tek başına yeterli değildir; bilgiler resmi ve güvenilir kaynaklardan doğrulanmalıdır. Marka kullanımı, ürün güvenliği, garanti ve gerekli sertifikalar ürün grubuna göre uzmanla kontrol edilmelidir.",
+      "keyPoints": [
+        "Kurumsal kimliği doğrulanmayan tedarikçiye ödeme yapmayın.",
+        "Teklifleri aynı ürün tanımı ve aynı teslim koşuluyla karşılaştırın.",
+        "Sözlü vaatleri yazılı teklife ve sözleşmeye dönüştürün.",
+        "Tek tedarikçiye bağımlılık için alternatif plan oluşturun."
+      ],
+      "checklist": [
+        "En az üç tedarikçiden karşılaştırılabilir teklif aldım.",
+        "Şirket ve yetki bilgilerini doğruladım.",
+        "Referans ve geçmiş teslimat bilgisi istedim.",
+        "Minimum sipariş, termin ve ödeme koşullarını yazılı aldım.",
+        "Kusurlu ürün ve iade prosedürünü öğrendim."
+      ],
+      "durationMinutes": 24,
+      "order": 3
+    },
+    {
+      "title": "Tedarikçi Puanlama ve Pazarlık",
+      "description": "Kararı yalnız birim fiyata göre değil, ağırlıklı puanlama yöntemiyle verin.",
+      "content": "En düşük fiyat her zaman en düşük toplam maliyet değildir. Kalite sorunu, gecikme, eksik teslimat veya zayıf iletişim; satış kaybı, iade ve itibar maliyeti oluşturur. Bu nedenle tedarikçileri kalite, toplam maliyet, teslimat, iletişim, esneklik ve güvenilirlik başlıklarında puanlayın.\n\nPazarlığa hedef fiyat kadar hazırlıkla girin. Yıllık tahmini hacim, deneme siparişi, artan adet basamakları, ödeme planı, ambalaj, etiket, navlun ve kusurlu ürün telafisini birlikte konuşun. Sadece fiyat indirimi istemek yerine iki tarafın riskini azaltan şartlar önerin.\n\nTüm tekliflerde para birimi, vergi, teslim şekli, geçerlilik tarihi ve hangi masrafların dahil olduğu açıkça yazmalıdır.",
+      "keyPoints": [
+        "Tedarikçi puanında kalite ve teslimatın ağırlığını yüksek tutun.",
+        "Farklı kapsamlı teklifleri doğrudan karşılaştırmayın.",
+        "İlk siparişte güvenli ödeme ve küçük adet tercih edin.",
+        "Pazarlık sonucunu imzalı teklif veya sözleşmeyle kayıt altına alın."
+      ],
+      "checklist": [
+        "Tedarikçi puan kartını doldurdum.",
+        "Toplam teslim maliyetini ayrı hesapladım.",
+        "Pazarlık hedefimi ve vazgeçme sınırımı belirledim.",
+        "Numune ile seri üretim standardını eşleştirdim.",
+        "Tüm ticari şartları yazılı teyit ettim."
+      ],
+      "durationMinutes": 22,
+      "order": 4
+    },
+    {
+      "title": "Sipariş, Kalite Kontrol ve Risk Planı",
+      "description": "Siparişten teslimata kadar kontrol noktaları kurun ve alternatif plan hazırlayın.",
+      "content": "Satın alma siparişinde ürün kodu, teknik özellik, renk, ölçü, adet, tolerans, ambalaj, etiket, teslim tarihi, fiyat, ödeme ve kusurlu ürün çözümü açıkça yazmalıdır. Onaylı numuneyi kalite standardının parçası haline getirin.\n\nÜretim veya hazırlık sürecinde ara kontrol, sevk öncesi son kontrol ve mal kabul kontrolü planlayın. Kontrol edilen adetleri, kusur türlerini ve fotoğrafları kaydedin. Kritik kusur ile kozmetik kusuru aynı değerlendirmeyin.\n\nRisk planında gecikme, kalite düşüşü, maliyet artışı, tedarikçinin kapanması, mevzuat değişikliği ve lojistik kesintisi için erken uyarı göstergesi ve yapılacak eylem bulunmalıdır. Alternatif tedarikçiyi ihtiyaç doğduğunda değil, işler yolundayken hazırlayın.",
+      "keyPoints": [
+        "Onaylı numuneyi üretim standardı olarak saklayın.",
+        "Teslimat öncesi kalite kontrol noktasını sözleşmeye ekleyin.",
+        "Toplam teslim maliyetine navlun, vergi ve fireyi dahil edin.",
+        "Kritik ürünlerde ikinci tedarikçi seçeneğini canlı tutun."
+      ],
+      "checklist": [
+        "Satın alma siparişini ayrıntılı hazırladım.",
+        "Kalite kabul ölçütlerini yazılı belirledim.",
+        "Sevk öncesi kontrol planı oluşturdum.",
+        "Toplam teslim maliyetini hesapladım.",
+        "Başlıca riskler için alternatif eylem yazdım.",
+        "Tedarikçi performansını aylık izleme planı yaptım."
+      ],
+      "durationMinutes": 24,
+      "order": 5
+    }
+  ]
+}
