@@ -13,7 +13,12 @@ export async function syncAcademyEnrollmentsForOrder(order) {
     .map((item) => item?.productId)
     .filter(Boolean);
   const courses = productIds.length
-    ? await AcademyCourse.find({ product: { $in: productIds } }).select("_id").lean()
+    ? await AcademyCourse.find({
+        $or: [
+          { product: { $in: productIds } },
+          { products: { $in: productIds } },
+        ],
+      }).select("_id").lean()
     : [];
   const courseIds = courses.map((course) => course._id);
   const shouldGrant =
@@ -73,7 +78,11 @@ export async function syncAcademyEnrollmentsForCourse(course) {
     { course: course._id, revokedAt: null },
     { $set: { revokedAt: new Date() } }
   );
-  if (!course.product) {
+  const linkedProductIds = [
+    ...(course.products || []),
+    ...(course.product ? [course.product] : []),
+  ];
+  if (!linkedProductIds.length) {
     return { granted: 0, revoked: Number(revokeResult.modifiedCount || 0) };
   }
 
@@ -82,7 +91,7 @@ export async function syncAcademyEnrollmentsForCourse(course) {
     orderType: "product",
     paymentStatus: "paid",
     status: { $ne: "cancelled" },
-    "items.productId": course.product,
+    "items.productId": { $in: linkedProductIds },
   }).lean();
 
   await Promise.all(paidOrders.map((order) => syncAcademyEnrollmentsForOrder(order)));

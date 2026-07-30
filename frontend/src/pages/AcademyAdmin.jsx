@@ -16,6 +16,7 @@ const emptyCourse = {
   category: "E-Ticaret",
   coverImage: "",
   product: "",
+  products: [],
   order: 0,
   isPublished: false,
   lessons: [{ ...emptyLesson }],
@@ -78,6 +79,7 @@ export default function AcademyAdmin({ onMessage }) {
       category: course.category || "E-Ticaret",
       coverImage: course.coverImage || "",
       product: course.product?._id || course.product || "",
+      products: (course.products || []).map((product) => product?._id || product),
       order: course.order || 0,
       isPublished: Boolean(course.isPublished),
       lessons: course.lessons?.length
@@ -100,6 +102,15 @@ export default function AcademyAdmin({ onMessage }) {
       lessons: current.lessons.map((lesson, lessonIndex) =>
         lessonIndex === index ? { ...lesson, [key]: value } : lesson
       ),
+    }));
+  }
+
+  function toggleProduct(productId) {
+    setForm((current) => ({
+      ...current,
+      products: current.products.includes(productId)
+        ? current.products.filter((id) => id !== productId)
+        : [...current.products, productId],
     }));
   }
 
@@ -174,19 +185,24 @@ export default function AcademyAdmin({ onMessage }) {
             <label>Baslik<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /></label>
             <label>Kategori<input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></label>
             <label>Kapak gorseli URL<input value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} /></label>
-            <label>
-              Satista olan egitim paketi
-              <select value={form.product} onChange={(e) => setForm({ ...form, product: e.target.value })}>
-                <option value="">Lisans alan herkese acik</option>
-                {products.map((product) => (
-                  <option key={product._id} value={product._id}>
-                    {product.nameTr || product.name}
-                  </option>
-                ))}
-              </select>
-            </label>
             <label>Siralama<input type="number" value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></label>
           </div>
+          <fieldset className="academy-product-links">
+            <legend>Bu egitimi acan urun paketleri</legend>
+            <p>Secilen paketlerden biri odendi oldugunda egitim kullaniciya acilir.</p>
+            <div>
+              {products.map((product) => (
+                <label key={product._id}>
+                  <input
+                    type="checkbox"
+                    checked={form.products.includes(product._id)}
+                    onChange={() => toggleProduct(product._id)}
+                  />
+                  {product.nameTr || product.name}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <label>Aciklama<textarea rows="3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           <label className="academy-publish"><input type="checkbox" checked={form.isPublished} onChange={(e) => setForm({ ...form, isPublished: e.target.checked })} /> Kullanici panelinde yayinla</label>
 

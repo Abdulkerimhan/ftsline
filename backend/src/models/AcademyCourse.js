@@ -24,6 +24,10 @@ const academyCourseSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    products: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+      default: [],
+    },
     order: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
     lessons: { type: [lessonSchema], default: [] },

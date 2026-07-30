@@ -22,6 +22,9 @@ function coursePayload(body) {
     category: String(body?.category || "E-Ticaret").trim(),
     coverImage: String(body?.coverImage || "").trim(),
     product: body?.product || null,
+    products: Array.isArray(body?.products)
+      ? body.products.map(String).filter(Boolean)
+      : [],
     order: Number(body?.order || 0),
     isPublished: Boolean(body?.isPublished),
     lessons: normalizeAcademyLessons(body?.lessons),
@@ -115,6 +118,7 @@ router.patch("/courses/:courseId/lessons/:lessonId/progress", authRequired, asyn
 router.get("/admin/courses", authRequired, superAdminOnly, async (_req, res) => {
   const courses = await AcademyCourse.find()
     .populate("product", "name nameTr nameEn isActive")
+    .populate("products", "name nameTr nameEn isActive")
     .sort({ order: 1, createdAt: 1 });
   res.json(courses);
 });
