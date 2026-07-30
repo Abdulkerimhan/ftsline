@@ -33,8 +33,8 @@ export default function Academy({ language = "tr" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function loadCourses() {
-    setLoading(true);
+  async function loadCourses({ silent = false } = {}) {
+    if (!silent) setLoading(true);
     setError("");
     try {
       const token = sessionStorage.getItem("accessToken");
@@ -57,6 +57,19 @@ export default function Academy({ language = "tr" }) {
     loadCourses();
   }, []);
 
+  useEffect(() => {
+    const refreshCourses = () => loadCourses({ silent: true });
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refreshCourses();
+    };
+    window.addEventListener("focus", refreshCourses);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshCourses);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, []);
+
   const selectedCourse = useMemo(
     () => courses.find((course) => course._id === selectedCourseId) || courses[0] || null,
     [courses, selectedCourseId]
@@ -74,8 +87,9 @@ export default function Academy({ language = "tr" }) {
   const progressPercent = lessons.length ? Math.round((completedCount / lessons.length) * 100) : 0;
 
   useEffect(() => {
-    setSelectedLessonId(lessons[0]?._id || "");
-  }, [selectedCourseId]);
+    const lessonStillExists = lessons.some((lesson) => lesson._id === selectedLessonId);
+    if (!lessonStillExists) setSelectedLessonId(lessons[0]?._id || "");
+  }, [lessons, selectedLessonId]);
 
   async function toggleLesson(lesson) {
     const completed = !completedIds.has(String(lesson._id));
@@ -93,6 +107,11 @@ export default function Academy({ language = "tr" }) {
         }
       );
       const data = await res.json().catch(() => ({}));
+      if (res.status === 404) {
+        await loadCourses({ silent: true });
+        setError("");
+        return;
+      }
       if (!res.ok) throw new Error(data?.message || "Ilerleme kaydedilemedi.");
       setCourses((current) =>
         current.map((course) =>
