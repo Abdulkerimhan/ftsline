@@ -1,0 +1,126 @@
+{
+  "title": "Sosyal Medya ve Reklam",
+  "description": "Markanız için doğru kanalı seçmek, düzenli içerik üretmek, reklam bütçesini kontrollü kullanmak ve sonuçları doğru metriklerle geliştirmek için uygulamalı eğitim.",
+  "lessons": [
+    {
+      "title": "Marka Dili, Hedef ve Konumlandırma",
+      "description": "Paylaşım yapmadan önce kime, ne söylediğinizi ve hangi sonucu istediğinizi netleştirin.",
+      "content": "Sosyal medya başarısı her gün paylaşım yapmakla değil, tutarlı bir mesajla başlar. Markanın sunduğu fayda, hedef müşterisi ve diğer seçeneklerden farkı tek cümlede açıklanabilmelidir.\n\nİletişim hedefinizi görünürlük, güven, etkileşim, potansiyel müşteri veya satış olarak belirleyin. Her içerikten doğrudan satış beklemek yerine müşterinin karar yolculuğundaki görevi tanımlayın.\n\nMarka dili samimi, uzman, sade veya ilham verici olabilir; fakat bütün kanallarda tutarlı olmalıdır. Kanıtlanamayan üstünlük, sağlık, sonuç ve kazanç vaatleri kullanmayın.",
+      "keyPoints": [
+        "Her platformda farklı bir marka gibi konuşmayın.",
+        "Tek paylaşımda bir ana mesaj ve bir eylem çağrısı kullanın.",
+        "Takipçi sayısını tek başarı ölçütü olarak görmeyin.",
+        "Gerçek dışı sonuç ve gelir vaatlerinden kaçının."
+      ],
+      "checklist": [
+        "Markamın değer önerisini tek cümleyle yazdım.",
+        "Ana hedef müşterimi tanımladım.",
+        "İletişim tonumu ve kullanmayacağım ifadeleri belirledim.",
+        "Önümüzdeki 30 günün ana iletişim hedefini seçtim.",
+        "Profil açıklaması ve iletişim bağlantılarını kontrol ettim."
+      ],
+      "durationMinutes": 18,
+      "order": 0
+    },
+    {
+      "title": "Hedef Kitle ve Doğru Kanal Seçimi",
+      "description": "Müşterinin bulunduğu kanallara öncelik verin ve her platformun görevini belirleyin.",
+      "content": "Her sosyal medya platformunda bulunmak zorunda değilsiniz. Müşterinin zaman geçirdiği, araştırma yaptığı ve satın alma kararına yaklaştığı kanalları seçin.\n\nHedef kitleyi yalnız yaş ve şehirle sınırlamayın. Sorunları, ilgi alanları, satın alma nedenleri, itirazları, içerik alışkanlıkları ve kullandıkları kelimeler daha değerlidir.\n\nBaşlangıçta bir ana kanal ve bir destek kanalı seçin. Ana kanalda düzenli içerik üretin; destek kanalını yeniden kullanım, müşteri desteği veya güven kanıtı için kullanın.",
+      "keyPoints": [
+        "Kanalı popülerliğine değil müşteri davranışına göre seçin.",
+        "Aynı içeriği her platforma ölçüsüz biçimde kopyalamayın.",
+        "Hedef kitle varsayımlarını yorumlar ve görüşmelerle doğrulayın.",
+        "Çocuklar ve hassas gruplara yönelik hedeflemede özel dikkat gösterin."
+      ],
+      "checklist": [
+        "Bir ana ve bir destek kanalı seçtim.",
+        "Müşterimin üç temel sorununu yazdım.",
+        "Satın almadan önce sorduğu beş soruyu belirledim.",
+        "Takip ettiği içerik türlerini araştırdım.",
+        "Her kanalın görevini yazdım."
+      ],
+      "durationMinutes": 20,
+      "order": 1
+    },
+    {
+      "title": "İçerik Sütunları ve Üretim Planı",
+      "description": "Sürekli ne paylaşacağınızı düşünmek yerine tekrar edilebilir içerik sistemi kurun.",
+      "content": "İçeriklerinizi dört ana sütunda planlayın: eğitim, güven, ürün ve topluluk. Eğitim içeriği müşterinin sorununu çözmesine yardım eder; güven içeriği süreç, ekip, yorum ve kanıt gösterir; ürün içeriği fayda ve kullanım anlatır; topluluk içeriği konuşma başlatır.\n\nBir fikirden birden fazla format üretin. Uzun bir anlatımı kısa video, görsel seri, soru-cevap, e-posta ve ürün sayfası parçasına dönüştürün. Böylece kaliteyi korurken üretim yükü azalır.\n\nİçerik takviminde konu, format, kanal, yayın tarihi, amaç ve eylem çağrısı yer almalıdır. Gerçek müşteri görseli veya yorumu için açık izin alın.",
+      "keyPoints": [
+        "Yalnız ürün fotoğrafı paylaşarak sürdürülebilir ilgi beklemeyin.",
+        "Telif hakkı bulunan görsel, müzik ve videoları izinsiz kullanmayın.",
+        "İçeriğin ilk saniyelerinde müşterinin sorununu veya faydayı gösterin.",
+        "Müşteri yorumlarını bağlamından koparmayın ve izin alın."
+      ],
+      "checklist": [
+        "Dört içerik sütunumu belirledim.",
+        "En az 20 içerik fikri yazdım.",
+        "Bir haftalık yayın takvimi hazırladım.",
+        "Her içerik için amaç ve eylem çağrısı seçtim.",
+        "Telif ve izin kontrolü yaptım."
+      ],
+      "durationMinutes": 24,
+      "order": 2
+    },
+    {
+      "title": "Organik Büyüme ve Topluluk Yönetimi",
+      "description": "Etkileşimi artıran düzenli yayın, iletişim ve müşteri hizmeti sistemi oluşturun.",
+      "content": "Organik büyüme, yalnız algoritmayı takip etmek değil; müşteriye düzenli değer sunmak ve gerçek konuşmalar kurmaktır. Paylaşımdan sonraki yorumları, mesajları ve sık soruları içerik kaynağı olarak kullanın.\n\nProfil ziyareti, kaydetme, paylaşma, bağlantı tıklaması ve nitelikli mesaj gibi göstergeler; yalnız beğeni sayısından daha anlamlı olabilir. Haftalık sonuçları içerik türüne göre karşılaştırın.\n\nOlumsuz yorumları silmek yerine, hakaret veya spam olmadığı sürece sakin ve çözüm odaklı yanıtlayın. Kişisel bilgi ve sipariş detaylarını açık yorumlarda istemeyin.",
+      "keyPoints": [
+        "Takipçi satın almayın ve yapay etkileşim kullanmayın.",
+        "Yorum ve mesajlara dönüş süresi için standart belirleyin.",
+        "Kriz anında tartışmaya girmeden kayıt ve çözüm süreci yürütün.",
+        "Kişisel verileri açık alanda paylaşmayın."
+      ],
+      "checklist": [
+        "Haftalık yayın ve yanıt rutini belirledim.",
+        "Sık sorulan sorular için hazır yanıtlar oluşturdum.",
+        "Olumsuz yorumlara müdahale akışını yazdım.",
+        "Haftalık takip edeceğim organik metrikleri seçtim.",
+        "En başarılı içerikleri yeniden kullanma planı yaptım."
+      ],
+      "durationMinutes": 20,
+      "order": 3
+    },
+    {
+      "title": "Reklam Kampanyası Kurulumu",
+      "description": "Amaç, hedef kitle, teklif, kreatif ve bütçeyi kontrollü bir test yapısında birleştirin.",
+      "content": "Reklam vermeden önce ürün sayfası, fiyat, stok, teslimat ve ödeme akışını test edin. Reklam, çalışmayan bir satış sürecini tek başına düzeltemez.\n\nKampanya amacını satış yolculuğuna göre seçin. Soğuk kitleye problemi ve faydayı anlatın; ürünü inceleyen kişiye kanıt ve itiraz cevapları gösterin; sepete yaklaşan müşteriye açık teklif ve güven unsurları sunun.\n\nBaşlangıçta küçük bütçe, sınırlı hedef kitle ve az sayıda değişken kullanın. Aynı anda hedef kitleyi, görseli, metni ve teklifi değiştirirseniz sonucun nedenini anlayamazsınız.",
+      "keyPoints": [
+        "Test siparişi tamamlanmadan reklam başlatmayın.",
+        "Platform politikasına aykırı kişisel özellik ve yanıltıcı vaat kullanmayın.",
+        "Reklam bütçesi için günlük ve toplam kayıp sınırı belirleyin.",
+        "Tek testte yalnız bir ana değişkeni karşılaştırın."
+      ],
+      "checklist": [
+        "Kampanya amacını ve başarı ölçütünü yazdım.",
+        "Hedef kitle, teklif ve açılış sayfasını eşleştirdim.",
+        "En az iki kreatif varyasyonu hazırladım.",
+        "Günlük bütçe ve durdurma sınırı belirledim.",
+        "Ölçüm bağlantıları ve dönüşüm takibini test ettim."
+      ],
+      "durationMinutes": 26,
+      "order": 4
+    },
+    {
+      "title": "Ölçüm, ROAS ve Optimizasyon",
+      "description": "Gösterimden kâra kadar doğru metrikleri okuyun ve veriye göre iyileştirin.",
+      "content": "Reklam sonucu yalnız tıklama veya ciro ile değerlendirilmez. Gösterim, tıklama oranı, tıklama maliyeti, sepete ekleme, dönüşüm oranı, müşteri edinme maliyeti, reklam geliri ve katkı payı birlikte okunmalıdır.\n\nROAS, reklam gelirinin reklam harcamasına oranıdır; fakat ürün maliyeti, kargo, komisyon, iade ve vergiyi göstermez. Kârlılık kararı verirken sipariş başına katkı payı ve başa baş reklam maliyetini kullanın.\n\nYeterli veri oluşmadan kampanyayı sürekli değiştirmeyin. Önce darboğazı belirleyin: düşük tıklama kreatif veya mesajı; yüksek tıklama fakat düşük satış sayfa, fiyat, güven veya teklif sorununu gösterebilir.",
+      "keyPoints": [
+        "Yüksek ROAS her zaman yüksek net kâr anlamına gelmez.",
+        "İade ve iptalleri reklam raporuna geri yansıtın.",
+        "Yeterli veri olmadan erken karar vermeyin.",
+        "Müşteri edinme maliyetini katkı payıyla karşılaştırın."
+      ],
+      "checklist": [
+        "Başa baş müşteri edinme maliyetini hesapladım.",
+        "Haftalık reklam raporu şablonu hazırladım.",
+        "İade ve iptal sonrası gerçek geliri takip ediyorum.",
+        "Kreatif, hedef kitle ve sayfa sorunlarını ayrı değerlendiriyorum.",
+        "Devam, artırma, düzeltme ve durdurma kurallarını yazdım."
+      ],
+      "durationMinutes": 26,
+      "order": 5
+    }
+  ]
+}
