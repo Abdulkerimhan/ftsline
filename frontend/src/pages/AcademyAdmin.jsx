@@ -15,6 +15,7 @@ const emptyCourse = {
   description: "",
   category: "E-Ticaret",
   coverImage: "",
+  product: "",
   order: 0,
   isPublished: false,
   lessons: [{ ...emptyLesson }],
@@ -26,6 +27,7 @@ export default function AcademyAdmin({ onMessage }) {
   const [editingId, setEditingId] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [products, setProducts] = useState([]);
 
   async function call(path, options = {}) {
     const token = sessionStorage.getItem("accessToken");
@@ -54,8 +56,18 @@ export default function AcademyAdmin({ onMessage }) {
     }
   }
 
+  async function loadProducts() {
+    try {
+      const data = await call("/admin/products");
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      onMessage?.(error.message);
+    }
+  }
+
   useEffect(() => {
     loadCourses();
+    loadProducts();
   }, []);
 
   function editCourse(course) {
@@ -65,6 +77,7 @@ export default function AcademyAdmin({ onMessage }) {
       description: course.description || "",
       category: course.category || "E-Ticaret",
       coverImage: course.coverImage || "",
+      product: course.product?._id || course.product || "",
       order: course.order || 0,
       isPublished: Boolean(course.isPublished),
       lessons: course.lessons?.length
@@ -161,6 +174,17 @@ export default function AcademyAdmin({ onMessage }) {
             <label>Baslik<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /></label>
             <label>Kategori<input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></label>
             <label>Kapak gorseli URL<input value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} /></label>
+            <label>
+              Satista olan egitim paketi
+              <select value={form.product} onChange={(e) => setForm({ ...form, product: e.target.value })}>
+                <option value="">Lisans alan herkese acik</option>
+                {products.map((product) => (
+                  <option key={product._id} value={product._id}>
+                    {product.nameTr || product.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label>Siralama<input type="number" value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></label>
           </div>
           <label>Aciklama<textarea rows="3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>

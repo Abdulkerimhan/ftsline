@@ -23,6 +23,7 @@ import {
   notifyPaymentUpdate,
   reportNotificationError,
 } from "../services/adminNotificationService.js";
+import { syncAcademyEnrollmentsForOrder } from "../services/academyEnrollmentService.js";
 
 const router = express.Router();
 
@@ -409,14 +410,21 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
     }
 
     let productNetworkBonus = null;
+    let academyEnrollment = null;
     if (finalOrder.orderType === "product") {
       productNetworkBonus =
         finalOrder.paymentStatus === "refunded" || finalOrder.status === "cancelled"
           ? await cancelProductNetworkBonus(finalOrder._id)
           : await distributeProductNetworkBonus(finalOrder._id);
+      academyEnrollment = await syncAcademyEnrollmentsForOrder(finalOrder);
     }
 
-    return res.json({ ...finalOrder, licenseActivation, productNetworkBonus });
+    return res.json({
+      ...finalOrder,
+      licenseActivation,
+      productNetworkBonus,
+      academyEnrollment,
+    });
   } catch (error) {
     console.error("Odeme durumu guncelleme hatasi:", error);
     return res.status(500).json({ message: "Odeme durumu guncellenemedi" });
@@ -479,8 +487,12 @@ router.put("/admin/:id/status", authRequired, adminOrSuperadmin, async (req, res
           ? await cancelProductNetworkBonus(order._id)
           : await distributeProductNetworkBonus(order._id)
         : null;
+    const academyEnrollment =
+      order.orderType === "product"
+        ? await syncAcademyEnrollmentsForOrder(order)
+        : null;
 
-    return res.json({ ...order, productNetworkBonus });
+    return res.json({ ...order, productNetworkBonus, academyEnrollment });
   } catch (error) {
     console.error("Siparis durumu guncelleme hatasi:", error);
     return res.status(500).json({ message: "Siparis durumu guncellenemedi" });

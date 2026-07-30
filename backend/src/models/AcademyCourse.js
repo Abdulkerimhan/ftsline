@@ -18,6 +18,12 @@ const academyCourseSchema = new mongoose.Schema(
     description: { type: String, default: "", trim: true, maxlength: 3000 },
     category: { type: String, default: "E-Ticaret", trim: true, maxlength: 100 },
     coverImage: { type: String, default: "", trim: true },
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      default: null,
+      index: true,
+    },
     order: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
     lessons: { type: [lessonSchema], default: [] },
