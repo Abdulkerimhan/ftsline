@@ -5,6 +5,9 @@ const API = import.meta.env.VITE_API_URL || "/api";
 const emptyLesson = {
   title: "",
   description: "",
+  content: "",
+  keyPoints: [],
+  checklist: [],
   videoUrl: "",
   documentUrl: "",
   durationMinutes: "",
@@ -141,6 +144,12 @@ export default function AcademyAdmin({ onMessage }) {
             ...form,
             lessons: form.lessons.map((lesson, index) => ({
               ...lesson,
+              keyPoints: Array.isArray(lesson.keyPoints)
+                ? lesson.keyPoints
+                : String(lesson.keyPoints || "").split("\n"),
+              checklist: Array.isArray(lesson.checklist)
+                ? lesson.checklist
+                : String(lesson.checklist || "").split("\n"),
               order: index,
               durationMinutes: Number(lesson.durationMinutes || 0),
             })),
@@ -224,6 +233,25 @@ export default function AcademyAdmin({ onMessage }) {
                   <label>PDF / dokuman URL<input placeholder="https://..." value={lesson.documentUrl} onChange={(e) => updateLesson(index, "documentUrl", e.target.value)} /></label>
                 </div>
                 <label>Ders aciklamasi<textarea rows="2" value={lesson.description} onChange={(e) => updateLesson(index, "description", e.target.value)} /></label>
+                <label>Detayli ders metni<textarea rows="8" value={lesson.content || ""} onChange={(e) => updateLesson(index, "content", e.target.value)} /></label>
+                <div className="academy-admin-grid">
+                  <label>
+                    Dikkat edilecekler (her satira bir madde)
+                    <textarea
+                      rows="5"
+                      value={Array.isArray(lesson.keyPoints) ? lesson.keyPoints.join("\n") : lesson.keyPoints || ""}
+                      onChange={(e) => updateLesson(index, "keyPoints", e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Uygulama kontrol listesi (her satira bir gorev)
+                    <textarea
+                      rows="5"
+                      value={Array.isArray(lesson.checklist) ? lesson.checklist.join("\n") : lesson.checklist || ""}
+                      onChange={(e) => updateLesson(index, "checklist", e.target.value)}
+                    />
+                  </label>
+                </div>
               </div>
             ))}
           </div>

@@ -186,6 +186,34 @@ export default function Academy({ language = "tr" }) {
               </button>
             )}
           </div>
+          {selectedLesson?.content && (
+            <div className="academy-article">
+              <h3>{isTr ? "Ders Notlari" : "Lesson Notes"}</h3>
+              {selectedLesson.content
+                .split(/\n{2,}/)
+                .filter(Boolean)
+                .map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+            </div>
+          )}
+          {Boolean(selectedLesson?.keyPoints?.length) && (
+            <div className="academy-material academy-warnings">
+              <h3>{isTr ? "Dikkat Edilecekler" : "Key Points"}</h3>
+              <ul>
+                {selectedLesson.keyPoints.map((item, index) => <li key={index}>{item}</li>)}
+              </ul>
+            </div>
+          )}
+          {Boolean(selectedLesson?.checklist?.length) && (
+            <div className="academy-material academy-checklist">
+              <h3>{isTr ? "Uygulama Kontrol Listesi" : "Action Checklist"}</h3>
+              {selectedLesson.checklist.map((item, index) => (
+                <label key={index}>
+                  <input type="checkbox" />
+                  <span>{item}</span>
+                </label>
+              ))}
+            </div>
+          )}
           {selectedLesson?.documentUrl && (
             <a
               className="academy-document"

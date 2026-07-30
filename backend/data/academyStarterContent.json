@@ -1,0 +1,127 @@
+{
+  "title": "E-Ticarete Başlangıç",
+  "description": "E-ticarete sağlam bir temel ile başlamak, doğru ürünü ve müşteriyi seçmek, maliyeti hesaplamak ve güven veren bir mağazayı yayına almak için uygulanabilir başlangıç programı.",
+  "lessons": [
+    {
+      "title": "E-Ticaret Yol Haritası",
+      "description": "İş modelini, hedefi ve ilk 30 günlük çalışma planını belirleyin.",
+      "content": "E-ticaret; yalnızca internetten ürün koyup sipariş beklemek değildir. Ürün, hedef müşteri, tedarik, fiyat, güven, teslimat ve satış sonrası desteğin birlikte çalıştığı bir sistemdir.\n\nBaşlangıçta tek bir satış kanalı, sınırlı ürün grubu ve ölçülebilir bir hedef seçmek işleri kolaylaştırır. İlk hedefiniz büyük ciro değil; sorunsuz çalışan ve tekrar edilebilen ilk satış sürecini kurmak olmalıdır.\n\nİş modelinizi stoklu satış, stoksuz satış, üretici satış veya dijital ürün olarak netleştirin. Sermaye, zaman, depolama ve teslimat imkânlarınıza uymayan bir model uzun süre sürdürülemez.",
+      "keyPoints": [
+        "Aynı anda çok fazla ürün ve kanalla başlamayın.",
+        "Ciro hedefinden önce kârlılık ve teslimat sürecini doğrulayın.",
+        "Kişisel para ile işletme bütçesini birbirinden ayırın.",
+        "Vergi, mesafeli satış ve tüketici yükümlülüklerini uzmanlarla netleştirin."
+      ],
+      "checklist": [
+        "Satacağım ürün grubunu bir cümleyle yazdım.",
+        "İş modelimi ve başlangıç bütçemi belirledim.",
+        "İlk 30 gün için ulaşılabilir satış hedefi koydum.",
+        "Haftalık ayırabileceğim çalışma süresini planladım.",
+        "Mali müşavir ve hukuk danışmanıyla görüşülecek konuları listeledim."
+      ],
+      "durationMinutes": 15,
+      "order": 0
+    },
+    {
+      "title": "Hedef Müşteri ve Değer Önerisi",
+      "description": "Herkese satmaya çalışmak yerine satın alma ihtimali yüksek müşteriyi tanımlayın.",
+      "content": "Hedef müşteri; yaşı ve şehrinden ibaret değildir. İhtiyacı, yaşadığı sorun, satın alma nedeni, bütçesi, karar verirken baktığı bilgiler ve itirazları birlikte düşünülmelidir.\n\nDeğer önerisi, müşterinin neden sizi seçmesi gerektiğini açıklar. Ürün özelliği yerine müşteriye sağlanan sonucu anlatın. Örneğin “paslanmaz çelik” bir özellik; “uzun süre güvenle kullanılır” ise müşterinin anlayacağı faydadır.\n\nMüşterinin kullandığı kelimeleri ürün başlığı, açıklama, reklam ve destek mesajlarında kullanın. Kanıtlanamayan üstünlük iddialarından ve gerçekçi olmayan gelir ya da sonuç vaatlerinden kaçının.",
+      "keyPoints": [
+        "Herkes hedef müşteriniz olamaz.",
+        "Ürün özelliğini müşteriye sağladığı faydaya çevirin.",
+        "Müşteri yorumlarını ve sık sorulan soruları araştırma kaynağı olarak kullanın.",
+        "Kanıtı olmayan sağlık, performans veya kazanç iddiaları kullanmayın."
+      ],
+      "checklist": [
+        "Bir ana müşteri profili oluşturdum.",
+        "Müşterinin çözmek istediği üç sorunu yazdım.",
+        "Satın almadan önce soracağı beş soruyu belirledim.",
+        "Ürünümün değer önerisini tek cümleyle yazdım.",
+        "Rakiplerden farklılaştığım noktayı kanıtıyla belirledim."
+      ],
+      "durationMinutes": 18,
+      "order": 1
+    },
+    {
+      "title": "Ürün Fikrini Doğrulama",
+      "description": "Stok almadan önce talebi, rekabeti ve tedarik riskini kontrol edin.",
+      "content": "Bir ürünü beğenmeniz, pazarın o ürünü satın alacağı anlamına gelmez. Arama eğilimleri, pazar yeri yorumları, rakip fiyatları, sosyal medya soruları ve müşterilerin tekrar eden şikâyetleri talep hakkında fikir verir.\n\nEn az beş rakibi karşılaştırın. Yalnızca fiyatı değil; teslimat süresi, görseller, açıklamalar, yorum puanı, iade yaklaşımı ve müşteri desteğini inceleyin. Amaç kopyalamak değil, pazardaki boşluğu bulmaktır.\n\nNumune görmeden yüksek miktarda stok almayın. Ürün kalitesi, ambalaj, garanti, tedarik süresi, minimum sipariş ve kusurlu ürün prosedürünü yazılı hale getirin.",
+      "keyPoints": [
+        "Talep verisi görmeden yüksek stok yatırımı yapmayın.",
+        "Sadece en ucuz tedarikçiyi seçmeyin.",
+        "Numune ile ürün, paketleme ve teslimat kalitesini test edin.",
+        "Marka, patent ve satış izni gerektiren ürünleri kontrol edin."
+      ],
+      "checklist": [
+        "En az beş rakibi tablo halinde karşılaştırdım.",
+        "Müşteri yorumlarından tekrar eden sorunları çıkardım.",
+        "Tedarikçiden numune ve yazılı fiyat teklifi aldım.",
+        "Teslim süresi ve kusurlu ürün şartlarını öğrendim.",
+        "Ürünün mevzuat ve marka risklerini kontrol ettim."
+      ],
+      "durationMinutes": 22,
+      "order": 2
+    },
+    {
+      "title": "Maliyet, Fiyat ve Kârlılık",
+      "description": "Görünmeyen giderleri dâhil ederek gerçek satış fiyatını hesaplayın.",
+      "content": "Satış fiyatı yalnızca ürün alış maliyetine kâr eklenerek belirlenmez. Kargo, ambalaj, ödeme komisyonu, pazar yeri komisyonu, reklam, vergi, iade ve hasarlı ürün payı hesaba katılmalıdır.\n\nBirim katkı payı; satış fiyatından değişken giderlerin çıkarılmasıyla bulunur. Bu tutar sabit giderleri ve kârı karşılar. İndirim yapmadan önce yeni fiyatın hâlâ pozitif katkı payı bırakıp bırakmadığını kontrol edin.\n\nNakit akışı ile kâr aynı şey değildir. Satış gerçekleşse bile tahsilat gecikebilir, tedarikçiye daha erken ödeme gerekebilir ve iadeler sonraki dönemde oluşabilir. En az bir yeniden sipariş döngüsünü karşılayacak nakit planı hazırlayın.",
+      "keyPoints": [
+        "Kargo ve reklam giderini fiyat hesabının dışında bırakmayın.",
+        "KDV dâhil ve KDV hariç tutarları karıştırmayın.",
+        "İndirim oranını değil, indirim sonrası kalan kârı izleyin.",
+        "İade ve kusurlu ürünler için pay ayırın."
+      ],
+      "checklist": [
+        "Birim ürün maliyetini hesapladım.",
+        "Kargo, ambalaj ve ödeme komisyonunu ekledim.",
+        "Reklam için sipariş başı üst sınır belirledim.",
+        "İade payını maliyet tablosuna ekledim.",
+        "Normal ve kampanyalı fiyat için ayrı kârlılık hesabı yaptım."
+      ],
+      "durationMinutes": 24,
+      "order": 3
+    },
+    {
+      "title": "Güven Veren Mağaza ve Ürün Sayfası",
+      "description": "Müşterinin satın alma kararını kolaylaştıran sayfaları hazırlayın.",
+      "content": "Ürün sayfası müşterinin satış temsilcisidir. Açık ürün adı, gerçek görseller, fayda odaklı açıklama, teknik bilgi, fiyat, teslimat beklentisi, iade koşulu ve iletişim yolu aynı sayfada anlaşılır olmalıdır.\n\nKopya veya yanıltıcı görseller güveni azaltır. Ürünü farklı açılardan, kullanım sırasında ve ölçüyü gösterecek biçimde sunun. Mobil ekranda başlık, fiyat, temel fayda ve sepete ekle düğmesi kolay görünmelidir.\n\nHakkımızda, iletişim, gizlilik, ön bilgilendirme, mesafeli satış ve iade sayfalarının güncel olması gerekir. Hukuki metinler işletmenize göre avukat tarafından; vergi ve fatura süreci mali müşavir tarafından kontrol edilmelidir.",
+      "keyPoints": [
+        "Başka mağazadan izinsiz görsel veya açıklama kopyalamayın.",
+        "Teslimat ve iade şartlarını gizlemeyin.",
+        "Mobil görünümü masaüstünden ayrı kontrol edin.",
+        "İletişim bilgileri ve şirket bilgileri ulaşılabilir olmalıdır."
+      ],
+      "checklist": [
+        "Ürün başlığını sade ve aranabilir biçimde yazdım.",
+        "En az dört gerçek ürün görseli hazırladım.",
+        "Fayda, kullanım, ölçü ve bakım bilgilerini ekledim.",
+        "Teslimat ve iade bilgisini görünür yaptım.",
+        "Tüm sayfaları telefondan test ettim."
+      ],
+      "durationMinutes": 20,
+      "order": 4
+    },
+    {
+      "title": "Yayına Çıkış ve İlk 30 Gün",
+      "description": "Test siparişinden ölçüme kadar kontrollü bir açılış planı uygulayın.",
+      "content": "Yayına çıkmadan önce gerçek müşteri gibi test siparişi verin. Kayıt, sepet, ödeme bildirimi, stok, e-posta, sipariş takibi, fatura süreci, iptal ve iade adımlarını baştan sona kontrol edin.\n\nİlk günlerde her kanala reklam vermek yerine küçük bir kitle ve tek teklif ile başlayın. Ziyaretçi, sepete ekleme, ödeme başlatma, satış, reklam maliyeti, iade ve müşteri sorularını haftalık takip edin.\n\nSatış gelmemesi yalnızca reklam sorunu değildir. Ürün, fiyat, güven, sayfa hızı, ödeme yöntemi ve teslimat beklentisi birlikte incelenmelidir. Veriye bakmadan sürekli fiyat düşürmek yerine darboğazı bulun.",
+      "keyPoints": [
+        "Test siparişi tamamlanmadan reklam başlatmayın.",
+        "Sadece ciroyu değil kârı ve iade oranını ölçün.",
+        "Aynı anda çok fazla değişiklik yapmayın.",
+        "Müşteri mesajlarına dönüş süresi için standart belirleyin."
+      ],
+      "checklist": [
+        "Mobil ve masaüstünde test siparişi verdim.",
+        "Ödeme ve sipariş e-postalarını kontrol ettim.",
+        "Stok düşümü, iptal ve iade akışını test ettim.",
+        "İlk kampanya bütçesi ve hedefini yazdım.",
+        "Haftalık takip edeceğim temel göstergeleri belirledim.",
+        "İlk 30 gün sonunda değerlendirme tarihi koydum."
+      ],
+      "durationMinutes": 20,
+      "order": 5
+    }
+  ]
+}

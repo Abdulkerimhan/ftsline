@@ -28,13 +28,23 @@ test("akademi erisimini aktif lisans ve superadmin icin acar", () => {
 test("akademi ders sozlesmesini temizler ve bos basliklari atar", () => {
   assert.deepEqual(
     normalizeAcademyLessons([
-      { title: " Giris ", durationMinutes: "12", order: "2" },
+      {
+        title: " Giris ",
+        durationMinutes: "12",
+        order: "2",
+        content: " Ders metni ",
+        keyPoints: [" Hedef belirle ", ""],
+        checklist: "Magaza adini sec\n\nButceyi yaz",
+      },
       { title: " " },
     ]),
     [
       {
         title: "Giris",
         description: "",
+        content: "Ders metni",
+        keyPoints: ["Hedef belirle"],
+        checklist: ["Magaza adini sec", "Butceyi yaz"],
         videoUrl: "",
         documentUrl: "",
         durationMinutes: 12,
