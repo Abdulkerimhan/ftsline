@@ -62,7 +62,7 @@ export default function AcademyAdmin({ onMessage }) {
 
   async function loadProducts() {
     try {
-      const data = await call("/admin/products");
+      const data = await call("/academy/admin/access-products");
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
       onMessage?.(error.message);
@@ -105,15 +105,6 @@ export default function AcademyAdmin({ onMessage }) {
       lessons: current.lessons.map((lesson, lessonIndex) =>
         lessonIndex === index ? { ...lesson, [key]: value } : lesson
       ),
-    }));
-  }
-
-  function toggleProduct(productId) {
-    setForm((current) => ({
-      ...current,
-      products: current.products.includes(productId)
-        ? current.products.filter((id) => id !== productId)
-        : [...current.products, productId],
     }));
   }
 
@@ -197,16 +188,15 @@ export default function AcademyAdmin({ onMessage }) {
             <label>Siralama<input type="number" value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></label>
           </div>
           <fieldset className="academy-product-links">
-            <legend>Bu egitimi acan urun paketleri</legend>
-            <p>Secilen paketlerden biri odendi oldugunda egitim kullaniciya acilir.</p>
+            <legend>Egitimi otomatik acan paketler</legend>
+            <p>
+              Siparis yonetiminde Odendi yapildiginda yalnizca asagidaki lisans ve
+              egitim paketleri Akademi erisimini otomatik acar.
+            </p>
             <div>
               {products.map((product) => (
                 <label key={product._id}>
-                  <input
-                    type="checkbox"
-                    checked={form.products.includes(product._id)}
-                    onChange={() => toggleProduct(product._id)}
-                  />
+                  <input type="checkbox" checked readOnly />
                   {product.nameTr || product.name}
                 </label>
               ))}

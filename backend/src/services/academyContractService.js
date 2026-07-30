@@ -23,6 +23,37 @@ export function normalizeAcademyLessons(lessons) {
     .filter((lesson) => lesson.title);
 }
 
+export function isAcademyAccessProduct(product) {
+  const haystack = [
+    product?.name,
+    product?.nameTr,
+    product?.nameEn,
+    product?.category,
+    product?.categoryTr,
+    product?.categoryEn,
+  ]
+    .map(normalizeSearchText)
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    haystack.includes("egitim paketi") ||
+    haystack.includes("egitim") ||
+    haystack.includes("giris lisans") ||
+    haystack.includes("ilk premium")
+  );
+}
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 function normalizeTextList(value) {
   const list = Array.isArray(value) ? value : String(value || "").split("\n");
   return list

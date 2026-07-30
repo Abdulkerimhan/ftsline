@@ -2,9 +2,11 @@ import express from "express";
 import AcademyCourse from "../models/AcademyCourse.js";
 import AcademyEnrollment from "../models/AcademyEnrollment.js";
 import AcademyProgress from "../models/AcademyProgress.js";
+import Product from "../models/Product.js";
 import { authRequired, superAdminOnly } from "../middleware/authMiddleware.js";
 import {
   hasAcademyAccess,
+  isAcademyAccessProduct,
   normalizeAcademyLessons,
 } from "../services/academyContractService.js";
 import {
@@ -15,16 +17,22 @@ import {
 
 const router = express.Router();
 
-function coursePayload(body) {
+async function academyAccessProducts() {
+  const products = await Product.find({ isActive: true })
+    .select("name nameTr nameEn category categoryTr categoryEn isActive")
+    .lean();
+  return products.filter(isAcademyAccessProduct);
+}
+
+async function coursePayload(body) {
+  const eligibleProducts = await academyAccessProducts();
   return {
     title: String(body?.title || "").trim(),
     description: String(body?.description || "").trim(),
     category: String(body?.category || "E-Ticaret").trim(),
     coverImage: String(body?.coverImage || "").trim(),
-    product: body?.product || null,
-    products: Array.isArray(body?.products)
-      ? body.products.map(String).filter(Boolean)
-      : [],
+    product: null,
+    products: eligibleProducts.map((product) => product._id),
     order: Number(body?.order || 0),
     isPublished: Boolean(body?.isPublished),
     lessons: normalizeAcademyLessons(body?.lessons),
@@ -123,8 +131,12 @@ router.get("/admin/courses", authRequired, superAdminOnly, async (_req, res) => 
   res.json(courses);
 });
 
+router.get("/admin/access-products", authRequired, superAdminOnly, async (_req, res) => {
+  res.json(await academyAccessProducts());
+});
+
 router.post("/admin/courses", authRequired, superAdminOnly, async (req, res) => {
-  const payload = coursePayload(req.body);
+  const payload = await coursePayload(req.body);
   if (!payload.title) return res.status(400).json({ message: "Egitim basligi zorunludur." });
   const course = await AcademyCourse.create(payload);
   await syncAcademyEnrollmentsForCourse(course);
@@ -132,7 +144,7 @@ router.post("/admin/courses", authRequired, superAdminOnly, async (req, res) => 
 });
 
 router.put("/admin/courses/:id", authRequired, superAdminOnly, async (req, res) => {
-  const payload = coursePayload(req.body);
+  const payload = await coursePayload(req.body);
   if (!payload.title) return res.status(400).json({ message: "Egitim basligi zorunludur." });
   const course = await AcademyCourse.findByIdAndUpdate(req.params.id, payload, {
     new: true,

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   hasAcademyAccess,
+  isAcademyAccessProduct,
   normalizeAcademyLessons,
 } from "../src/services/academyContractService.js";
 
@@ -52,4 +53,17 @@ test("akademi ders sozlesmesini temizler ve bos basliklari atar", () => {
       },
     ]
   );
+});
+
+test("yalnizca lisans ve egitim paketleri akademi erisimi acar", () => {
+  assert.equal(isAcademyAccessProduct({ nameTr: "eğitim paketi 2 yıllık" }), true);
+  assert.equal(
+    isAcademyAccessProduct({ name: "giriş lisans ve ilk premium üyelik bedeli" }),
+    true
+  );
+  assert.equal(isAcademyAccessProduct({ categoryTr: "Eğitim" }), true);
+  assert.equal(isAcademyAccessProduct({ nameTr: "BİLEKLİK" }), false);
+  assert.equal(isAcademyAccessProduct({ nameTr: "sabun" }), false);
+  assert.equal(isAcademyAccessProduct({ nameTr: "SU ARITMA" }), false);
+  assert.equal(isAcademyAccessProduct({ nameTr: "BARDAK" }), false);
 });
