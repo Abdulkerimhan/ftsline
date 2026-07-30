@@ -42,7 +42,10 @@ const result = await request(`/academy/admin/courses/${course._id}`, {
     description: content.description,
     product: course.product?._id || course.product || null,
     products: (course.products || []).map((product) => product?._id || product),
-    lessons: content.lessons,
+    lessons: content.lessons.map((lesson) => ({
+      ...lesson,
+      documentUrl: "/documents/FTSLine_E-Ticarete_Baslangic_Ders_Notlari.pdf",
+    })),
   }),
 });
 

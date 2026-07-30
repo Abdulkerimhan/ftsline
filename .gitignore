@@ -37,3 +37,5 @@ backend/uploads/**
 !backend/uploads/
 !backend/uploads/products/
 !backend/uploads/products/.gitkeep
+output/
+tmp/
