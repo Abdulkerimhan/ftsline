@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { getProduct } from "../api.js";
 import { addToCart } from "../utils/cart.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
+import "./ProductDetail.css";
 
 const text = {
   tr: { loading: "Urun yukleniyor...", notFound: "Urun bulunamadi", loadError: "Urun yuklenirken hata olustu", back: "Urunlere Don", noImage: "Gorsel Yok", noDesc: "Bu urun icin aciklama eklenmemis.", normalPrice: "Normal Fiyat", licensedPrice: "Lisansli Fiyat", specialPrice: "Sana ozel fiyat", shownPrice: "Gosterilen fiyat", licenseActive: "Lisans avantaji aktif", brand: "Marka", category: "Kategori", userType: "Kullanici Tipi", licensed: "Lisansli", standard: "Standart", addToCart: "Sepete Ekle", added: "sepete eklendi", currency: "TL" },
@@ -92,26 +93,26 @@ export default function ProductDetail() {
   }
 
   return (
-    <div style={pageWrap}>
-      <div style={containerStyle}>
-        <div style={{ marginBottom: "20px" }}>
+    <div className="product-detail-page" style={pageWrap}>
+      <div className="product-detail-container" style={containerStyle}>
+        <div className="product-detail-top" style={{ marginBottom: "20px" }}>
           <Link to="/products" style={backLinkStyle}>← {tt.back}</Link>
         </div>
 
         {message && <div style={successBox}>{message}</div>}
 
-        <div style={detailGrid}>
-          <div style={cardStyle}>
-            <div style={imageFrame}>
+        <div className="product-detail-grid" style={detailGrid}>
+          <div className="product-detail-left" style={cardStyle}>
+            <div className="product-detail-main-image-wrap" style={imageFrame}>
               {images.length > 0 ? (
-                <img src={images[activeImage]} alt={product.name} style={mainImageStyle} />
+                <img className="product-detail-main-image" src={images[activeImage]} alt={product.name} style={mainImageStyle} />
               ) : (
-                <div style={emptyImageStyle}>{tt.noImage}</div>
+                <div className="product-detail-noimage" style={emptyImageStyle}>{tt.noImage}</div>
               )}
             </div>
 
             {images.length > 1 && (
-              <div style={thumbGrid}>
+              <div className="product-detail-thumb-grid" style={thumbGrid}>
                 {images.map((img, index) => (
                   <button key={img} onClick={() => setActiveImage(index)} style={{ ...thumbButton, border: activeImage === index ? "2px solid #0f3fae" : "1px solid #d8e1f0" }}>
                     <img src={img} alt={`${product.name} ${index + 1}`} style={thumbImage} />
@@ -121,14 +122,14 @@ export default function ProductDetail() {
             )}
           </div>
 
-          <div style={cardStyle}>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "14px" }}>
+          <div className="product-detail-right" style={cardStyle}>
+            <div className="product-detail-badges" style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "14px" }}>
               {product.category && <Badge text={product.category} />}
               {product.brand && <Badge text={product.brand} />}
             </div>
 
-            <h1 style={productTitle}>{product.name}</h1>
-            <p style={productDesc}>{product.description || tt.noDesc}</p>
+            <h1 className="product-detail-title" style={productTitle}>{product.name}</h1>
+            <p className="product-detail-description" style={productDesc}>{product.description || tt.noDesc}</p>
 
             <div style={priceBox}>
               <PriceRow label={tt.normalPrice} value={`${formatPrice(normalPrice)} ${tt.currency}`} />
@@ -154,7 +155,6 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-      <style>{`@media (max-width: 980px) { .product-detail-grid { grid-template-columns: 1fr !important; } }`}</style>
     </div>
   );
 }
