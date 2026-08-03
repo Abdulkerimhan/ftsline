@@ -28,6 +28,10 @@ export function hasPaidActiveLicense(user, now = Date.now()) {
   return Number.isFinite(expiresAt) && expiresAt > now;
 }
 
+export function hasPurchasedLicense(user) {
+  return Boolean(user?.licenseStartedAt);
+}
+
 export function canViewProduct(product, user) {
-  return !isMonthlyEducationProduct(product) || hasPaidActiveLicense(user);
+  return !isMonthlyEducationProduct(product) || hasPurchasedLicense(user);
 }

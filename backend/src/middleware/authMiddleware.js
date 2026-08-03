@@ -73,7 +73,7 @@ export async function authOptional(req, res, next) {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, getJwtSecret());
     const user = await User.findById(decoded.id).select(
-      "role isActive isLicensed licenseExpiresAt"
+      "role isActive isLicensed licenseStartedAt licenseExpiresAt"
     );
 
     if (!user || user.isActive === false) {

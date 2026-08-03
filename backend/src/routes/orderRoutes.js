@@ -26,6 +26,7 @@ import {
 import { syncAcademyEnrollmentsForOrder } from "../services/academyEnrollmentService.js";
 import {
   hasPaidActiveLicense,
+  hasPurchasedLicense,
   isMonthlyEducationProduct,
 } from "../services/productAccessService.js";
 
@@ -71,7 +72,7 @@ async function authOptional(req, res, next) {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, getJwtSecret());
     const user = await User.findById(decoded.id).select(
-      "role isActive isLicensed licenseExpiresAt"
+      "role isActive isLicensed licenseStartedAt licenseExpiresAt"
     );
 
     if (!user || user.isActive === false) {
@@ -113,10 +114,10 @@ async function normalizeOrderItems(items = [], buyer = null) {
 
   if (
     products.some(isMonthlyEducationProduct) &&
-    !hasPaidActiveLicense(buyer)
+    !hasPurchasedLicense(buyer)
   ) {
     const error = new Error(
-      "Egitim paketi 1 aylik yalnizca aktif lisans odemesi bulunan kullanicilar icindir."
+      "Egitim paketi 1 aylik yalnizca daha once lisans almis kullanicilar icindir."
     );
     error.code = "LICENSE_REQUIRED";
     throw error;
