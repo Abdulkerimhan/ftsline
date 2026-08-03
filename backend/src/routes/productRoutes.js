@@ -3,7 +3,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import Product from "../models/Product.js";
-import { authRequired } from "../middleware/authMiddleware.js";
+import { authOptional, authRequired } from "../middleware/authMiddleware.js";
+import { canViewProduct } from "../services/productAccessService.js";
 
 const router = express.Router();
 
@@ -39,12 +40,12 @@ function fileUrl(req, file) {
 
 /* ================= PUBLIC ================= */
 
-router.get("/", async (req, res) => {
+router.get("/", authOptional, async (req, res) => {
   try {
     const products = await Product.find({ isActive: true }).sort({
       createdAt: -1,
     });
-    res.json(products);
+    res.json(products.filter((product) => canViewProduct(product, req.user)));
   } catch {
     res.status(500).json({ message: "Ürünler alınamadı" });
   }
@@ -170,9 +171,11 @@ router.delete(
 
 /* ================= SINGLE ================= */
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", authOptional, async (req, res) => {
   const product = await Product.findById(req.params.id);
-  if (!product) return res.status(404).json({ message: "Yok" });
+  if (!product || !product.isActive || !canViewProduct(product, req.user)) {
+    return res.status(404).json({ message: "Urun bulunamadi" });
+  }
   res.json(product);
 });
 

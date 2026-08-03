@@ -24,6 +24,10 @@ import {
   reportNotificationError,
 } from "../services/adminNotificationService.js";
 import { syncAcademyEnrollmentsForOrder } from "../services/academyEnrollmentService.js";
+import {
+  hasPaidActiveLicense,
+  isMonthlyEducationProduct,
+} from "../services/productAccessService.js";
 
 const router = express.Router();
 
@@ -66,7 +70,9 @@ async function authOptional(req, res, next) {
   try {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, getJwtSecret());
-    const user = await User.findById(decoded.id).select("role isActive isLicensed");
+    const user = await User.findById(decoded.id).select(
+      "role isActive isLicensed licenseExpiresAt"
+    );
 
     if (!user || user.isActive === false) {
       return res.status(401).json({ message: "Kullanici oturumu gecersiz" });
@@ -89,7 +95,7 @@ function adminOrSuperadmin(req, res, next) {
 
 /* ================= HELPERS ================= */
 
-async function normalizeOrderItems(items = [], isLicensed = false, hasRegisteredBuyer = false) {
+async function normalizeOrderItems(items = [], buyer = null) {
   const requested = items.map((item) => ({
     productId: String(item.productId || item._id || "").trim(),
     quantity: Math.max(1, Math.floor(Number(item.quantity || 1))),
@@ -104,6 +110,20 @@ async function normalizeOrderItems(items = [], isLicensed = false, hasRegistered
   if (productIds.length !== requested.length || products.length !== new Set(productIds).size) {
     throw new Error("Sipariste gecersiz veya pasif urun var");
   }
+
+  if (
+    products.some(isMonthlyEducationProduct) &&
+    !hasPaidActiveLicense(buyer)
+  ) {
+    const error = new Error(
+      "Egitim paketi 1 aylik yalnizca aktif lisans odemesi bulunan kullanicilar icindir."
+    );
+    error.code = "LICENSE_REQUIRED";
+    throw error;
+  }
+
+  const isLicensed = hasPaidActiveLicense(buyer);
+  const hasRegisteredBuyer = Boolean(buyer?._id);
 
   return requested.map(({ productId, quantity }) => {
     const product = productMap.get(productId);
@@ -184,11 +204,7 @@ router.post("/", authOptional, async (req, res) => {
             quantity: 1,
           },
         ]
-      : await normalizeOrderItems(
-          items,
-          req.user?.isLicensed === true,
-          Boolean(req.user?._id)
-        );
+      : await normalizeOrderItems(items, req.user);
 
     const calculatedSubtotal = orderItems.reduce((sum, item) => {
       return sum + Number(item.price || 0) * Number(item.quantity || 1);
@@ -253,6 +269,9 @@ router.post("/", authOptional, async (req, res) => {
     console.error("Siparis olusturma hatasi:", error);
     if (error.message === "Sipariste gecersiz veya pasif urun var") {
       return res.status(400).json({ message: error.message });
+    }
+    if (error.code === "LICENSE_REQUIRED") {
+      return res.status(403).json({ message: error.message });
     }
     if (error.code === "INSUFFICIENT_STOCK") {
       return res.status(409).json({ message: error.message });

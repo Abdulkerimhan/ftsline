@@ -209,6 +209,9 @@ export async function getProducts() {
   try {
     const res = await fetch(`${API}/products`, {
       method: "GET",
+      headers: {
+        ...getAuthHeader(),
+      },
     });
 
     return await parseResponse(res);
@@ -222,6 +225,9 @@ export async function getProduct(id) {
   try {
     const res = await fetch(`${API}/products/${id}`, {
       method: "GET",
+      headers: {
+        ...getAuthHeader(),
+      },
     });
 
     return await parseResponse(res);
