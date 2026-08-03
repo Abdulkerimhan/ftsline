@@ -12,6 +12,7 @@ import {
   retryInitialUnilevelForActivatedLicense,
 } from "../services/licensePlanService.js";
 import { syncAcademyEnrollmentsForOrder } from "../services/academyEnrollmentService.js";
+import { activateMonthlyEducationLicenseForOrder } from "../services/monthlyEducationLicenseService.js";
 import {
   buildFinanceOrderUpdate,
   serializeFinanceOrder,
@@ -454,12 +455,20 @@ router.patch(
         order.orderType === "product"
           ? await syncAcademyEnrollmentsForOrder(order)
           : null;
+      const monthlyLicenseActivation =
+        order.orderType === "product" && order.paymentStatus === "paid"
+          ? await activateMonthlyEducationLicenseForOrder({
+              orderId: order._id,
+              paidAt: new Date(),
+            })
+          : null;
       res.json({
         message: "Finans kaydi guncellendi",
         order: serializeFinanceOrder(order),
         licenseActivation,
         productNetworkBonus,
         academyEnrollment,
+        monthlyLicenseActivation,
       });
     } catch (error) {
       console.error("Finans siparis guncelleme hatasi:", error);

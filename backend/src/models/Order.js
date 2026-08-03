@@ -184,6 +184,17 @@ const orderSchema = new mongoose.Schema(
       default: null,
     },
 
+    monthlyLicenseActivatedAt: {
+      type: Date,
+      default: null,
+    },
+
+    monthlyLicenseMonths: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     status: {
       type: String,
       enum: ["pending", "preparing", "shipped", "completed", "cancelled"],

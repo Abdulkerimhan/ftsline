@@ -29,6 +29,7 @@ import {
   hasPurchasedLicense,
   isMonthlyEducationProduct,
 } from "../services/productAccessService.js";
+import { activateMonthlyEducationLicenseForOrder } from "../services/monthlyEducationLicenseService.js";
 
 const router = express.Router();
 
@@ -431,12 +432,20 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
 
     let productNetworkBonus = null;
     let academyEnrollment = null;
+    let monthlyLicenseActivation = null;
     if (finalOrder.orderType === "product") {
       productNetworkBonus =
         finalOrder.paymentStatus === "refunded" || finalOrder.status === "cancelled"
           ? await cancelProductNetworkBonus(finalOrder._id)
           : await distributeProductNetworkBonus(finalOrder._id);
       academyEnrollment = await syncAcademyEnrollmentsForOrder(finalOrder);
+      monthlyLicenseActivation =
+        finalOrder.paymentStatus === "paid"
+          ? await activateMonthlyEducationLicenseForOrder({
+              orderId: finalOrder._id,
+              paidAt: new Date(),
+            })
+          : null;
     }
 
     return res.json({
@@ -444,6 +453,7 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
       licenseActivation,
       productNetworkBonus,
       academyEnrollment,
+      monthlyLicenseActivation,
     });
   } catch (error) {
     console.error("Odeme durumu guncelleme hatasi:", error);
