@@ -145,25 +145,68 @@
 }
 
 .home-hero-visual {
+  position: relative;
+  isolation: isolate;
   min-height: 500px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 28px;
+  justify-content: space-between;
+  padding: 30px;
   overflow: hidden;
   color: #fff;
   background:
-    linear-gradient(rgba(8, 20, 44, 0.08), rgba(8, 20, 44, 0.74)),
-    linear-gradient(135deg, #0f3fae, #12306f);
+    linear-gradient(180deg, rgba(5, 20, 52, 0.22), rgba(5, 19, 50, 0.94)),
+    url("/home-features/product-store.png") center/cover no-repeat;
 }
 
-.home-hero-visual img {
-  width: min(72%, 260px);
-  align-self: center;
-  margin: auto 0;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
+.home-hero-visual::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -80px;
+  bottom: -90px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(26, 109, 255, 0.28);
+  filter: blur(6px);
+}
+
+.home-visual-brand {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 13px;
+  padding: 10px 15px 10px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 18px;
+  background: rgba(7, 31, 79, 0.72);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 16px 32px rgba(3, 15, 39, 0.24);
+}
+
+.home-visual-brand img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.home-visual-brand span,
+.home-visual-brand small {
+  display: block;
+}
+
+.home-visual-brand span {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.home-visual-brand small {
+  margin-top: 3px;
+  color: #cfe3ff;
+  font-size: 12px;
 }
 
 .home-visual-copy span {
@@ -184,6 +227,25 @@
 .home-products-showcase,
 .home-system {
   padding: 58px 0;
+}
+
+.home-visual-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.home-visual-tags em {
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
 }
 
 .home-why {
@@ -772,6 +834,20 @@
   .home-hero-copy,
   .home-hero-visual {
     padding: 20px;
+  }
+
+  .home-hero-visual {
+    min-height: 520px;
+    background-position: 60% center;
+  }
+
+  .home-visual-brand img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .home-visual-copy strong {
+    font-size: 27px;
   }
 
   .home-hero-copy {

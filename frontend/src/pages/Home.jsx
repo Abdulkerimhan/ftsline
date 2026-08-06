@@ -137,10 +137,21 @@ export default function Home() {
           </div>
 
           <div className="home-hero-visual" aria-label="FTSLine marka vitrini">
-            <img src="/ftsline.png" alt="FTSLine" />
+            <div className="home-visual-brand">
+              <img src="/ftsline.png" alt="FTSLine" />
+              <div>
+                <span>FTSLine</span>
+                <small>{language === "en" ? "Digital commerce platform" : "Dijital ticaret platformu"}</small>
+              </div>
+            </div>
             <div className="home-visual-copy">
-              <span>FTSLine</span>
+              <span>{language === "en" ? "ONE DIGITAL EXPERIENCE" : "TEK DİJİTAL DENEYİM"}</span>
               <strong>{storefront.visualText}</strong>
+              <div className="home-visual-tags">
+                <em>{language === "en" ? "E-Commerce" : "E-Ticaret"}</em>
+                <em>{language === "en" ? "Education" : "Eğitim"}</em>
+                <em>{language === "en" ? "Order Tracking" : "Sipariş Takibi"}</em>
+              </div>
             </div>
           </div>
         </div>
