@@ -9,20 +9,36 @@
   margin: auto;
 }
 
-/* HERO */
 .about-hero {
-  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  position: relative;
+  isolation: isolate;
+  min-height: 430px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
+  background: #0b1e4b url("/about/about-hero.png") center/cover no-repeat;
   color: white;
-  padding: 60px 40px;
-  border-radius: 20px;
+  padding: 60px 48px;
+  border-radius: 22px;
   margin-bottom: 30px;
-  text-align: center; /* 🔥 TÜM İÇERİĞİ ORTALAR */
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  box-shadow: 0 18px 45px rgba(7, 25, 65, 0.22);
+}
+
+.about-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(5, 20, 54, 0.96) 0%, rgba(8, 31, 79, 0.84) 44%, rgba(8, 36, 92, 0.1) 78%);
 }
 
 .about-badge {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 7px 15px;
   border-radius: 20px;
   font-size: 13px;
   display: inline-block;
@@ -31,28 +47,29 @@
 }
 
 .about-hero h1 {
-  font-size: 40px;
-  margin: 10px 0;
-  font-weight: 700;
+  max-width: 590px;
+  font-size: clamp(38px, 5vw, 62px);
+  line-height: 1.05;
+  margin: 10px 0 18px;
+  font-weight: 800;
 }
 
 .about-quote {
-  font-weight: bold;
-  color: #c7d2fe;
+  font-weight: 800;
+  color: #9fd5ff;
   margin-bottom: 15px;
   font-size: 16px;
 }
 
 .about-desc {
-  max-width: 750px;
-  margin: 0 auto; /* 🔥 ORTALAR */
-  text-align: center;
-  line-height: 1.8;
+  max-width: 590px;
+  margin: 0;
+  text-align: left;
+  line-height: 1.75;
   font-size: 17px;
   color: #e0ecff;
 }
 
-/* SECTION */
 .about-section {
   background: white;
   padding: 35px;
@@ -66,64 +83,82 @@
   margin-bottom: 10px;
 }
 
-.about-section p {
+.about-section > p {
   text-align: center;
-  max-width: 700px;
-  margin: 0 auto 20px auto;
-  color: #555;
+  max-width: 760px;
+  margin: 0 auto 25px;
+  color: #4a5870;
+  line-height: 1.65;
 }
 
-/* GRID */
 .about-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
 
-/* CARD */
 .about-card {
-  background: #f1f5ff;
-  padding: 25px;
-  border-radius: 15px;
+  overflow: hidden;
+  background: #f7f9ff;
+  border-radius: 16px;
   text-align: center;
-  transition: 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .about-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 14px 28px rgba(17, 54, 116, 0.12);
 }
 
 .about-card h3 {
   margin-bottom: 10px;
-  color: #1d4ed8;
+  color: #1749ad;
 }
 
-/* GAIN */
-.about-gain {
-  background: #eef4ff;
-  padding: 25px;
-  border-radius: 15px;
-  text-align: left;
-  transition: 0.3s;
+.about-card p {
+  margin: 0;
+  color: #536078;
+  line-height: 1.6;
 }
 
-.about-gain:hover {
-  transform: translateY(-5px);
+.about-card-content {
+  min-height: 155px;
+  padding: 24px;
 }
 
-.about-gain h3 {
-  margin-bottom: 10px;
+.about-value-image {
+  height: 190px;
+  background-image: url("/about/about-values.png");
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
 }
 
-.about-gain ul {
-  padding-left: 18px;
-  line-height: 1.7;
+.about-value-card:nth-child(1) .about-value-image { background-position: left center; }
+.about-value-card:nth-child(2) .about-value-image { background-position: center center; }
+.about-value-card:nth-child(3) .about-value-image { background-position: right center; }
+
+.about-team-card {
+  padding: 30px 24px;
+  border: 1px solid #dbe7fb;
+  background: linear-gradient(145deg, #ffffff, #edf4ff);
 }
 
-/* CTA */
+.about-team-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #0f3d91, #2c6bf2);
+  color: #fff;
+  font-weight: 800;
+  font-size: 21px;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
+}
+
 .about-cta {
-  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  background: linear-gradient(135deg, #123478, #2563eb);
   color: white;
   padding: 45px;
   border-radius: 20px;
@@ -131,10 +166,32 @@
   box-shadow: 0 15px 40px rgba(37, 99, 235, 0.3);
 }
 
-.about-cta h2 {
-  margin-bottom: 10px;
+.about-cta h2 { margin-bottom: 10px; }
+.about-cta p { color: #e0ecff; }
+
+@media (max-width: 900px) {
+  .about-grid { grid-template-columns: 1fr; }
+  .about-value-image { height: 250px; }
+  .about-card-content { min-height: auto; }
 }
 
-.about-cta p {
-  color: #e0ecff;
+@media (max-width: 760px) {
+  .about-page { padding: 16px 12px 30px; }
+
+  .about-hero {
+    min-height: 560px;
+    padding: 32px 24px;
+    justify-content: flex-end;
+    background-position: 67% center;
+  }
+
+  .about-hero::before {
+    background: linear-gradient(180deg, rgba(5, 20, 54, 0.08) 8%, rgba(5, 20, 54, 0.55) 48%, rgba(5, 20, 54, 0.98) 76%);
+  }
+
+  .about-hero h1 { font-size: 38px; }
+  .about-desc { font-size: 15px; line-height: 1.65; }
+  .about-section { padding: 25px 16px; }
+  .about-value-image { height: 210px; }
+  .about-cta { padding: 34px 22px; }
 }

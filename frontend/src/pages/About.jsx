@@ -3,46 +3,46 @@ import "./About.css";
 
 const text = {
   tr: {
-    badge: "DIJITAL CAGDA",
-    title: "Erken dijitallesen, yol alir.",
-    quote: "DIJITAL DUNYAYA ACILAN KAPI.",
-    desc: "FTSLine, dijital dunyada bireylerin gelir elde edebilecegi yenilikci ve adil bir e-ticaret ve eğitim platformudur. Guvene ve surdurulebilir bir sisteme dayanan modern bir deneyim sunar.",
+    badge: "DİJİTAL ÇAĞDA",
+    title: "Erken dijitalleşen, yol alır.",
+    quote: "DİJİTAL DÜNYAYA AÇILAN KAPI.",
+    desc: "FTSLine; e-ticaret, dijital eğitim ve güvenli sipariş süreçlerini tek platformda bir araya getirir. Teknolojiyle desteklenen, anlaşılır ve sürdürülebilir bir deneyim sunar.",
     whoTitle: "Biz Kimiz?",
-    whoDesc: "Teknolojiyi, insan potansiyelini ve paylasimi bir araya getirerek kazanci buyuten bir sistem kurduk. Amacimiz sadece kazanc degil, birlikte buyuyen guclu bir topluluk olusturmaktir.",
+    whoDesc: "Teknolojiyi, eğitimi ve e-ticareti bir araya getirerek kullanıcıların dijital dünyada güvenle ilerleyebileceği güçlü bir sistem kurduk.",
     cards: [
-      { title: "Misyonumuz", desc: "Her bireyin dijitalde kendi ekonomisini kurmasini saglamak." },
-      { title: "Vizyonumuz", desc: "Global ölçekte lider bir dijital eco sistem ağı olmak." },
-      { title: "Temel Gucumuz", desc: "Teknoloji, sistem ve topluluk birlesimi." },
+      { title: "Misyonumuz", desc: "Her bireyin dijitalde bilgiye, eğitime ve ticaret araçlarına kolayca ulaşmasını sağlamak." },
+      { title: "Vizyonumuz", desc: "Global ölçekte lider bir dijital ekosistem olmak." },
+      { title: "Temel Gücümüz", desc: "Teknoloji, güvenli sistemler ve kullanıcı odaklı hizmetlerin birleşimi." },
     ],
     teamTitle: "Ekibimiz",
     team: [
-      { title: "Yazilim", desc: "Platform altyapisini gelistiren ekip" },
-      { title: "Strateji", desc: "Kazanc modelini yoneten ekip" },
-      { title: "Topluluk", desc: "Kullanici deneyimini yoneten ekip" },
+      { title: "Yazılım", desc: "Platform altyapısını geliştiren ve güvenliğini sağlayan ekip", icon: "</>" },
+      { title: "E-Ticaret", desc: "Ürün, sipariş ve müşteri deneyimini geliştiren ekip", icon: "▣" },
+      { title: "Eğitim", desc: "Dijital eğitim içeriklerini hazırlayan ekip", icon: "▶" },
     ],
-    ctaTitle: "Gelecegi birlikte kur",
-    ctaDesc: "FTSLine sadece kazanc degil, dijital bir yasam modeli sunar.",
+    ctaTitle: "Geleceği birlikte şekillendirelim",
+    ctaDesc: "FTSLine ile e-ticaret ve dijital eğitimi tek bir güvenilir deneyimde keşfedin.",
   },
   en: {
     badge: "IN THE DIGITAL AGE",
     title: "Those who go digital early move ahead.",
     quote: "THE GATEWAY TO THE DIGITAL WORLD.",
-    desc: "FTSLine is an innovative and fair e-commerce and education platform where people can build income in the digital world. It offers a modern experience based on trust and a sustainable system.",
+    desc: "FTSLine brings e-commerce, digital education and secure ordering processes together on one platform. It offers a clear and sustainable experience supported by technology.",
     whoTitle: "Who Are We?",
-    whoDesc: "We built a system that combines technology, human potential and sharing to grow value. Our goal is not only income, but a strong community that grows together.",
+    whoDesc: "We combine technology, education and e-commerce in a powerful system where users can move forward confidently in the digital world.",
     cards: [
-      { title: "Our Mission", desc: "To help every person build their own digital economy." },
-      { title: "Our Vision", desc: "To become a leading digital network platform globally." },
-      { title: "Our Core Strength", desc: "The combination of technology, system and community." },
+      { title: "Our Mission", desc: "To provide easy access to digital knowledge, education and commerce tools." },
+      { title: "Our Vision", desc: "To become a leading global digital ecosystem." },
+      { title: "Our Core Strength", desc: "The combination of technology, reliable systems and user-focused services." },
     ],
     teamTitle: "Our Team",
     team: [
-      { title: "Software", desc: "The team developing the platform infrastructure" },
-      { title: "Strategy", desc: "The team managing the earning model" },
-      { title: "Community", desc: "The team managing user experience" },
+      { title: "Software", desc: "The team developing and securing the platform infrastructure", icon: "</>" },
+      { title: "E-Commerce", desc: "The team improving product, order and customer experience", icon: "▣" },
+      { title: "Education", desc: "The team preparing digital education content", icon: "▶" },
     ],
-    ctaTitle: "Build the future together",
-    ctaDesc: "FTSLine offers not only earnings, but a digital lifestyle model.",
+    ctaTitle: "Shape the future together",
+    ctaDesc: "Discover e-commerce and digital education in one reliable FTSLine experience.",
   },
 };
 
@@ -65,10 +65,13 @@ export default function About() {
           <p>{tt.whoDesc}</p>
           <div className="about-grid">
             {tt.cards.map((card) => (
-              <div className="about-card" key={card.title}>
-                <h3>{card.title}</h3>
-                <p>{card.desc}</p>
-              </div>
+              <article className="about-card about-value-card" key={card.title}>
+                <div className="about-value-image" aria-hidden="true" />
+                <div className="about-card-content">
+                  <h3>{card.title}</h3>
+                  <p>{card.desc}</p>
+                </div>
+              </article>
             ))}
           </div>
         </section>
@@ -77,10 +80,11 @@ export default function About() {
           <h2>{tt.teamTitle}</h2>
           <div className="about-grid">
             {tt.team.map((card) => (
-              <div className="about-card" key={card.title}>
+              <article className="about-card about-team-card" key={card.title}>
+                <span className="about-team-icon" aria-hidden="true">{card.icon}</span>
                 <h3>{card.title}</h3>
                 <p>{card.desc}</p>
-              </div>
+              </article>
             ))}
           </div>
         </section>
