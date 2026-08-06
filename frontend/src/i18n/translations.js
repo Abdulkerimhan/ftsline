@@ -87,7 +87,7 @@ export const translations = {
       hero: {
         badge: "FTSLine Premium Platform",
         title: "Erken kalkan degil, erken dijitallesen yol alir.",
-        description: "FTSLine; urun satisi, lisansli fiyat sistemi, kullanici paneli ve ekip takibini bir araya getiren modern bir dijital platformdur.",
+        description: "FTSLine; urunleri, avantajli fiyatlari, dijital egitimleri ve siparis takibini tek platformda bir araya getirir.",
         primaryButton: "Hemen Kayit Ol",
         secondaryButton: "Urunleri Gor",
         checks: ["Guvenli hesap", "Lisansli fiyat", "Hizli sepet", "Panel takibi"],
@@ -241,7 +241,7 @@ export const translations = {
       hero: {
         badge: "FTSLine Premium Platform",
         title: "Those who digitalize early move ahead.",
-        description: "FTSLine is a modern digital platform that combines product sales, licensed pricing, user dashboards and team tracking in one place.",
+        description: "FTSLine brings products, advantageous pricing, digital education and order tracking together on one platform.",
         primaryButton: "Create Account",
         secondaryButton: "View Products",
         checks: ["Secure account", "Licensed pricing", "Fast cart", "Dashboard tracking"],

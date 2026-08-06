@@ -40,6 +40,19 @@
   flex-direction: column;
   justify-content: center;
   padding: clamp(28px, 5vw, 58px);
+  color: #fff;
+  background:
+    linear-gradient(90deg, rgba(3, 13, 35, 0.97) 0%, rgba(3, 14, 38, 0.9) 48%, rgba(3, 18, 48, 0.38) 100%),
+    url("/home-features/digital-future-hero.png") 68% center / cover no-repeat;
+  border-color: rgba(52, 111, 235, 0.28);
+  box-shadow: 0 24px 50px rgba(5, 22, 55, 0.22);
+}
+
+.home-hero-copy .home-eyebrow {
+  color: #dbeafe;
+  background: rgba(43, 103, 235, 0.28);
+  border: 1px solid rgba(147, 197, 253, 0.26);
+  backdrop-filter: blur(8px);
 }
 
 .home-eyebrow,
@@ -60,19 +73,33 @@
 .home-hero-copy h1 {
   max-width: 760px;
   margin: 18px 0 0;
-  color: #08142c;
+  color: #fff;
   font-size: clamp(38px, 5.8vw, 68px);
   line-height: 1.04;
   letter-spacing: 0;
   font-weight: 950;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.32);
 }
 
 .home-hero-copy p {
   max-width: 680px;
   margin-top: 20px;
-  color: #526176;
+  color: rgba(239, 246, 255, 0.9);
   font-size: 18px;
   line-height: 1.72;
+}
+
+.home-hero-copy .home-primary-action {
+  color: #0a2f78;
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.2);
+}
+
+.home-hero-copy .home-secondary-action {
+  color: #fff;
+  background: rgba(15, 63, 174, 0.3);
+  border-color: rgba(191, 219, 254, 0.42);
+  backdrop-filter: blur(8px);
 }
 
 .home-actions {
@@ -745,6 +772,14 @@
   .home-hero-copy,
   .home-hero-visual {
     padding: 20px;
+  }
+
+  .home-hero-copy {
+    min-height: 600px;
+    justify-content: flex-end;
+    background:
+      linear-gradient(180deg, rgba(3, 14, 38, 0.24) 0%, rgba(3, 14, 38, 0.8) 48%, rgba(3, 13, 35, 0.98) 100%),
+      url("/home-features/digital-future-hero.png") 66% center / cover no-repeat;
   }
 
   .home-hero-copy h1 {
