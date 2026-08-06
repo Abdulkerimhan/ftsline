@@ -18,6 +18,12 @@ function productImage(product) {
   return "/ftsline.png";
 }
 
+const valueImages = [
+  "/home-features/product-store.png",
+  "/home-features/digital-education.png",
+  "/home-features/order-tracking.png",
+];
+
 export default function Home() {
   const { t = {}, language = "tr" } = useI18n() || {};
   const home = t.home || {};
@@ -213,10 +219,18 @@ export default function Home() {
             <h2>{storefront.valuesTitle}</h2>
           </div>
           <div className="home-value-grid">
-            {values.map((item) => (
+            {values.map((item, index) => (
               <article className="home-value-card" key={item.title}>
-                <h3>{item.title}</h3>
-                <p>{item.desc}</p>
+                <img
+                  className="home-value-image"
+                  src={valueImages[index % valueImages.length]}
+                  alt=""
+                  loading="lazy"
+                />
+                <div className="home-value-content">
+                  <h3>{item.title}</h3>
+                  <p>{item.desc}</p>
+                </div>
               </article>
             ))}
           </div>
