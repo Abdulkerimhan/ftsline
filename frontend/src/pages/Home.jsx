@@ -301,9 +301,17 @@ export default function Home() {
             <p>{storefront.licenseDesc}</p>
           </div>
 
+          <img
+            className="home-license-advantages-image"
+            src="/home-features/license-advantages.png"
+            alt=""
+            loading="lazy"
+          />
+
           <div className="home-advantage-grid">
-            {licensedAdvantages.map((item) => (
+            {licensedAdvantages.map((item, index) => (
               <article className="home-advantage-card" key={item.title}>
+                <span className="home-advantage-number">{String(index + 1).padStart(2, "0")}</span>
                 <h3>{item.title}</h3>
                 <p>{item.desc}</p>
               </article>
