@@ -138,32 +138,75 @@
 .about-value-card:nth-child(3) .about-value-image { background-position: right center; }
 
 .about-team-card {
-  padding: 30px 24px;
   border: 1px solid #dbe7fb;
-  background: linear-gradient(145deg, #ffffff, #edf4ff);
+  background: #fff;
+}
+
+.about-team-image {
+  position: relative;
+  height: 210px;
+  background-image: url("/about/about-team.png");
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+}
+
+.about-team-card:nth-child(1) .about-team-image { background-position: left center; }
+.about-team-card:nth-child(2) .about-team-image { background-position: center center; }
+.about-team-card:nth-child(3) .about-team-image { background-position: right center; }
+
+.about-team-image::after {
+  content: "";
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(180deg, transparent, rgba(3, 19, 54, 0.72));
+}
+
+.about-team-content {
+  min-height: 145px;
+  padding: 25px 24px 30px;
 }
 
 .about-team-icon {
+  position: absolute;
+  z-index: 1;
+  left: 20px;
+  bottom: 18px;
   display: grid;
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 16px;
+  width: 50px;
+  height: 50px;
   place-items: center;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #0f3d91, #2c6bf2);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 15px;
+  background: rgba(13, 68, 173, 0.86);
+  backdrop-filter: blur(8px);
   color: #fff;
   font-weight: 800;
-  font-size: 21px;
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
+  font-size: 19px;
+  box-shadow: 0 10px 22px rgba(8, 35, 88, 0.28);
 }
 
 .about-cta {
-  background: linear-gradient(135deg, #123478, #2563eb);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #123478 url("/about/about-values.png") center/cover no-repeat;
   color: white;
   padding: 45px;
   border-radius: 20px;
   text-align: center;
   box-shadow: 0 15px 40px rgba(37, 99, 235, 0.3);
+}
+
+.about-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(7, 31, 80, 0.96), rgba(22, 72, 179, 0.78), rgba(7, 31, 80, 0.92));
 }
 
 .about-cta h2 { margin-bottom: 10px; }
@@ -172,6 +215,7 @@
 @media (max-width: 900px) {
   .about-grid { grid-template-columns: 1fr; }
   .about-value-image { height: 250px; }
+  .about-team-image { height: 270px; }
   .about-card-content { min-height: auto; }
 }
 
@@ -193,5 +237,7 @@
   .about-desc { font-size: 15px; line-height: 1.65; }
   .about-section { padding: 25px 16px; }
   .about-value-image { height: 210px; }
-  .about-cta { padding: 34px 22px; }
+  .about-team-image { height: 220px; }
+  .about-team-content { min-height: auto; }
+  .about-cta { min-height: 300px; padding: 34px 22px; }
 }

@@ -81,9 +81,13 @@ export default function About() {
           <div className="about-grid">
             {tt.team.map((card) => (
               <article className="about-card about-team-card" key={card.title}>
-                <span className="about-team-icon" aria-hidden="true">{card.icon}</span>
-                <h3>{card.title}</h3>
-                <p>{card.desc}</p>
+                <div className="about-team-image" aria-hidden="true">
+                  <span className="about-team-icon">{card.icon}</span>
+                </div>
+                <div className="about-team-content">
+                  <h3>{card.title}</h3>
+                  <p>{card.desc}</p>
+                </div>
               </article>
             ))}
           </div>
