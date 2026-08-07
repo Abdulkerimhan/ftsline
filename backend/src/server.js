@@ -412,7 +412,7 @@ app.get("/api/user/referrals", async (req, res) => {
       _id: { $ne: currentUser._id },
       role: { $ne: "superadmin" },
     })
-      .select("username fullName email isActive isLicensed createdAt sponsor career careerLevel")
+      .select("username fullName email isActive isLicensed licenseExpiresAt createdAt sponsor career careerLevel")
       .sort({ createdAt: 1 })
       .lean();
 

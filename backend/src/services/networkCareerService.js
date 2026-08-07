@@ -3,7 +3,7 @@ import { calculateCareer, isActiveMember, CAREER_LEVELS } from "./careerService.
 
 async function getDirectUsers(userId) {
   return User.find({ sponsor: userId }).select(
-    "_id username isActive isLicensed career"
+    "_id username isActive isLicensed licenseExpiresAt career"
   );
 }
 

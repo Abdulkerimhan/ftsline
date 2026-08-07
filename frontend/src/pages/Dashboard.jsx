@@ -32,12 +32,23 @@ const UNILEVEL_CAREER_LABELS = {
   TAC_ELMAS: "Taç Elmas",
 };
 
+function isUnilevelMemberActive(member) {
+  if (member?.isActive !== true || member?.isLicensed !== true) return false;
+  if (!member?.licenseExpiresAt) return true;
+  return new Date(member.licenseExpiresAt).getTime() >= Date.now();
+}
+
 function getUnilevelCareer(member) {
   const currentLevel = member?.career?.level;
   const legacyLevel = member?.careerLevel;
-  const level = currentLevel && currentLevel !== "NONE"
+  let level = currentLevel && currentLevel !== "NONE"
     ? currentLevel
     : legacyLevel || currentLevel || "NONE";
+
+  const directActiveCount = (member?.children || []).filter(isUnilevelMemberActive).length;
+  if (["NONE", "starter"].includes(level) && directActiveCount >= 2) {
+    level = "BRONZ";
+  }
 
   return {
     label: UNILEVEL_CAREER_LABELS[level] || "Başlangıç",
@@ -169,6 +180,8 @@ export default function Dashboard({ initialSection = "overview" }) {
           username: member.username,
           createdAt: member.createdAt,
           isActive: member.isActive,
+          isLicensed: member.isLicensed,
+          licenseExpiresAt: member.licenseExpiresAt,
           career: member.career,
           careerLevel: member.careerLevel,
           children,
@@ -218,9 +231,11 @@ export default function Dashboard({ initialSection = "overview" }) {
 
     const appendVisible = (nodes, level) => {
       nodes.forEach((node) => {
+        const networkActive = isUnilevelMemberActive(node);
         visible.push({
           ...node,
           level,
+          networkActive,
           careerDisplay: getUnilevelCareer(node),
           joinDate: node.createdAt
             ? new Date(node.createdAt).toLocaleDateString(
@@ -228,7 +243,7 @@ export default function Dashboard({ initialSection = "overview" }) {
               )
             : "-",
           contribution: 0,
-          status: node.isActive
+          status: networkActive
             ? safeText(dashboardT?.active, "Aktif")
             : safeText(dashboardT?.passive, "Pasif"),
         });
@@ -1029,7 +1044,7 @@ export default function Dashboard({ initialSection = "overview" }) {
               type="button"
               key={member.id}
               className={`dashboard-unilevel-row ${
-                member.isActive ? "is-active" : "is-passive"
+                member.networkActive ? "is-active" : "is-passive"
               } ${hasChildren ? "is-clickable" : ""}`}
               style={{ "--unilevel-depth": member.level - 1 }}
               onClick={() => hasChildren && toggleUniNode(member.id)}
@@ -1037,7 +1052,7 @@ export default function Dashboard({ initialSection = "overview" }) {
             >
               <div>
                 <div className={`dashboard-list-title dashboard-unilevel-name ${
-                  member.isActive ? "is-active" : "is-passive"
+                  member.networkActive ? "is-active" : "is-passive"
                 }`}>
                   <span>{member.username}</span>
                   <span className={`dashboard-career-badge ${member.careerDisplay.className}`}>
