@@ -200,6 +200,49 @@
   font-weight: 700;
 }
 
+.super-user-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.super-career-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(110px, 1fr));
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.super-career-summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 56px;
+  padding: 10px 13px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.super-career-summary-item strong {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding-inline: 7px;
+  border-radius: 10px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
 .super-search:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
@@ -376,6 +419,60 @@
   font-size: 12px;
   font-weight: 900;
   border: 1px solid #bfdbfe;
+}
+
+.super-career-badge.none,
+.super-career-badge.starter {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
+.super-career-badge.bronz,
+.super-career-badge.bronze,
+.super-career-summary-item.bronz {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #9a3412;
+}
+
+.super-career-badge.gumus,
+.super-career-badge.silver,
+.super-career-summary-item.gumus {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.super-career-badge.altin,
+.super-career-badge.gold,
+.super-career-summary-item.altin {
+  background: #fefce8;
+  border-color: #fde047;
+  color: #854d0e;
+}
+
+.super-career-badge.platin,
+.super-career-badge.platinum,
+.super-career-summary-item.platin {
+  background: #ecfeff;
+  border-color: #67e8f9;
+  color: #155e75;
+}
+
+.super-career-badge.elmas,
+.super-career-badge.diamond,
+.super-career-summary-item.elmas {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.super-career-badge.tac-elmas,
+.super-career-summary-item.tac-elmas {
+  background: #faf5ff;
+  border-color: #d8b4fe;
+  color: #7e22ce;
 }
 
 .super-actions {
@@ -1130,6 +1227,25 @@
   margin-top: 6px;
   color: #64748b;
   font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  .super-career-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 980px) {
+  .super-user-tools {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .super-career-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .super-payment-badge {

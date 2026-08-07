@@ -87,6 +87,50 @@ function formatEarningStatus(status) {
   return labels[status] || status || "-";
 }
 
+const CAREER_LABELS = {
+  NONE: "Başlangıç",
+  starter: "Başlangıç",
+  BRONZ: "Bronz",
+  bronze: "Bronz",
+  GUMUS: "Gümüş",
+  silver: "Gümüş",
+  ALTIN: "Altın",
+  gold: "Altın",
+  PLATIN: "Platin",
+  platinum: "Platin",
+  ELMAS: "Elmas",
+  diamond: "Elmas",
+  TAC_ELMAS: "Taç Elmas",
+};
+
+const CAREER_LEVEL_ALIASES = {
+  starter: "NONE",
+  bronze: "BRONZ",
+  silver: "GUMUS",
+  gold: "ALTIN",
+  platinum: "PLATIN",
+  diamond: "ELMAS",
+};
+
+function getUserCareerLevel(user) {
+  const currentLevel = user?.career?.level;
+  const legacyLevel = user?.careerLevel;
+  const rawLevel = currentLevel && currentLevel !== "NONE"
+    ? currentLevel
+    : legacyLevel || currentLevel || "NONE";
+
+  return CAREER_LEVEL_ALIASES[rawLevel] || rawLevel;
+}
+
+function getUserCareerLabel(user) {
+  const level = getUserCareerLevel(user);
+  return CAREER_LABELS[level] || CAREER_LABELS.NONE;
+}
+
+function getCareerClass(user) {
+  return String(getUserCareerLevel(user)).toLowerCase().replaceAll("_", "-");
+}
+
 export default function SuperAdminPanel() {
   const [activeMenu, setActiveMenu] = useState("overview");
   const [search, setSearch] = useState("");
@@ -267,9 +311,19 @@ export default function SuperAdminPanel() {
       u.username?.toLowerCase().includes(q) ||
       u.fullName?.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
-      u.role?.toLowerCase().includes(q)
+      u.role?.toLowerCase().includes(q) ||
+      getUserCareerLabel(u).toLowerCase().includes(q)
     );
   });
+
+  const careerSummary = useMemo(() => {
+    const levels = ["BRONZ", "GUMUS", "ALTIN", "PLATIN", "ELMAS", "TAC_ELMAS"];
+    return levels.map((level) => ({
+      level,
+      label: CAREER_LABELS[level],
+      count: users.filter((user) => getUserCareerLevel(user).toUpperCase() === level).length,
+    }));
+  }, [users]);
 
   const filteredOrders = orders.filter((o) => {
     const q = search.trim().toLowerCase();
@@ -842,12 +896,29 @@ export default function SuperAdminPanel() {
             <p>Kullanici rolu, aktiflik ve lisans yonetimi.</p>
           </div>
 
-          <input
-            className="super-search"
-            placeholder="Kullanici ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div className="super-user-tools">
+            <input
+              className="super-search"
+              placeholder="Kullanici veya kariyer ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <button type="button" className="super-btn success" onClick={updateCareers}>
+              Kariyerleri Güncelle
+            </button>
+          </div>
+        </div>
+
+        <div className="super-career-summary" aria-label="Kariyer dağılımı">
+          {careerSummary.map((item) => (
+            <div
+              className={`super-career-summary-item ${item.level.toLowerCase().replaceAll("_", "-")}`}
+              key={item.level}
+            >
+              <span>{item.label}</span>
+              <strong>{item.count}</strong>
+            </div>
+          ))}
         </div>
 
         <div className="super-table-wrap">
@@ -860,6 +931,7 @@ export default function SuperAdminPanel() {
                 <th>Rol</th>
                 <th>Durum</th>
                 <th>Lisans</th>
+                <th>Kariyer</th>
                 <th>Lisans Baslangici</th>
                 <th>Pasife Dusecegi Tarih</th>
                 <th>Kalan Sure</th>
@@ -925,6 +997,11 @@ export default function SuperAdminPanel() {
                         }
                       >
                         {user.isLicensed ? "Lisansli" : "Lisanssiz"}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`super-career-badge ${getCareerClass(user)}`}>
+                        {getUserCareerLabel(user)}
                       </span>
                     </td>
                     <td className="super-license-date">
@@ -1005,7 +1082,7 @@ export default function SuperAdminPanel() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="11" className="super-empty">
+                  <td colSpan="12" className="super-empty">
                     Kullanici bulunamadi.
                   </td>
                 </tr>
