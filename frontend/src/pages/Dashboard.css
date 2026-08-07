@@ -1198,6 +1198,18 @@
   border: 1px solid #eef2f7;
 }
 
+.dashboard-unilevel-row.is-active {
+  border-color: #bbf7d0;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 72%);
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.08);
+}
+
+.dashboard-unilevel-row.is-passive {
+  border-color: #fecaca;
+  background: linear-gradient(135deg, #fff1f2 0%, #ffffff 72%);
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.07);
+}
+
 .dashboard-presentation-link {
   margin-top: 4px;
   color: #bfe3ff;
@@ -1278,6 +1290,69 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.dashboard-unilevel-name.is-active > span:first-child {
+  color: #15803d;
+}
+
+.dashboard-unilevel-name.is-passive > span:first-child {
+  color: #b91c1c;
+}
+
+.dashboard-career-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.dashboard-career-badge.bronz,
+.dashboard-career-badge.bronze {
+  border-color: #fdba74;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.dashboard-career-badge.gumus,
+.dashboard-career-badge.silver {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.dashboard-career-badge.altin,
+.dashboard-career-badge.gold {
+  border-color: #fde047;
+  background: #fefce8;
+  color: #854d0e;
+}
+
+.dashboard-career-badge.platin,
+.dashboard-career-badge.platinum {
+  border-color: #67e8f9;
+  background: #ecfeff;
+  color: #155e75;
+}
+
+.dashboard-career-badge.elmas,
+.dashboard-career-badge.diamond {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dashboard-career-badge.tac-elmas {
+  border-color: #d8b4fe;
+  background: #faf5ff;
+  color: #7e22ce;
 }
 
 .dashboard-team-count {

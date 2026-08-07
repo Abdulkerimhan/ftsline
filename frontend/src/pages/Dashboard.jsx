@@ -16,6 +16,35 @@ import "./Dashboard.css";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
+const UNILEVEL_CAREER_LABELS = {
+  NONE: "Başlangıç",
+  starter: "Başlangıç",
+  BRONZ: "Bronz",
+  bronze: "Bronz",
+  GUMUS: "Gümüş",
+  silver: "Gümüş",
+  ALTIN: "Altın",
+  gold: "Altın",
+  PLATIN: "Platin",
+  platinum: "Platin",
+  ELMAS: "Elmas",
+  diamond: "Elmas",
+  TAC_ELMAS: "Taç Elmas",
+};
+
+function getUnilevelCareer(member) {
+  const currentLevel = member?.career?.level;
+  const legacyLevel = member?.careerLevel;
+  const level = currentLevel && currentLevel !== "NONE"
+    ? currentLevel
+    : legacyLevel || currentLevel || "NONE";
+
+  return {
+    label: UNILEVEL_CAREER_LABELS[level] || "Başlangıç",
+    className: String(level).toLowerCase().replaceAll("_", "-"),
+  };
+}
+
 export default function Dashboard({ initialSection = "overview" }) {
   const i18n = useI18n() || {};
   const t = i18n.t || {};
@@ -140,6 +169,8 @@ export default function Dashboard({ initialSection = "overview" }) {
           username: member.username,
           createdAt: member.createdAt,
           isActive: member.isActive,
+          career: member.career,
+          careerLevel: member.careerLevel,
           children,
           totalTeamCount: children.reduce(
             (total, child) => total + 1 + Number(child.totalTeamCount || 0),
@@ -190,6 +221,7 @@ export default function Dashboard({ initialSection = "overview" }) {
         visible.push({
           ...node,
           level,
+          careerDisplay: getUnilevelCareer(node),
           joinDate: node.createdAt
             ? new Date(node.createdAt).toLocaleDateString(
                 language === "tr" ? "tr-TR" : "en-US"
@@ -996,14 +1028,21 @@ export default function Dashboard({ initialSection = "overview" }) {
             <button
               type="button"
               key={member.id}
-              className={`dashboard-unilevel-row ${hasChildren ? "is-clickable" : ""}`}
+              className={`dashboard-unilevel-row ${
+                member.isActive ? "is-active" : "is-passive"
+              } ${hasChildren ? "is-clickable" : ""}`}
               style={{ "--unilevel-depth": member.level - 1 }}
               onClick={() => hasChildren && toggleUniNode(member.id)}
               aria-expanded={hasChildren ? isExpanded : undefined}
             >
               <div>
-                <div className="dashboard-list-title dashboard-unilevel-name">
-                  {member.username}
+                <div className={`dashboard-list-title dashboard-unilevel-name ${
+                  member.isActive ? "is-active" : "is-passive"
+                }`}>
+                  <span>{member.username}</span>
+                  <span className={`dashboard-career-badge ${member.careerDisplay.className}`}>
+                    {member.careerDisplay.label}
+                  </span>
                   {member.totalTeamCount > 0 && (
                     <span className="dashboard-team-count">
                       {language === "tr" ? "Alt ekip" : "Team"}: {member.totalTeamCount}
