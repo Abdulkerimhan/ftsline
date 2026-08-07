@@ -1452,8 +1452,6 @@ export default function Dashboard({ initialSection = "overview" }) {
         return renderOrders();
       case "profile":
         return renderProfile();
-      case "settings":
-        return renderSettings();
       case "faq":
         return <FAQ embedded />;
       default:
@@ -1600,19 +1598,6 @@ export default function Dashboard({ initialSection = "overview" }) {
               <span className="dashboard-side-icon">?</span>
               {sidebarOpen && (
                 <span>{safeText(sectionsT?.faq, "SSS")}</span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              className={`dashboard-side-link ${
-                activeSection === "settings" ? "active" : ""
-              }`}
-              onClick={() => selectSection("settings")}
-            >
-              <span className="dashboard-side-icon">A</span>
-              {sidebarOpen && (
-                <span>{safeText(sectionsT?.settings, "Ayarlar")}</span>
               )}
             </button>
 
