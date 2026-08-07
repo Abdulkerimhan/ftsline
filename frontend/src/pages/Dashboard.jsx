@@ -1248,7 +1248,7 @@ export default function Dashboard({ initialSection = "overview" }) {
 
           <form onSubmit={handleProfileSave} className="dashboard-form">
             <div className="dashboard-avatar-editor">
-              <div className="dashboard-avatar-preview">
+              <label className="dashboard-avatar-preview dashboard-avatar-preview-selectable">
                 {avatarPreview || user?.avatar ? (
                   <img
                     src={avatarPreview || user.avatar}
@@ -1257,7 +1257,13 @@ export default function Dashboard({ initialSection = "overview" }) {
                 ) : (
                   <span>{(user?.fullName || user?.username || "K").charAt(0).toUpperCase()}</span>
                 )}
-              </div>
+                <span className="dashboard-avatar-camera" aria-hidden="true">&#128247;</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleAvatarChange}
+                />
+              </label>
               <div className="dashboard-avatar-actions">
                 <strong>Profil Fotoğrafı</strong>
                 <span>JPG, PNG veya WebP · en fazla 5 MB</span>
@@ -1648,13 +1654,20 @@ export default function Dashboard({ initialSection = "overview" }) {
             <span></span>
           </button>
 
-          <div className="dashboard-topbar-avatar">
+          <button
+            type="button"
+            className="dashboard-topbar-avatar"
+            onClick={() => selectSection("profile")}
+            title={language === "tr" ? "Profil fotoğrafını ekle veya değiştir" : "Add or change profile photo"}
+            aria-label={language === "tr" ? "Profil fotoğrafını düzenle" : "Edit profile photo"}
+          >
             {user?.avatar ? (
               <img src={user.avatar} alt="Profil fotoğrafı" />
             ) : (
               <span>{(user?.fullName || user?.username || "K").charAt(0).toUpperCase()}</span>
             )}
-          </div>
+            <span className="dashboard-topbar-avatar-edit" aria-hidden="true">+</span>
+          </button>
 
           <div className="dashboard-topbar-title">
             {safeText(dashboardT?.welcome, "HoÅŸ geldin")},{" "}
