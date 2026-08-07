@@ -679,8 +679,122 @@
 }
 
 .matrix-min-width {
-  min-width: 900px;
+  min-width: 0;
   padding: 4px 18px 10px;
+}
+
+.matrix-focus-view {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.matrix-focus-toolbar {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.matrix-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 1px solid #cfdbef;
+  border-radius: 12px;
+  background: #fff;
+  color: #174db8;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(24, 52, 96, 0.08);
+}
+
+.matrix-back-button:hover {
+  border-color: #9fb8e5;
+  background: #f7faff;
+}
+
+.matrix-back-button span {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.matrix-focus-hint,
+.matrix-focus-depth {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.matrix-focus-depth {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #eaf1ff;
+  color: #2458c8;
+}
+
+.matrix-focused-node {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 46px;
+}
+
+.matrix-focused-node::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 32px;
+  border-left: 2px solid #bfd0ea;
+}
+
+.matrix-focus-children {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  padding-top: 26px;
+}
+
+.matrix-focus-children::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  border-top: 2px solid #bfd0ea;
+}
+
+.matrix-focus-slot {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.matrix-focus-slot::before {
+  content: "";
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  height: 26px;
+  border-left: 2px solid #bfd0ea;
+}
+
+.matrix-branch-end {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  border: 1px dashed #cbd8eb;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .matrix-node-wrap {
@@ -707,6 +821,10 @@
   appearance: none;
   -webkit-appearance: none;
   outline: none;
+}
+
+.matrix-node:disabled {
+  opacity: 1;
 }
 
 .matrix-clickable {
@@ -1236,7 +1354,7 @@
   }
 
   .matrix-min-width {
-    min-width: 680px;
+    min-width: 0;
   }
 }
 
@@ -1322,7 +1440,44 @@
   }
 
   .matrix-min-width {
-    min-width: 640px;
+    min-width: 0;
+    padding-inline: 2px;
+  }
+
+  .matrix-focus-toolbar {
+    margin-bottom: 14px;
+  }
+
+  .matrix-focus-hint {
+    max-width: 190px;
+  }
+
+  .matrix-focused-node {
+    padding-bottom: 38px;
+  }
+
+  .matrix-focused-node::after {
+    height: 26px;
+  }
+
+  .matrix-focus-children {
+    gap: 12px;
+    padding-top: 22px;
+  }
+
+  .matrix-focus-slot::before {
+    top: -22px;
+    height: 22px;
+  }
+
+  .matrix-focus-children .matrix-node,
+  .matrix-focus-children .matrix-empty {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .matrix-back-button {
+    padding: 8px 10px;
   }
 
   .matrix-node-wrap {

@@ -155,11 +155,7 @@ export default function Dashboard({ initialSection = "overview" }) {
     };
   }, [referrals, user?._id, user?.username]);
 
-  const [expandedNodes, setExpandedNodes] = useState({
-    root: true,
-    "root-L": true,
-    "root-R": true,
-  });
+  const [matrixFocusPath, setMatrixFocusPath] = useState(["root"]);
 
   const [expandedUniNodes, setExpandedUniNodes] = useState({});
 
@@ -553,13 +549,6 @@ export default function Dashboard({ initialSection = "overview" }) {
     if (paymentMethod === "cash_on_delivery") return language === "tr" ? "Kapida Odeme" : "Cash on Delivery";
     return language === "tr" ? "Odeme" : "Payment";
   };
-  const toggleMatrixNode = (nodeId) => {
-    setExpandedNodes((prev) => ({
-      ...prev,
-      [nodeId]: !prev[nodeId],
-    }));
-  };
-
   const toggleUniNode = (nodeId) => {
     setExpandedUniNodes((prev) => ({
       ...prev,
@@ -567,55 +556,107 @@ export default function Dashboard({ initialSection = "overview" }) {
     }));
   };
 
-  const renderMatrixNode = (node, level = 1, maxLevel = 15, nodeId = "root") => {
-    if (!node || level > maxLevel) return null;
+  const getMatrixFocus = () => {
+    const focusId = matrixFocusPath[matrixFocusPath.length - 1] || "root";
+    const directions = focusId.split("-").slice(1);
+    let node = matrixTree;
+
+    directions.forEach((direction) => {
+      node = direction === "L" ? node?.left : node?.right;
+    });
+
+    return {
+      node: node || matrixTree,
+      nodeId: node ? focusId : "root",
+      level: node ? directions.length + 1 : 1,
+    };
+  };
+
+  const focusMatrixBranch = (nodeId) => {
+    setMatrixFocusPath((previous) => [...previous, nodeId]);
+  };
+
+  const closeMatrixBranch = () => {
+    setMatrixFocusPath((previous) =>
+      previous.length > 1 ? previous.slice(0, -1) : previous
+    );
+  };
+
+  const renderMatrixCard = (node, level, nodeId, isFocus = false) => {
+    if (!node) {
+      return (
+        <div className="matrix-empty">
+          {safeText(matrixT?.emptySlot, "Boş Slot")}
+        </div>
+      );
+    }
 
     const hasChildren = !!(node.left || node.right);
-    const isExpanded = !!expandedNodes[nodeId];
 
     return (
-      <div className="matrix-node-wrap" key={nodeId}>
-        <button
-          type="button"
-          className={`matrix-node ${level === 1 ? "matrix-root" : ""} ${
-            hasChildren ? "matrix-clickable" : ""
-          }`}
-          onClick={() => hasChildren && toggleMatrixNode(nodeId)}
-        >
-          <div className="matrix-node-name">{node.username}</div>
-          <div className="matrix-level">
-            {safeText(matrixT?.level, "Seviye")} {level}
+      <button
+        type="button"
+        className={`matrix-node ${isFocus ? "matrix-root" : ""} ${
+          hasChildren && !isFocus ? "matrix-clickable" : ""
+        }`}
+        onClick={() => hasChildren && !isFocus && focusMatrixBranch(nodeId)}
+        disabled={!hasChildren || isFocus}
+      >
+        <div className="matrix-node-name">{node.username}</div>
+        <div className="matrix-level">
+          {safeText(matrixT?.level, "Seviye")} {level}
+        </div>
+        {hasChildren && !isFocus && (
+          <div className="matrix-toggle-text">
+            {language === "tr" ? "Kolu aç" : "Open branch"}
           </div>
-          {hasChildren && (
-            <div className="matrix-toggle-text">
-              {isExpanded
-                ? safeText(matrixT?.close, "Kapat")
-                : safeText(matrixT?.open, "AÃ§")}
-            </div>
+        )}
+      </button>
+    );
+  };
+
+  const renderFocusedMatrix = () => {
+    const { node, nodeId, level } = getMatrixFocus();
+    const canGoBack = matrixFocusPath.length > 1;
+
+    return (
+      <div className="matrix-focus-view">
+        <div className="matrix-focus-toolbar">
+          {canGoBack ? (
+            <button type="button" className="matrix-back-button" onClick={closeMatrixBranch}>
+              <span aria-hidden="true">←</span>
+              {language === "tr" ? "Bir üst kola dön" : "Back one level"}
+            </button>
+          ) : (
+            <span className="matrix-focus-hint">
+              {language === "tr"
+                ? "Detay için bir kola dokun"
+                : "Select a branch to view details"}
+            </span>
           )}
-        </button>
+          <span className="matrix-focus-depth">
+            {safeText(matrixT?.level, "Seviye")} {level}
+          </span>
+        </div>
 
-        {hasChildren && isExpanded && level < maxLevel && (
-          <div className="matrix-children">
-            <div className="matrix-child-slot">
-              {node.left ? (
-                renderMatrixNode(node.left, level + 1, maxLevel, `${nodeId}-L`)
-              ) : (
-                <div className="matrix-empty">
-                  {safeText(matrixT?.emptySlot, "BoÅŸ Slot")}
-                </div>
-              )}
-            </div>
+        <div className="matrix-focused-node">
+          {renderMatrixCard(node, level, nodeId, true)}
+        </div>
 
-            <div className="matrix-child-slot">
-              {node.right ? (
-                renderMatrixNode(node.right, level + 1, maxLevel, `${nodeId}-R`)
-              ) : (
-                <div className="matrix-empty">
-                  {safeText(matrixT?.emptySlot, "BoÅŸ Slot")}
-                </div>
-              )}
+        {node?.left || node?.right ? (
+          <div className="matrix-focus-children">
+            <div className="matrix-focus-slot">
+              {renderMatrixCard(node?.left, level + 1, `${nodeId}-L`)}
             </div>
+            <div className="matrix-focus-slot">
+              {renderMatrixCard(node?.right, level + 1, `${nodeId}-R`)}
+            </div>
+          </div>
+        ) : (
+          <div className="matrix-branch-end">
+            {language === "tr"
+              ? "Bu kolun altında henüz kullanıcı yok."
+              : "No users under this branch yet."}
           </div>
         )}
       </div>
@@ -995,7 +1036,7 @@ export default function Dashboard({ initialSection = "overview" }) {
 
           <div className="matrix-scroll">
             <div className="matrix-min-width">
-              {renderMatrixNode(matrixTree, 1, 15, "root")}
+              {renderFocusedMatrix()}
             </div>
           </div>
 
