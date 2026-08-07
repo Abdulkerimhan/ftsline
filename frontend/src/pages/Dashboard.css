@@ -684,7 +684,7 @@
 }
 
 .matrix-focus-view {
-  width: min(100%, 760px);
+  width: min(100%, 980px);
   margin: 0 auto;
 }
 
@@ -772,7 +772,10 @@
 .matrix-focus-slot {
   position: relative;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  min-width: 0;
 }
 
 .matrix-focus-slot::before {
@@ -781,6 +784,50 @@
   top: -26px;
   left: 50%;
   height: 26px;
+  border-left: 2px solid #bfd0ea;
+}
+
+.matrix-preview-children {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 40px;
+}
+
+.matrix-preview-children::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 25%;
+  right: 25%;
+  border-top: 2px solid #bfd0ea;
+}
+
+.matrix-preview-children::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 17px;
+  border-left: 2px solid #bfd0ea;
+}
+
+.matrix-preview-slot {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.matrix-preview-slot::before {
+  content: "";
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  height: 24px;
   border-left: 2px solid #bfd0ea;
 }
 
@@ -806,12 +853,13 @@
 }
 
 .matrix-node {
+  position: relative;
   min-width: 150px;
   max-width: 210px;
   text-align: center;
-  padding: 14px 16px;
+  padding: 16px 16px 14px;
   border-radius: 18px;
-  background: #ffffff;
+  background: linear-gradient(155deg, #ffffff 0%, #f7faff 100%);
   color: #0f172a;
   border: 1px solid #dfe7f3;
   box-shadow: 0 12px 28px rgba(24, 52, 96, 0.11);
@@ -821,6 +869,25 @@
   appearance: none;
   -webkit-appearance: none;
   outline: none;
+}
+
+.matrix-person-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 8px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e6efff, #d5e5ff);
+  color: #174db8;
+  font-size: 17px;
+  box-shadow: inset 0 0 0 1px rgba(36, 88, 216, 0.1);
+}
+
+.matrix-root .matrix-person-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  box-shadow: none;
 }
 
 .matrix-node:disabled {
@@ -851,11 +918,53 @@
   overflow-wrap: anywhere;
 }
 
-.matrix-level {
-  margin-top: 6px;
+.matrix-level,
+.matrix-level-badge {
+  display: inline-flex;
+  margin-top: 7px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #2458c8;
   font-size: 11px;
-  font-weight: 700;
-  opacity: 0.82;
+  font-weight: 800;
+}
+
+.matrix-root .matrix-level-badge {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.matrix-team-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.matrix-team-count strong {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding-inline: 5px;
+  border-radius: 8px;
+  background: #dfeaff;
+  color: #174db8;
+  font-size: 12px;
+}
+
+.matrix-root .matrix-team-count {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.matrix-root .matrix-team-count strong {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
 }
 
 .matrix-toggle-text {
@@ -1461,19 +1570,52 @@
   }
 
   .matrix-focus-children {
-    gap: 12px;
-    padding-top: 22px;
+    grid-template-columns: 1fr;
+    gap: 34px;
+    padding-top: 0;
+  }
+
+  .matrix-focus-children::before {
+    display: none;
+  }
+
+  .matrix-focus-slot {
+    padding-top: 24px;
   }
 
   .matrix-focus-slot::before {
-    top: -22px;
-    height: 22px;
+    top: 0;
+    height: 24px;
   }
 
   .matrix-focus-children .matrix-node,
   .matrix-focus-children .matrix-empty {
     width: 100%;
     min-width: 0;
+  }
+
+  .matrix-focus-slot > .matrix-node,
+  .matrix-focus-slot > .matrix-empty {
+    width: min(100%, 230px);
+  }
+
+  .matrix-preview-children {
+    width: min(100%, 390px);
+    gap: 10px;
+  }
+
+  .matrix-preview-children .matrix-node,
+  .matrix-preview-children .matrix-empty {
+    padding-inline: 7px;
+  }
+
+  .matrix-preview-children .matrix-person-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .matrix-preview-children .matrix-node-name {
+    font-size: 13px;
   }
 
   .matrix-back-button {

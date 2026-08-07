@@ -573,13 +573,37 @@ export default function Dashboard({ initialSection = "overview" }) {
   };
 
   const focusMatrixBranch = (nodeId) => {
-    setMatrixFocusPath((previous) => [...previous, nodeId]);
+    setMatrixFocusPath((previous) => {
+      const currentId = previous[previous.length - 1] || "root";
+      const currentParts = currentId.split("-");
+      const targetParts = nodeId.split("-");
+
+      if (
+        targetParts.length <= currentParts.length ||
+        targetParts.slice(0, currentParts.length).join("-") !== currentId
+      ) {
+        return [...previous, nodeId];
+      }
+
+      const pathSteps = [];
+      for (let length = currentParts.length + 1; length <= targetParts.length; length += 1) {
+        pathSteps.push(targetParts.slice(0, length).join("-"));
+      }
+
+      return [...previous, ...pathSteps];
+    });
   };
 
   const closeMatrixBranch = () => {
     setMatrixFocusPath((previous) =>
       previous.length > 1 ? previous.slice(0, -1) : previous
     );
+  };
+
+  const countMatrixTeam = (node) => {
+    if (!node) return 0;
+    return (node.left ? 1 + countMatrixTeam(node.left) : 0) +
+      (node.right ? 1 + countMatrixTeam(node.right) : 0);
   };
 
   const renderMatrixCard = (node, level, nodeId, isFocus = false) => {
@@ -592,6 +616,7 @@ export default function Dashboard({ initialSection = "overview" }) {
     }
 
     const hasChildren = !!(node.left || node.right);
+    const teamCount = countMatrixTeam(node);
 
     return (
       <button
@@ -602,9 +627,14 @@ export default function Dashboard({ initialSection = "overview" }) {
         onClick={() => hasChildren && !isFocus && focusMatrixBranch(nodeId)}
         disabled={!hasChildren || isFocus}
       >
+        <span className="matrix-person-icon" aria-hidden="true">&#128100;</span>
         <div className="matrix-node-name">{node.username}</div>
-        <div className="matrix-level">
+        <div className="matrix-level-badge">
           {safeText(matrixT?.level, "Seviye")} {level}
+        </div>
+        <div className="matrix-team-count">
+          <strong>{teamCount}</strong>
+          <span>{language === "tr" ? "alt ekip" : "team below"}</span>
         </div>
         {hasChildren && !isFocus && (
           <div className="matrix-toggle-text">
@@ -614,6 +644,22 @@ export default function Dashboard({ initialSection = "overview" }) {
       </button>
     );
   };
+
+  const renderMatrixBranchPreview = (node, level, nodeId) => (
+    <div className="matrix-focus-slot">
+      {renderMatrixCard(node, level, nodeId)}
+      {node && (node.left || node.right) && (
+        <div className="matrix-preview-children">
+          <div className="matrix-preview-slot">
+            {renderMatrixCard(node.left, level + 1, `${nodeId}-L`)}
+          </div>
+          <div className="matrix-preview-slot">
+            {renderMatrixCard(node.right, level + 1, `${nodeId}-R`)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const renderFocusedMatrix = () => {
     const { node, nodeId, level } = getMatrixFocus();
@@ -645,12 +691,8 @@ export default function Dashboard({ initialSection = "overview" }) {
 
         {node?.left || node?.right ? (
           <div className="matrix-focus-children">
-            <div className="matrix-focus-slot">
-              {renderMatrixCard(node?.left, level + 1, `${nodeId}-L`)}
-            </div>
-            <div className="matrix-focus-slot">
-              {renderMatrixCard(node?.right, level + 1, `${nodeId}-R`)}
-            </div>
+            {renderMatrixBranchPreview(node?.left, level + 1, `${nodeId}-L`)}
+            {renderMatrixBranchPreview(node?.right, level + 1, `${nodeId}-R`)}
           </div>
         ) : (
           <div className="matrix-branch-end">
