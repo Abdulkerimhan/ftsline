@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import multer from "multer";
 
 import User from "./models/User.js";
 import { processDueLicenseMatrixPayouts } from "./services/licensePlanService.js";
@@ -20,10 +21,20 @@ import authRoutes from "./routes/authRoutes.js";
 import registrationRoutes from "./routes/registrationRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import academyRoutes from "./routes/academyRoutes.js";
+import { uploadUserAvatar } from "./utils/cloudinaryUpload.js";
 
 dotenv.config();
 
 const app = express();
+
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter(req, file, cb) {
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    cb(null, allowed.includes(String(file.mimetype || "").toLowerCase()));
+  },
+});
 
 app.set("trust proxy", 1);
 
@@ -335,6 +346,46 @@ app.patch("/api/user/me", async (req, res) => {
     }
 
     return res.status(500).json({ message: "Profil bilgileri kaydedilemedi" });
+  }
+});
+
+app.post("/api/user/me/avatar", avatarUpload.single("avatar"), async (req, res) => {
+  const auth = req.headers.authorization;
+
+  if (!auth || !auth.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Token yok" });
+  }
+
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "JPG, PNG veya WebP formatinda bir profil fotografi secin",
+      });
+    }
+
+    const avatar = await uploadUserAvatar(req.file);
+    const user = await User.findByIdAndUpdate(
+      decoded.id,
+      { avatar },
+      { new: true }
+    ).populate("sponsor", "username email fullName");
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanici bulunamadi" });
+    }
+
+    return res.json(user);
+  } catch (error) {
+    console.error("Profil fotografi yukleme hatasi:", error);
+
+    if (error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Gecersiz token" });
+    }
+
+    return res.status(500).json({ message: "Profil fotografi yuklenemedi" });
   }
 });
 

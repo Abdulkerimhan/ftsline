@@ -132,6 +132,21 @@ export async function updateMyProfile(data) {
   return parseResponse(res);
 }
 
+export async function uploadMyAvatar(file) {
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  const res = await fetch(`${API}/user/me/avatar`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeader(),
+    },
+    body: formData,
+  });
+
+  return parseResponse(res);
+}
+
 export async function getReferrals() {
   try {
     const res = await fetch(`${API}/user/referrals`, {

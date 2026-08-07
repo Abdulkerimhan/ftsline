@@ -7,6 +7,7 @@ import {
   getMyWithdrawals,
   getReferrals,
   updateMyProfile,
+  uploadMyAvatar,
 } from "../api.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import FAQ from "./FAQ.jsx";
@@ -114,6 +115,8 @@ export default function Dashboard({ initialSection = "overview" }) {
   });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
 
   const unilevelTree = useMemo(() => {
     const childrenBySponsor = new Map();
@@ -416,13 +419,33 @@ export default function Dashboard({ initialSection = "overview" }) {
     }));
   };
 
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setProfileMessage("Lütfen bir görsel dosyası seçin.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileMessage("Profil fotoğrafı en fazla 5 MB olabilir.");
+      return;
+    }
+
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    setProfileMessage("");
+  };
+
   const handleProfileSave = async (e) => {
     e.preventDefault();
     setProfileSaving(true);
     setProfileMessage("");
 
     try {
-      const updatedUser = await updateMyProfile({
+      let updatedUser = await updateMyProfile({
         fullName: profileForm.fullName,
         email: profileForm.email,
         phone: profileForm.phone,
@@ -430,6 +453,10 @@ export default function Dashboard({ initialSection = "overview" }) {
         address: profileForm.address,
         password: profileForm.password,
       });
+
+      if (avatarFile) {
+        updatedUser = await uploadMyAvatar(avatarFile);
+      }
 
       setUser(updatedUser);
       setProfileForm({
@@ -441,6 +468,9 @@ export default function Dashboard({ initialSection = "overview" }) {
         password: "",
       });
       sessionStorage.setItem("user", JSON.stringify(updatedUser));
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      setAvatarFile(null);
+      setAvatarPreview("");
       setProfileMessage(
         safeText(profileT?.saveAlert, "Profil bilgileri kaydedildi")
       );
@@ -1134,6 +1164,30 @@ export default function Dashboard({ initialSection = "overview" }) {
           </h2>
 
           <form onSubmit={handleProfileSave} className="dashboard-form">
+            <div className="dashboard-avatar-editor">
+              <div className="dashboard-avatar-preview">
+                {avatarPreview || user?.avatar ? (
+                  <img
+                    src={avatarPreview || user.avatar}
+                    alt="Profil fotoğrafı"
+                  />
+                ) : (
+                  <span>{(user?.fullName || user?.username || "K").charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <div className="dashboard-avatar-actions">
+                <strong>Profil Fotoğrafı</strong>
+                <span>JPG, PNG veya WebP · en fazla 5 MB</span>
+                <label className="dashboard-avatar-button">
+                  Fotoğraf Seç
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleAvatarChange}
+                  />
+                </label>
+              </div>
+            </div>
             <div>
               <div className="dashboard-input-label">
                 {safeText(profileT?.fullName, "Ad Soyad")}
@@ -1510,6 +1564,14 @@ export default function Dashboard({ initialSection = "overview" }) {
             <span></span>
             <span></span>
           </button>
+
+          <div className="dashboard-topbar-avatar">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="Profil fotoğrafı" />
+            ) : (
+              <span>{(user?.fullName || user?.username || "K").charAt(0).toUpperCase()}</span>
+            )}
+          </div>
 
           <div className="dashboard-topbar-title">
             {safeText(dashboardT?.welcome, "HoÅŸ geldin")},{" "}

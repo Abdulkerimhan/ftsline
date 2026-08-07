@@ -9,7 +9,7 @@ import {
 } from "../services/adminNotificationService.js";
 
 const router = express.Router();
-const USERNAME_REGEX = /^[a-z0-9_.]{3,20}$/;
+const USERNAME_REGEX = /^(?=.*[a-z])[a-z0-9]{5,20}$/;
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
 function generateCode() {

@@ -14,8 +14,8 @@ const text = {
     show: "Göster",
     hide: "Gizle",
     required: "Kullanıcı adı, e-posta ve şifre zorunlu",
-    usernameLength: "Kullanıcı adı en az 3 karakter olmalı",
-    usernameInvalid: "Kullanıcı adında yalnızca küçük harf, rakam, _ ve . olabilir",
+    usernameLength: "Kullanıcı adı en az 5 karakter olmalı",
+    usernameInvalid: "Kullanıcı adı en az bir küçük harf içermeli; yalnızca küçük harf ve rakam kullanılabilir",
     passwordLength: "Şifre en az 6 karakter olmalı",
     success: "Kayıt tamamlandı! Giriş sayfasına yönlendiriliyorsunuz...",
     failed: "Kayıt başarısız",
@@ -40,8 +40,8 @@ const text = {
     show: "Show",
     hide: "Hide",
     required: "Username, email and password are required",
-    usernameLength: "Username must be at least 3 characters",
-    usernameInvalid: "Username can only contain lowercase letters, numbers, _ and .",
+    usernameLength: "Username must be at least 5 characters",
+    usernameInvalid: "Username must contain at least one lowercase letter and may only use lowercase letters and numbers",
     passwordLength: "Password must be at least 6 characters",
     success: "Registration completed! Redirecting to login...",
     failed: "Registration failed",
@@ -102,8 +102,8 @@ export default function Register() {
   const handleRegister = async (event) => {
     event?.preventDefault();
     if (!form.username.trim() || !form.email.trim() || !form.password.trim()) return setErrorMsg(tt.required);
-    if (form.username.trim().length < 3) return setErrorMsg(tt.usernameLength);
-    if (!/^[a-z0-9_.]+$/.test(form.username.trim())) return setErrorMsg(tt.usernameInvalid);
+    if (form.username.trim().length < 5) return setErrorMsg(tt.usernameLength);
+    if (!/^(?=.*[a-z])[a-z0-9]{5,20}$/.test(form.username.trim())) return setErrorMsg(tt.usernameInvalid);
     if (form.password.length < 6) return setErrorMsg(tt.passwordLength);
 
     setLoading(true);
