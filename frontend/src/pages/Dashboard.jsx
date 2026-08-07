@@ -242,7 +242,6 @@ export default function Dashboard({ initialSection = "overview" }) {
                 language === "tr" ? "tr-TR" : "en-US"
               )
             : "-",
-          contribution: 0,
           status: networkActive
             ? safeText(dashboardT?.active, "Aktif")
             : safeText(dashboardT?.passive, "Pasif"),
@@ -1085,9 +1084,6 @@ export default function Dashboard({ initialSection = "overview" }) {
                 </span>
               </div>
 
-              <div className="dashboard-amount-positive">
-                + {formatMoney(member.contribution)} TL
-              </div>
             </button>
             );
           })}
