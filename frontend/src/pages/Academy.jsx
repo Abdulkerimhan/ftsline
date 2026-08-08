@@ -8,12 +8,18 @@ function embedVideoUrl(value) {
   if (!url) return "";
   try {
     const parsed = new URL(url);
+    let youtubeId = "";
     if (parsed.hostname.includes("youtu.be")) {
-      return `https://www.youtube.com/embed/${parsed.pathname.replace("/", "")}`;
+      youtubeId = parsed.pathname.split("/").filter(Boolean)[0] || "";
     }
     if (parsed.hostname.includes("youtube.com")) {
-      const id = parsed.searchParams.get("v") || parsed.pathname.split("/").pop();
-      return id ? `https://www.youtube.com/embed/${id}` : "";
+      youtubeId = parsed.searchParams.get("v") || parsed.pathname.split("/").filter(Boolean).pop() || "";
+    }
+    if (youtubeId) {
+      const safeId = youtubeId.match(/^[A-Za-z0-9_-]{11}$/)?.[0];
+      return safeId
+        ? `https://www.youtube-nocookie.com/embed/${safeId}?rel=0&playsinline=1`
+        : "";
     }
     if (parsed.hostname.includes("vimeo.com")) {
       const id = parsed.pathname.split("/").filter(Boolean).pop();
@@ -181,6 +187,7 @@ export default function Academy({ language = "tr" }) {
                 src={videoUrl}
                 title={selectedLesson?.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
               />
             </div>
