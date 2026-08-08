@@ -134,6 +134,8 @@ function getCareerClass(user) {
 export default function SuperAdminPanel() {
   const [activeMenu, setActiveMenu] = useState("overview");
   const [search, setSearch] = useState("");
+  const [userStatusFilter, setUserStatusFilter] = useState("all");
+  const [userCareerFilter, setUserCareerFilter] = useState("all");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [orderDateFrom, setOrderDateFrom] = useState("");
@@ -306,18 +308,32 @@ export default function SuperAdminPanel() {
 
   const filteredUsers = users.filter((u) => {
     const q = search.toLowerCase();
-
-    return (
+    const matchesSearch =
       u.username?.toLowerCase().includes(q) ||
       u.fullName?.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
       u.role?.toLowerCase().includes(q) ||
-      getUserCareerLabel(u).toLowerCase().includes(q)
-    );
+      getUserCareerLabel(u).toLowerCase().includes(q);
+    const matchesStatus =
+      userStatusFilter === "all" ||
+      (userStatusFilter === "active" && u.isActive !== false) ||
+      (userStatusFilter === "passive" && u.isActive === false);
+    const matchesCareer =
+      userCareerFilter === "all" ||
+      getUserCareerLevel(u).toUpperCase() === userCareerFilter;
+
+    return matchesSearch && matchesStatus && matchesCareer;
   });
 
+  const userSummary = useMemo(() => {
+    const active = users.filter((user) => user.isActive !== false).length;
+    const passive = users.filter((user) => user.isActive === false).length;
+    const licensed = users.filter((user) => user.isLicensed === true).length;
+    return { total: users.length, active, passive, licensed };
+  }, [users]);
+
   const careerSummary = useMemo(() => {
-    const levels = ["BRONZ", "GUMUS", "ALTIN", "PLATIN", "ELMAS", "TAC_ELMAS"];
+    const levels = ["NONE", "BRONZ", "GUMUS", "ALTIN", "PLATIN", "ELMAS", "TAC_ELMAS"];
     return levels.map((level) => ({
       level,
       label: CAREER_LABELS[level],
@@ -911,14 +927,78 @@ export default function SuperAdminPanel() {
 
         <div className="super-career-summary" aria-label="Kariyer dağılımı">
           {careerSummary.map((item) => (
-            <div
-              className={`super-career-summary-item ${item.level.toLowerCase().replaceAll("_", "-")}`}
+            <button
+              type="button"
+              className={`super-career-summary-item ${item.level.toLowerCase().replaceAll("_", "-")} ${userCareerFilter === item.level ? "selected" : ""}`}
               key={item.level}
+              onClick={() => setUserCareerFilter((current) => current === item.level ? "all" : item.level)}
             >
               <span>{item.label}</span>
               <strong>{item.count}</strong>
-            </div>
+            </button>
           ))}
+        </div>
+
+        <div className="super-user-overview" aria-label="Kullanıcı özeti ve filtreleri">
+          <button
+            type="button"
+            className={`super-user-stat total ${userStatusFilter === "all" ? "selected" : ""}`}
+            onClick={() => setUserStatusFilter("all")}
+          >
+            <span>Toplam kayıt</span>
+            <strong>{userSummary.total}</strong>
+          </button>
+          <button
+            type="button"
+            className={`super-user-stat active ${userStatusFilter === "active" ? "selected" : ""}`}
+            onClick={() => setUserStatusFilter("active")}
+          >
+            <span>Aktif kullanıcı</span>
+            <strong>{userSummary.active}</strong>
+          </button>
+          <button
+            type="button"
+            className={`super-user-stat passive ${userStatusFilter === "passive" ? "selected" : ""}`}
+            onClick={() => setUserStatusFilter("passive")}
+          >
+            <span>Pasif kullanıcı</span>
+            <strong>{userSummary.passive}</strong>
+          </button>
+          <div className="super-user-stat licensed">
+            <span>Lisanslı kullanıcı</span>
+            <strong>{userSummary.licensed}</strong>
+          </div>
+        </div>
+
+        <div className="super-user-filterbar">
+          <div className="super-user-filter-group" aria-label="Duruma göre filtrele">
+            <button type="button" className={userStatusFilter === "all" ? "selected" : ""} onClick={() => setUserStatusFilter("all")}>Tümü</button>
+            <button type="button" className={userStatusFilter === "active" ? "selected active" : ""} onClick={() => setUserStatusFilter("active")}>Sadece aktifler</button>
+            <button type="button" className={userStatusFilter === "passive" ? "selected passive" : ""} onClick={() => setUserStatusFilter("passive")}>Sadece pasifler</button>
+          </div>
+          <label className="super-user-career-filter">
+            <span>Kariyere göre</span>
+            <select value={userCareerFilter} onChange={(event) => setUserCareerFilter(event.target.value)}>
+              <option value="all">Tüm kariyerler</option>
+              {careerSummary.map((item) => (
+                <option value={item.level} key={item.level}>{item.label} ({item.count})</option>
+              ))}
+            </select>
+          </label>
+          <span className="super-filter-result">{filteredUsers.length} kayıt gösteriliyor</span>
+          {(search || userStatusFilter !== "all" || userCareerFilter !== "all") && (
+            <button
+              type="button"
+              className="super-clear-user-filters"
+              onClick={() => {
+                setSearch("");
+                setUserStatusFilter("all");
+                setUserCareerFilter("all");
+              }}
+            >
+              Filtreleri temizle
+            </button>
+          )}
         </div>
 
         <div className="super-table-wrap">
