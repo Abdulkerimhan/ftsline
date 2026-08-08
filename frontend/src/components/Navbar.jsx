@@ -10,6 +10,17 @@ export default function Navbar() {
   const { t, language, changeLanguage } = useI18n();
 
   const common = t?.common || {};
+  const announcements = language === "tr"
+    ? [
+        "FTSLine'a hoş geldiniz.",
+        "E-ticaret eğitimleri ve yeni dersler Akademi alanında.",
+        "Yeni ürünler ve güncel kampanyalar için Ürünler sayfasını takip edin.",
+      ]
+    : [
+        "Welcome to FTSLine.",
+        "E-commerce training and new lessons are available in the Academy.",
+        "Follow the Products page for new products and current campaigns.",
+      ];
 
   const [token, setToken] = useState(sessionStorage.getItem("accessToken"));
   const [user, setUser] = useState(() => {
@@ -175,6 +186,25 @@ export default function Navbar() {
 
         <div className={isMobileMenuOpen ? "navbar-menu navbar-menu-mobile open" : "navbar-menu navbar-menu-mobile"}>
           <NavLinks />
+        </div>
+      </div>
+
+      <div className="navbar-announcements" aria-label={language === "tr" ? "Duyurular" : "Announcements"}>
+        <div className="navbar-announcements-inner">
+          <span className="navbar-announcements-label">
+            <span aria-hidden="true">&#128226;</span>
+            {language === "tr" ? "Duyurular" : "Announcements"}
+          </span>
+          <div className="navbar-announcements-window">
+            <div className="navbar-announcements-track">
+              {[...announcements, ...announcements].map((announcement, index) => (
+                <span className="navbar-announcement" key={`${announcement}-${index}`}>
+                  {announcement}
+                  <span className="navbar-announcement-dot" aria-hidden="true" />
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </nav>
