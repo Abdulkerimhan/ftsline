@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import multer from "multer";
 
 import User from "./models/User.js";
+import SiteSetting from "./models/SiteSetting.js";
 import { processDueLicenseMatrixPayouts } from "./services/licensePlanService.js";
 import { ensureLicensedUsersMatrixPlacement } from "./services/matrixService.js";
 
@@ -522,6 +523,23 @@ app.get("/api/public/config", (req, res) => {
       enabled: Boolean(process.env.USDT_TRC20_ADDRESS),
     },
   });
+});
+
+app.get("/api/public/announcements", async (req, res) => {
+  try {
+    const settings = await SiteSetting.findOne({ key: "main" }).lean();
+    const announcements = (settings?.announcements || [])
+      .filter((item) => item.isActive !== false && item.textTr)
+      .map((item) => ({
+        id: String(item._id || ""),
+        textTr: item.textTr,
+        textEn: item.textEn || item.textTr,
+      }));
+
+    res.json({ announcements });
+  } catch (error) {
+    res.status(500).json({ message: "Duyurular getirilemedi" });
+  }
 });
 /* ================= ROUTES ================= */
 

@@ -14,10 +14,16 @@ import {
 } from "../services/unilevelBonusService.js";
 import { ensureUserMatrixPlacement } from "../services/matrixService.js";
 import { buildUserEarningSummary } from "../services/earningSummaryService.js";
+import SiteSetting from "../models/SiteSetting.js";
 
 const router = express.Router();
 
 const ADMIN_PERMISSION_VALUES = ["users", "products", "finance", "settings"];
+const DEFAULT_ANNOUNCEMENTS = [
+  { textTr: "FTSLine'a hoş geldiniz.", textEn: "Welcome to FTSLine.", isActive: true },
+  { textTr: "E-ticaret eğitimleri ve yeni dersler Akademi alanında.", textEn: "E-commerce training and new lessons are available in the Academy.", isActive: true },
+  { textTr: "Yeni ürünler ve güncel kampanyalar için Ürünler sayfasını takip edin.", textEn: "Follow the Products page for new products and current campaigns.", isActive: true },
+];
 
 function normalizeAdminPermissions(permissions) {
   if (!Array.isArray(permissions)) return [];
@@ -33,6 +39,51 @@ function addMonths(date, months) {
   result.setDate(Math.min(originalDay, lastDay));
   return result;
 }
+
+router.get("/announcements", authRequired, superAdminOnly, async (req, res) => {
+  try {
+    const settings = await SiteSetting.findOne({ key: "main" }).lean();
+    res.json({ announcements: settings ? settings.announcements : DEFAULT_ANNOUNCEMENTS });
+  } catch (error) {
+    res.status(500).json({ message: "Duyurular getirilemedi" });
+  }
+});
+
+router.put("/announcements", authRequired, superAdminOnly, async (req, res) => {
+  try {
+    if (!Array.isArray(req.body?.announcements)) {
+      return res.status(400).json({ message: "Duyuru listesi gecersiz" });
+    }
+
+    if (req.body.announcements.length > 10) {
+      return res.status(400).json({ message: "En fazla 10 duyuru eklenebilir" });
+    }
+
+    const announcements = req.body.announcements.map((item) => ({
+      textTr: String(item?.textTr || "").trim(),
+      textEn: String(item?.textEn || "").trim(),
+      isActive: item?.isActive !== false,
+    }));
+
+    if (announcements.some((item) => !item.textTr)) {
+      return res.status(400).json({ message: "Her duyurunun Turkce metni zorunludur" });
+    }
+
+    if (announcements.some((item) => item.textTr.length > 160 || item.textEn.length > 160)) {
+      return res.status(400).json({ message: "Duyuru metni en fazla 160 karakter olabilir" });
+    }
+
+    const settings = await SiteSetting.findOneAndUpdate(
+      { key: "main" },
+      { $set: { announcements } },
+      { new: true, upsert: true, runValidators: true }
+    ).lean();
+
+    res.json({ announcements: settings.announcements, message: "Duyurular kaydedildi" });
+  } catch (error) {
+    res.status(500).json({ message: "Duyurular kaydedilemedi" });
+  }
+});
 
 router.get("/users", authRequired, superAdminOnly, async (req, res) => {
   try {

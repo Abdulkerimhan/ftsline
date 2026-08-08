@@ -4,13 +4,15 @@ import { getCartCount } from "../utils/cart.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import "./Navbar.css";
 
+const API = import.meta.env.VITE_API_URL || "/api";
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, language, changeLanguage } = useI18n();
 
   const common = t?.common || {};
-  const announcements = language === "tr"
+  const defaultAnnouncements = language === "tr"
     ? [
         "FTSLine'a hoş geldiniz.",
         "E-ticaret eğitimleri ve yeni dersler Akademi alanında.",
@@ -21,6 +23,11 @@ export default function Navbar() {
         "E-commerce training and new lessons are available in the Academy.",
         "Follow the Products page for new products and current campaigns.",
       ];
+
+  const [announcementItems, setAnnouncementItems] = useState(null);
+  const announcements = announcementItems === null
+    ? defaultAnnouncements
+    : announcementItems.map((item) => language === "tr" ? item.textTr : (item.textEn || item.textTr));
 
   const [token, setToken] = useState(sessionStorage.getItem("accessToken"));
   const [user, setUser] = useState(() => {
@@ -54,6 +61,31 @@ export default function Navbar() {
       window.removeEventListener("cartUpdated", updateCart);
       window.removeEventListener("authChanged", syncAuth);
       window.removeEventListener("storage", syncAuth);
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadAnnouncements = () => {
+      fetch(`${API}/public/announcements`, { signal: controller.signal })
+        .then((response) => response.ok ? response.json() : Promise.reject(new Error("Duyurular getirilemedi")))
+        .then((data) => {
+          if (Array.isArray(data?.announcements)) {
+            setAnnouncementItems(data.announcements);
+          }
+        })
+        .catch((error) => {
+          if (error?.name !== "AbortError") console.error(error);
+        });
+    };
+
+    loadAnnouncements();
+    window.addEventListener("announcementsUpdated", loadAnnouncements);
+
+    return () => {
+      controller.abort();
+      window.removeEventListener("announcementsUpdated", loadAnnouncements);
     };
   }, []);
 
@@ -189,7 +221,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div className="navbar-announcements" aria-label={language === "tr" ? "Duyurular" : "Announcements"}>
+      {announcements.length > 0 && <div className="navbar-announcements" aria-label={language === "tr" ? "Duyurular" : "Announcements"}>
         <div className="navbar-announcements-inner">
           <span className="navbar-announcements-label">
             <span aria-hidden="true">&#128226;</span>
@@ -206,7 +238,7 @@ export default function Navbar() {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
     </nav>
   );
 }

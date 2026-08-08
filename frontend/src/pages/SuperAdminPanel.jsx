@@ -151,6 +151,8 @@ export default function SuperAdminPanel() {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [announcementDrafts, setAnnouncementDrafts] = useState([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
 
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -241,6 +243,59 @@ export default function SuperAdminPanel() {
     }
   }
 
+  async function loadAnnouncements() {
+    setAnnouncementsLoading(true);
+    const data = await request("/superadmin/announcements", {}, null);
+    if (Array.isArray(data?.announcements)) {
+      setAnnouncementDrafts(data.announcements.map((item) => ({
+        textTr: item.textTr || "",
+        textEn: item.textEn || "",
+        isActive: item.isActive !== false,
+      })));
+    }
+    setAnnouncementsLoading(false);
+  }
+
+  function updateAnnouncement(index, field, value) {
+    setAnnouncementDrafts((current) => current.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, [field]: value } : item
+    )));
+  }
+
+  function addAnnouncement() {
+    setAnnouncementDrafts((current) => {
+      if (current.length >= 10) {
+        setMessage("En fazla 10 duyuru eklenebilir.");
+        return current;
+      }
+      return [...current, { textTr: "", textEn: "", isActive: true }];
+    });
+  }
+
+  function removeAnnouncement(index) {
+    setAnnouncementDrafts((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  async function saveAnnouncements() {
+    if (announcementDrafts.some((item) => !item.textTr.trim())) {
+      setMessage("Her duyurunun Turkce metnini yazin.");
+      return;
+    }
+
+    setAnnouncementsLoading(true);
+    const data = await request("/superadmin/announcements", {
+      method: "PUT",
+      body: JSON.stringify({ announcements: announcementDrafts }),
+    }, null);
+
+    if (data) {
+      setAnnouncementDrafts(data.announcements || []);
+      setMessage(data.message || "Duyurular kaydedildi.");
+      window.dispatchEvent(new Event("announcementsUpdated"));
+    }
+    setAnnouncementsLoading(false);
+  }
+
   async function updateWithdrawal(requestId, status) {
     const promptText = status === "approved"
       ? "Banka ödemesi açıklaması (isteğe bağlı):"
@@ -271,6 +326,7 @@ export default function SuperAdminPanel() {
 
   useEffect(() => {
     if (activeMenu === "finance") loadFinance();
+    if (activeMenu === "announcements") loadAnnouncements();
   }, [activeMenu]);
 
   const stats = useMemo(() => {
@@ -1537,6 +1593,85 @@ export default function SuperAdminPanel() {
     );
   }
 
+  function renderAnnouncements() {
+    return (
+      <section className="super-card super-announcement-admin">
+        <div className="super-section-heading">
+          <div>
+            <h2>Kayan Duyurular</h2>
+            <p>Navbar altinda gosterilecek duyurulari yalnizca Super Admin yonetebilir.</p>
+          </div>
+          <button type="button" className="super-btn" onClick={addAnnouncement} disabled={announcementsLoading}>
+            + Yeni Duyuru
+          </button>
+        </div>
+
+        {announcementsLoading && !announcementDrafts.length ? (
+          <div className="super-empty">Duyurular yukleniyor...</div>
+        ) : (
+          <div className="super-announcement-list">
+            {announcementDrafts.map((item, index) => (
+              <article className={`super-announcement-editor ${item.isActive ? "active" : "passive"}`} key={index}>
+                <div className="super-announcement-editor-head">
+                  <strong>Duyuru {index + 1}</strong>
+                  <div className="super-announcement-editor-actions">
+                    <label className="super-announcement-toggle">
+                      <input
+                        type="checkbox"
+                        checked={item.isActive}
+                        onChange={(event) => updateAnnouncement(index, "isActive", event.target.checked)}
+                      />
+                      <span>{item.isActive ? "Yayinda" : "Pasif"}</span>
+                    </label>
+                    <button type="button" className="super-btn danger" onClick={() => removeAnnouncement(index)}>
+                      Sil
+                    </button>
+                  </div>
+                </div>
+
+                <div className="super-announcement-fields">
+                  <label>
+                    <span>Turkce metin</span>
+                    <textarea
+                      value={item.textTr}
+                      maxLength={160}
+                      rows={2}
+                      placeholder="Duyuruyu Turkce yazin..."
+                      onChange={(event) => updateAnnouncement(index, "textTr", event.target.value)}
+                    />
+                    <small>{item.textTr.length}/160</small>
+                  </label>
+                  <label>
+                    <span>Ingilizce metin (istege bagli)</span>
+                    <textarea
+                      value={item.textEn}
+                      maxLength={160}
+                      rows={2}
+                      placeholder="Announcement in English..."
+                      onChange={(event) => updateAnnouncement(index, "textEn", event.target.value)}
+                    />
+                    <small>{item.textEn.length}/160</small>
+                  </label>
+                </div>
+              </article>
+            ))}
+
+            {!announcementDrafts.length && (
+              <div className="super-empty">Aktif duyuru yok. Yeni duyuru ekleyebilirsiniz.</div>
+            )}
+          </div>
+        )}
+
+        <div className="super-announcement-savebar">
+          <span>{announcementDrafts.filter((item) => item.isActive).length} aktif / {announcementDrafts.length} toplam duyuru</span>
+          <button type="button" className="super-btn" onClick={saveAnnouncements} disabled={announcementsLoading}>
+            {announcementsLoading ? "Kaydediliyor..." : "Duyurulari Kaydet"}
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   function renderContent() {
     if (loading) {
       return <div className="super-card super-empty">Yukleniyor...</div>;
@@ -1548,6 +1683,7 @@ export default function SuperAdminPanel() {
     if (activeMenu === "orders") return renderOrders();
     if (activeMenu === "finance") return renderFinance();
     if (activeMenu === "academy") return <AcademyAdmin onMessage={setMessage} />;
+    if (activeMenu === "announcements") return renderAnnouncements();
 
     return renderOverview();
   }
@@ -1600,6 +1736,13 @@ export default function SuperAdminPanel() {
           onClick={() => menuClick("academy")}
         >
           Akademi
+        </button>
+
+        <button
+          className={activeMenu === "announcements" ? "active" : ""}
+          onClick={() => menuClick("announcements")}
+        >
+          Duyurular
         </button>
 
         <button className="logout" onClick={logout}>
