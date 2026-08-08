@@ -133,6 +133,9 @@ function getCareerClass(user) {
 
 export default function SuperAdminPanel() {
   const [activeMenu, setActiveMenu] = useState("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window === "undefined" ? true : window.innerWidth > 980,
+  );
   const [search, setSearch] = useState("");
   const [userStatusFilter, setUserStatusFilter] = useState("all");
   const [userCareerFilter, setUserCareerFilter] = useState("all");
@@ -447,6 +450,7 @@ export default function SuperAdminPanel() {
     setActiveMenu(menu);
     setSearch("");
     setMessage("");
+    if (window.innerWidth <= 980) setSidebarOpen(false);
   }
 
   function logout() {
@@ -1690,69 +1694,91 @@ export default function SuperAdminPanel() {
 
   return (
     <div className="super-panel">
-      <aside className="super-sidebar">
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="super-sidebar-backdrop"
+          aria-label="Menüyü kapat"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <aside className={`super-sidebar ${sidebarOpen ? "open" : "closed"}`}>
         <div className="super-logo">
-          <strong>FTSLine</strong>
-          <span>Super Admin</span>
+          <span className="super-logo-mark">
+            <img src="/ftsline.png" alt="FTSLine Logo" />
+          </span>
+          <span className="super-logo-copy">
+            <strong>FTSLine</strong>
+            <small>Super Admin</small>
+          </span>
         </div>
 
         <button
           className={activeMenu === "overview" ? "active" : ""}
           onClick={() => menuClick("overview")}
         >
-          Genel Bakis
+          <span className="super-menu-icon">G</span><span>Genel Bakış</span>
         </button>
 
         <button
           className={activeMenu === "users" ? "active" : ""}
           onClick={() => menuClick("users")}
         >
-          Kullanicilar
+          <span className="super-menu-icon">K</span><span>Kullanıcılar</span>
         </button>
 
         <button
           className={activeMenu === "products" ? "active" : ""}
           onClick={() => menuClick("products")}
         >
-          Urunler
+          <span className="super-menu-icon">Ü</span><span>Ürünler</span>
         </button>
 
         <button
           className={activeMenu === "orders" ? "active" : ""}
           onClick={() => menuClick("orders")}
         >
-          Siparisler
+          <span className="super-menu-icon">S</span><span>Siparişler</span>
         </button>
 
         <button
           className={activeMenu === "finance" ? "active" : ""}
           onClick={() => menuClick("finance")}
         >
-          Finans
+          <span className="super-menu-icon">F</span><span>Finans</span>
         </button>
 
         <button
           className={activeMenu === "academy" ? "active" : ""}
           onClick={() => menuClick("academy")}
         >
-          Akademi
+          <span className="super-menu-icon">A</span><span>Akademi</span>
         </button>
 
         <button
           className={activeMenu === "announcements" ? "active" : ""}
           onClick={() => menuClick("announcements")}
         >
-          Duyurular
+          <span className="super-menu-icon">D</span><span>Duyurular</span>
         </button>
 
         <button className="logout" onClick={logout}>
-          Cikis Yap
+          <span className="super-menu-icon">Ç</span><span>Çıkış Yap</span>
         </button>
       </aside>
 
       <main className="super-main">
         <div className="super-topbar">
-          <div>
+          <button
+            type="button"
+            className="super-mobile-menu"
+            aria-label="Menüyü aç veya kapat"
+            onClick={() => setSidebarOpen((current) => !current)}
+          >
+            <span></span><span></span><span></span>
+          </button>
+          <div className="super-topbar-copy">
             <h1>Super Admin Paneli</h1>
             <p>Tum sistemi yonetebilecegin ana kontrol alani.</p>
           </div>
