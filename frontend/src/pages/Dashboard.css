@@ -1548,7 +1548,10 @@
   .dashboard-sidebar-backdrop {
     display: block;
     position: fixed;
-    inset: 0;
+    top: 106px;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 55;
     border: 0;
     padding: 0;
@@ -1559,7 +1562,8 @@
   .dashboard-sidebar {
     position: fixed;
     left: 0;
-    top: 0;
+    top: 106px;
+    height: calc(100vh - 106px);
     z-index: 60;
     transform: translateX(0);
     width: 260px;
@@ -1590,6 +1594,17 @@
 
   .matrix-min-width {
     min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-sidebar-backdrop {
+    top: 82px;
+  }
+
+  .dashboard-sidebar {
+    top: 82px;
+    height: calc(100vh - 82px);
   }
 }
 
