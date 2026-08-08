@@ -136,6 +136,7 @@ export default function SuperAdminPanel() {
   const [search, setSearch] = useState("");
   const [userStatusFilter, setUserStatusFilter] = useState("all");
   const [userCareerFilter, setUserCareerFilter] = useState("all");
+  const [userLicenseFilter, setUserLicenseFilter] = useState("all");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [orderDateFrom, setOrderDateFrom] = useState("");
@@ -321,15 +322,20 @@ export default function SuperAdminPanel() {
     const matchesCareer =
       userCareerFilter === "all" ||
       getUserCareerLevel(u).toUpperCase() === userCareerFilter;
+    const matchesLicense =
+      userLicenseFilter === "all" ||
+      (userLicenseFilter === "licensed" && u.isLicensed === true) ||
+      (userLicenseFilter === "unlicensed" && u.isLicensed !== true);
 
-    return matchesSearch && matchesStatus && matchesCareer;
+    return matchesSearch && matchesStatus && matchesCareer && matchesLicense;
   });
 
   const userSummary = useMemo(() => {
     const active = users.filter((user) => user.isActive !== false).length;
     const passive = users.filter((user) => user.isActive === false).length;
     const licensed = users.filter((user) => user.isLicensed === true).length;
-    return { total: users.length, active, passive, licensed };
+    const unlicensed = users.length - licensed;
+    return { total: users.length, active, passive, licensed, unlicensed };
   }, [users]);
 
   const careerSummary = useMemo(() => {
@@ -964,10 +970,22 @@ export default function SuperAdminPanel() {
             <span>Pasif kullanıcı</span>
             <strong>{userSummary.passive}</strong>
           </button>
-          <div className="super-user-stat licensed">
+          <button
+            type="button"
+            className={`super-user-stat licensed ${userLicenseFilter === "licensed" ? "selected" : ""}`}
+            onClick={() => setUserLicenseFilter((current) => current === "licensed" ? "all" : "licensed")}
+          >
             <span>Lisanslı kullanıcı</span>
             <strong>{userSummary.licensed}</strong>
-          </div>
+          </button>
+          <button
+            type="button"
+            className={`super-user-stat unlicensed ${userLicenseFilter === "unlicensed" ? "selected" : ""}`}
+            onClick={() => setUserLicenseFilter((current) => current === "unlicensed" ? "all" : "unlicensed")}
+          >
+            <span>Lisanssız kullanıcı</span>
+            <strong>{userSummary.unlicensed}</strong>
+          </button>
         </div>
 
         <div className="super-user-filterbar">
@@ -985,8 +1003,16 @@ export default function SuperAdminPanel() {
               ))}
             </select>
           </label>
+          <div className="super-user-license-filter" aria-label="Lisansa göre filtrele">
+            <span>Lisans durumuna göre</span>
+            <div>
+              <button type="button" className={userLicenseFilter === "all" ? "selected" : ""} onClick={() => setUserLicenseFilter("all")}>Tümü</button>
+              <button type="button" className={userLicenseFilter === "licensed" ? "selected licensed" : ""} onClick={() => setUserLicenseFilter("licensed")}>Lisanslı</button>
+              <button type="button" className={userLicenseFilter === "unlicensed" ? "selected unlicensed" : ""} onClick={() => setUserLicenseFilter("unlicensed")}>Lisanssız</button>
+            </div>
+          </div>
           <span className="super-filter-result">{filteredUsers.length} kayıt gösteriliyor</span>
-          {(search || userStatusFilter !== "all" || userCareerFilter !== "all") && (
+          {(search || userStatusFilter !== "all" || userCareerFilter !== "all" || userLicenseFilter !== "all") && (
             <button
               type="button"
               className="super-clear-user-filters"
@@ -994,6 +1020,7 @@ export default function SuperAdminPanel() {
                 setSearch("");
                 setUserStatusFilter("all");
                 setUserCareerFilter("all");
+                setUserLicenseFilter("all");
               }}
             >
               Filtreleri temizle

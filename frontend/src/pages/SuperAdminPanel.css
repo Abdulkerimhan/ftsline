@@ -264,7 +264,7 @@
 
 .super-user-overview {
   display: grid;
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
   gap: 12px;
   margin: 0 0 14px;
 }
@@ -301,6 +301,7 @@ button.super-user-stat {
 .super-user-stat.active { background: #ecfdf5; border-color: #86efac; }
 .super-user-stat.passive { background: #fff7ed; border-color: #fdba74; }
 .super-user-stat.licensed { background: #f5f3ff; border-color: #c4b5fd; }
+.super-user-stat.unlicensed { background: #fff1f2; border-color: #fda4af; }
 .super-user-stat.selected { box-shadow: inset 0 0 0 2px #2563eb, 0 8px 18px rgba(37, 99, 235, 0.12); }
 
 .super-user-filterbar {
@@ -347,6 +348,50 @@ button.super-user-stat {
   flex-direction: column;
   gap: 5px;
   min-width: 210px;
+}
+
+.super-user-license-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.super-user-license-filter > span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.super-user-license-filter > div {
+  display: flex;
+  gap: 6px;
+}
+
+.super-user-license-filter button {
+  min-height: 40px;
+  padding: 8px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.super-user-license-filter button.selected {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.super-user-license-filter button.selected.licensed {
+  border-color: #7c3aed;
+  background: #7c3aed;
+}
+
+.super-user-license-filter button.selected.unlicensed {
+  border-color: #e11d48;
+  background: #e11d48;
 }
 
 .super-user-career-filter span,
@@ -1367,7 +1412,7 @@ button.super-user-stat {
   }
 
   .super-user-overview {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -1398,12 +1443,21 @@ button.super-user-stat {
 
   .super-user-filter-group,
   .super-user-career-filter,
+  .super-user-license-filter,
   .super-clear-user-filters {
     width: 100%;
   }
 
   .super-user-filter-group button {
     flex: 1 1 100%;
+  }
+
+  .super-user-license-filter > div {
+    width: 100%;
+  }
+
+  .super-user-license-filter button {
+    flex: 1;
   }
 
   .super-filter-result {
