@@ -166,12 +166,8 @@
   width: max-content;
   display: flex;
   align-items: center;
-  animation: navbar-announcements-scroll 32s linear infinite;
+  animation: navbar-announcements-scroll 18s linear infinite;
   will-change: transform;
-}
-
-.navbar-announcements:hover .navbar-announcements-track {
-  animation-play-state: paused;
 }
 
 .navbar-announcement {
@@ -197,17 +193,6 @@
 @keyframes navbar-announcements-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .navbar-announcements-track {
-    width: 100%;
-    animation: none;
-  }
-
-  .navbar-announcement:not(:first-child) {
-    display: none;
-  }
 }
 
 @media (max-width: 1180px) {
@@ -301,6 +286,6 @@
   }
 
   .navbar-announcements-track {
-    animation-duration: 27s;
+    animation-duration: 16s;
   }
 }
