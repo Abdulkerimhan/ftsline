@@ -1,5 +1,11 @@
 ﻿import User from "../models/User.js";
-import { calculateCareer, isActiveMember, CAREER_LEVELS } from "./careerService.js";
+import {
+  calculateCareer,
+  careerRank,
+  isActiveMember,
+  CAREER_LEVELS,
+} from "./careerService.js";
+import { sendCareerCongratulations } from "./careerNotificationService.js";
 
 async function getDirectUsers(userId) {
   return User.find({ sponsor: userId }).select(
@@ -63,15 +69,31 @@ export async function updateUserCareer(user) {
 
   const careerResult = calculateCareer(stats);
   const newLevel = careerResult.level;
-  const oldLevel = user?.career?.level || CAREER_LEVELS.NONE;
+  const oldLevel =
+    user?.career?.level && user.career.level !== CAREER_LEVELS.NONE
+      ? user.career.level
+      : user?.careerLevel || user?.career?.level || CAREER_LEVELS.NONE;
 
   user.teamCount = stats.totalMembers;
   user.career = {
     level: newLevel,
     updatedAt: new Date(),
   };
+  // Keep the legacy field in sync while older screens/clients still use it.
+  user.careerLevel = newLevel;
 
   await user.save();
+
+  const promoted = careerRank(newLevel) > careerRank(oldLevel);
+  let notification = { sent: false, reason: "not_promoted" };
+  if (promoted) {
+    try {
+      notification = await sendCareerCongratulations(user, newLevel);
+    } catch (error) {
+      console.error("CAREER_CONGRATULATIONS_ERR:", user.username, error.message);
+      notification = { sent: false, reason: "send_failed" };
+    }
+  }
 
   return {
     userId: user._id,
@@ -79,13 +101,17 @@ export async function updateUserCareer(user) {
     oldLevel,
     newLevel,
     changed: oldLevel !== newLevel,
+    promoted,
+    notification,
     stats: careerResult.stats,
     matchedRules: careerResult.matchedRules,
   };
 }
 
 export async function updateAllCareers() {
-  const users = await User.find().sort({ createdAt: 1 });
+  // Descendants are normally newer than sponsors. Updating newest first makes
+  // their new career visible to parent leg calculations in the same run.
+  const users = await User.find().sort({ createdAt: -1 });
 
   const results = [];
 

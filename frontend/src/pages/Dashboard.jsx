@@ -79,13 +79,27 @@ export default function Dashboard({ initialSection = "overview" }) {
     Number(value || 0).toLocaleString(language === "tr" ? "tr-TR" : "en-US");
 
   const formatCareer = (career) => {
-    if (!career) return "BaÅŸlangÄ±Ã§";
+    const rawLevel = typeof career === "object"
+      ? career?.level || career?.name || career?.title
+      : career;
+    const level = String(rawLevel || "NONE");
+    const labels = {
+      NONE: "Başlangıç",
+      starter: "Başlangıç",
+      BRONZ: "Bronz",
+      bronze: "Bronz",
+      GUMUS: "Gümüş",
+      silver: "Gümüş",
+      ALTIN: "Altın",
+      gold: "Altın",
+      PLATIN: "Platin",
+      platinum: "Platin",
+      ELMAS: "Elmas",
+      diamond: "Elmas",
+      TAC_ELMAS: "Taç Elmas",
+    };
 
-    if (typeof career === "object") {
-      return career.level || career.name || career.title || "BaÅŸlangÄ±Ã§";
-    }
-
-    return career;
+    return labels[level] || level;
   };
 
   const [user, setUser] = useState(() => {
@@ -391,7 +405,11 @@ export default function Dashboard({ initialSection = "overview" }) {
             licenseStatus: data?.isLicensed
               ? safeText(dashboardT?.active, "Aktif")
               : safeText(dashboardT?.passive, "Pasif"),
-            career: data?.career ? formatCareer(data.career) : prev.career,
+            career: formatCareer(
+              data?.career?.level && data.career.level !== "NONE"
+                ? data.career
+                : data?.careerLevel || data?.career || prev.career
+            ),
             licenseEndsAt:
               data?.licenseEndsAt ||
               data?.licenseExpiresAt ||

@@ -60,12 +60,26 @@ const labels = {
   TAC_ELMAS: "Tac Elmas",
 };
 
+const levelAliases = {
+  starter: CAREER_LEVELS.NONE,
+  bronze: CAREER_LEVELS.BRONZ,
+  silver: CAREER_LEVELS.GUMUS,
+  gold: CAREER_LEVELS.ALTIN,
+  platinum: CAREER_LEVELS.PLATIN,
+  diamond: CAREER_LEVELS.ELMAS,
+};
+
+export function normalizeCareerLevel(level) {
+  const rawLevel = String(level || CAREER_LEVELS.NONE);
+  return levelAliases[rawLevel] || rawLevel;
+}
+
 export function getCareerLabel(level) {
-  return labels[level] || labels.NONE;
+  return labels[normalizeCareerLevel(level)] || labels.NONE;
 }
 
 export function careerRank(level) {
-  return CAREER_ORDER.indexOf(level || CAREER_LEVELS.NONE);
+  return CAREER_ORDER.indexOf(normalizeCareerLevel(level));
 }
 
 export function hasCareerAtLeast(level, minimumLevel) {
