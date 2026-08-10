@@ -28,6 +28,8 @@ export default function Cart() {
         rowTotal: "Ara Toplam",
         totalProducts: "Toplam Ürün",
         totalAmount: "Toplam Tutar",
+        shipping: "Kargo",
+        freeShipping: "Ücretsiz",
         orderSummary: "Sipariş Özeti",
         checkout: "Siparişi Tamamla",
         clearCart: "Sepeti Temizle",
@@ -47,6 +49,8 @@ export default function Cart() {
         rowTotal: "Subtotal",
         totalProducts: "Total Items",
         totalAmount: "Total Amount",
+        shipping: "Shipping",
+        freeShipping: "Free",
         orderSummary: "Order Summary",
         checkout: "Complete Order",
         clearCart: "Clear Cart",
@@ -77,7 +81,9 @@ export default function Cart() {
     };
   }, []);
 
-  const total = getCartTotal();
+  const subtotal = getCartTotal();
+  const shipping = subtotal > 0 && subtotal < 1000 ? 150 : 0;
+  const total = subtotal + shipping;
   const totalQty = cart.reduce((sum, item) => {
     return sum + Number(item.quantity || 1);
   }, 0);
@@ -192,6 +198,16 @@ export default function Cart() {
               <div className="cart-summary-row">
                 <span>{t.totalProducts}</span>
                 <strong>{totalQty}</strong>
+              </div>
+
+              <div className="cart-summary-row">
+                <span>{t.rowTotal}</span>
+                <strong>{formatPrice(subtotal)} {t.currency}</strong>
+              </div>
+
+              <div className="cart-summary-row">
+                <span>{t.shipping}</span>
+                <strong>{shipping ? `${formatPrice(shipping)} ${t.currency}` : t.freeShipping}</strong>
               </div>
 
               <div className="cart-summary-row">

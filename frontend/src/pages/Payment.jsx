@@ -192,7 +192,7 @@ export default function Payment() {
     return sum + price * qty;
   }, 0);
 
-  const shipping = 0;
+  const shipping = !isLicenseOrder && subtotal > 0 && subtotal < 1000 ? 150 : 0;
   const total = subtotal + shipping;
   const displayCurrency = isLicenseOrder ? "" : t.currency;
   useEffect(() => {
@@ -639,7 +639,7 @@ export default function Payment() {
 
               <div className="payment-summary-line">
                 <span>{t.shipping}</span>
-                <strong>{t.free}</strong>
+                <strong>{shipping ? `${formatPrice(shipping)} ${t.currency}` : t.free}</strong>
               </div>
 
               <div className="payment-summary-line total">

@@ -212,7 +212,11 @@ router.post("/", authOptional, async (req, res) => {
       return sum + Number(item.price || 0) * Number(item.quantity || 1);
     }, 0);
 
-    const finalShippingPrice = 0;
+    // Kargo tutari istemciden kabul edilmez; siparis ara toplamina gore sunucuda hesaplanir.
+    // Lisans siparisleri fiziksel teslimat icermedigi icin kargodan muaftir.
+    const finalShippingPrice = !isLicenseOrder && calculatedSubtotal > 0 && calculatedSubtotal < 1000
+      ? 150
+      : 0;
     const finalTotal = calculatedSubtotal + finalShippingPrice;
 
     const trackingCode = await createUniqueTrackingCode();
