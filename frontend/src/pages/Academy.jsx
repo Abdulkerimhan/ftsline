@@ -150,14 +150,16 @@ export default function Academy({ language = "tr" }) {
   }
 
   const videoUrl = embedVideoUrl(selectedLesson?.videoUrl);
+  const courseIndex = Math.max(0, courses.findIndex((course) => course._id === selectedCourse?._id));
+  const courseColors = ["aqua", "sky", "blue", "violet", "amber", "green"];
 
   return (
     <div className="academy-page">
       <div className="academy-heading">
         <div>
-          <span>FTSLine</span>
-          <h1>{isTr ? "Akademi" : "Academy"}</h1>
-          <p>{isTr ? "E-ticaret yolculugunda ihtiyacin olan egitimler." : "Training for your e-commerce journey."}</p>
+          <span>{isTr ? "FTSLine Eğitim Merkezi" : "FTSLine Learning Center"}</span>
+          <h1>{isTr ? "E-Ticaret Akademisi" : "E-Commerce Academy"}</h1>
+          <p>{isTr ? "Bilgini geliştir, dersleri tamamla ve e-ticaret yolculuğunda adım adım ilerle." : "Build your skills and advance through your e-commerce journey."}</p>
         </div>
         <div className="academy-overall">
           <strong>%{progressPercent}</strong>
@@ -165,21 +167,47 @@ export default function Academy({ language = "tr" }) {
         </div>
       </div>
 
-      <div className="academy-course-tabs">
-        {courses.map((course) => (
-          <button
-            type="button"
-            key={course._id}
-            className={course._id === selectedCourse?._id ? "active" : ""}
-            onClick={() => setSelectedCourseId(course._id)}
-          >
-            <span>{course.category}</span>
-            <strong>{course.title}</strong>
-          </button>
-        ))}
+      <div className="academy-mobile-course">
+        <label htmlFor="academy-course-select">{isTr ? "Eğitim programı" : "Training program"}</label>
+        <select id="academy-course-select" value={selectedCourse?._id || ""} onChange={(event) => setSelectedCourseId(event.target.value)}>
+          {courses.map((course, index) => <option key={course._id} value={course._id}>{index + 1}. {course.title}</option>)}
+        </select>
       </div>
 
-      <div className="academy-layout">
+      <div className="academy-catalog">
+        <aside className="academy-course-menu">
+          <h2>{isTr ? "Eğitimler" : "Programs"}</h2>
+          {courses.map((course, index) => (
+            <button type="button" key={course._id} className={course._id === selectedCourse?._id ? "active" : ""} onClick={() => setSelectedCourseId(course._id)}>
+              <span>{index + 1}</span><strong>{course.title}</strong><b>›</b>
+            </button>
+          ))}
+        </aside>
+        <section className="academy-catalog-content">
+          <div className="academy-catalog-title">
+            <div><small>{selectedCourse?.category}</small><h2>{selectedCourse?.title}</h2></div>
+            <p>{selectedCourse?.description}</p>
+          </div>
+          <div className="academy-lesson-grid">
+            {lessons.map((lesson, index) => (
+              <article className={`academy-lesson-card ${courseColors[(courseIndex + index) % courseColors.length]}`} key={lesson._id}>
+                <button className="academy-card-cover" type="button" onClick={() => setSelectedLessonId(lesson._id)}>
+                  {selectedCourse?.coverImage ? <img src={selectedCourse.coverImage} alt="" /> : <span className="academy-cover-art"><i>↗</i><b>{index + 1}</b></span>}
+                </button>
+                <div className="academy-card-body">
+                  <small>{lesson.durationMinutes ? `${lesson.durationMinutes} ${isTr ? "dk" : "min"}` : (isTr ? "Ders" : "Lesson")}</small>
+                  <h3>{lesson.title}</h3>
+                  <p>{lesson.description || (isTr ? "Uygulamalı eğitim içeriğini şimdi inceleyin." : "Explore this practical lesson.")}</p>
+                  <button type="button" onClick={() => setSelectedLessonId(lesson._id)}>{completedIds.has(String(lesson._id)) ? "✓ " : "▶ "}{isTr ? "Eğitime Başla" : "Start Lesson"}</button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <div className="academy-section-label"><span>{isTr ? "Seçili ders" : "Selected lesson"}</span><h2>{selectedLesson?.title}</h2></div>
+      <div className="academy-layout" id="academy-player">
         <section className="academy-player-card">
           {videoUrl ? (
             <div className="academy-video">
