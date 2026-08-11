@@ -2,6 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import "./Academy.css";
 
 const API = import.meta.env.VITE_API_URL || "/api";
+const defaultLessonCovers = [
+  "/images/academy/yol-haritasi.svg",
+  "/images/academy/hedef-musteri.svg",
+  "/images/academy/urun-dogrulama.svg",
+  "/images/academy/maliyet-karlilik.svg",
+  "/images/academy/guvenli-magaza.svg",
+  "/images/academy/yayina-cikis.svg",
+];
 
 function embedVideoUrl(value) {
   const url = String(value || "").trim();
@@ -192,7 +200,11 @@ export default function Academy({ language = "tr" }) {
             {lessons.map((lesson, index) => (
               <article className={`academy-lesson-card ${courseColors[(courseIndex + index) % courseColors.length]}`} key={lesson._id}>
                 <button className="academy-card-cover" type="button" onClick={() => setSelectedLessonId(lesson._id)}>
-                  {selectedCourse?.coverImage ? <img src={selectedCourse.coverImage} alt="" /> : <span className="academy-cover-art"><i>↗</i><b>{index + 1}</b></span>}
+                  <img
+                    src={defaultLessonCovers[index % defaultLessonCovers.length]}
+                    alt={`${lesson.title} ders görseli`}
+                    loading="lazy"
+                  />
                 </button>
                 <div className="academy-card-body">
                   <small>{lesson.durationMinutes ? `${lesson.durationMinutes} ${isTr ? "dk" : "min"}` : (isTr ? "Ders" : "Lesson")}</small>
