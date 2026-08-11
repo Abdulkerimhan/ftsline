@@ -737,6 +737,13 @@
 .matrix-focus-view {
   width: min(100%, 980px);
   margin: 0 auto;
+  padding: 22px;
+  border: 1px solid rgba(154, 180, 225, 0.42);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(42, 103, 238, 0.17), transparent 35%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(241, 247, 255, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 18px 50px rgba(44, 75, 128, 0.08);
 }
 
 .matrix-focus-toolbar {
@@ -783,8 +790,9 @@
 .matrix-focus-depth {
   padding: 7px 10px;
   border-radius: 999px;
-  background: #eaf1ff;
+  background: linear-gradient(135deg, #dfeaff, #edf4ff);
   color: #2458c8;
+  box-shadow: 0 6px 16px rgba(36, 88, 200, 0.1);
 }
 
 .matrix-focused-node {
@@ -910,10 +918,11 @@
   text-align: center;
   padding: 16px 16px 14px;
   border-radius: 18px;
-  background: linear-gradient(155deg, #ffffff 0%, #f7faff 100%);
+  overflow: hidden;
+  background: linear-gradient(155deg, #ffffff 0%, #f3f7ff 100%);
   color: #0f172a;
   border: 1px solid #dfe7f3;
-  box-shadow: 0 12px 28px rgba(24, 52, 96, 0.11);
+  box-shadow: 0 15px 34px rgba(24, 52, 96, 0.14), inset 0 1px 0 #fff;
   font-weight: 800;
   font-size: 14px;
   transition: 0.22s ease;
@@ -922,17 +931,29 @@
   outline: none;
 }
 
+.matrix-card-accent {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: linear-gradient(90deg, #18b7e9, #275de4 58%, #7c4dff);
+}
+
+.matrix-leaf .matrix-card-accent {
+  background: linear-gradient(90deg, #41d6a3, #16a77c);
+}
+
 .matrix-person-icon {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   margin: 0 auto 8px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #e6efff, #d5e5ff);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e9f2ff, #cedfff);
   color: #174db8;
-  font-size: 17px;
-  box-shadow: inset 0 0 0 1px rgba(36, 88, 216, 0.1);
+  font-size: 20px;
+  border: 3px solid #fff;
+  box-shadow: 0 7px 16px rgba(35, 86, 190, 0.2), inset 0 0 0 1px rgba(36, 88, 216, 0.12);
 }
 
 .matrix-root .matrix-person-icon {
@@ -959,7 +980,13 @@
   background: linear-gradient(135deg, #082e83 0%, #1558db 58%, #2f72ff 100%);
   color: #fff;
   border: none;
-  box-shadow: 0 16px 34px rgba(15, 63, 174, 0.28);
+  box-shadow: 0 20px 42px rgba(15, 63, 174, 0.36);
+  transform: scale(1.04);
+}
+
+.matrix-root .matrix-card-accent {
+  background: linear-gradient(90deg, #51d7ff, #fff 48%, #80a5ff);
+  opacity: 0.72;
 }
 
 .matrix-node-name {
@@ -967,6 +994,30 @@
   font-weight: 900;
   letter-spacing: -0.15px;
   overflow-wrap: anywhere;
+}
+
+.matrix-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  color: #16815f;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.matrix-status-badge span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #21c98a;
+  box-shadow: 0 0 0 4px rgba(33, 201, 138, 0.13);
+}
+
+.matrix-root .matrix-status-badge { color: #d9fff1; }
+.matrix-root .matrix-status-badge span {
+  background: #6fffc2;
+  box-shadow: 0 0 0 4px rgba(111, 255, 194, 0.16);
 }
 
 .matrix-level,
@@ -1003,8 +1054,8 @@
   min-width: 22px;
   height: 22px;
   padding-inline: 5px;
-  border-radius: 8px;
-  background: #dfeaff;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #dbe8ff, #eef4ff);
   color: #174db8;
   font-size: 12px;
 }
@@ -1022,14 +1073,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   margin-top: 9px;
   padding: 4px 9px;
   border-radius: 999px;
-  background: #edf3ff;
+  background: linear-gradient(135deg, #e3edff, #f0f5ff);
   color: #174db8;
   font-size: 11px;
   font-weight: 800;
   opacity: 1;
+}
+
+.matrix-toggle-text span {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.matrix-clickable:hover .matrix-toggle-text span {
+  transform: translateX(3px);
 }
 
 .matrix-root .matrix-toggle-text {

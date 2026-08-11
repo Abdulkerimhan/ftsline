@@ -686,13 +686,18 @@ export default function Dashboard({ initialSection = "overview" }) {
       <button
         type="button"
         className={`matrix-node ${isFocus ? "matrix-root" : ""} ${
-          hasChildren && !isFocus ? "matrix-clickable" : ""
+          hasChildren && !isFocus ? "matrix-clickable matrix-has-team" : "matrix-leaf"
         }`}
         onClick={() => hasChildren && !isFocus && focusMatrixBranch(nodeId)}
         disabled={!hasChildren || isFocus}
       >
+        <span className="matrix-card-accent" aria-hidden="true" />
         <span className="matrix-person-icon" aria-hidden="true">&#128100;</span>
         <div className="matrix-node-name">{node.username}</div>
+        <div className="matrix-status-badge">
+          <span aria-hidden="true" />
+          {language === "tr" ? "Aktif" : "Active"}
+        </div>
         <div className="matrix-level-badge">
           {safeText(matrixT?.level, "Seviye")} {level}
         </div>
@@ -703,6 +708,7 @@ export default function Dashboard({ initialSection = "overview" }) {
         {hasChildren && !isFocus && (
           <div className="matrix-toggle-text">
             {language === "tr" ? "Kolu aç" : "Open branch"}
+            <span aria-hidden="true">→</span>
           </div>
         )}
       </button>
