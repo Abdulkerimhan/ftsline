@@ -109,6 +109,7 @@ router.post(
 
         priceNormal: Number(req.body.priceNormal || 0),
         priceLicensed: Number(req.body.priceLicensed || 0),
+        networkProfitBase: Number(req.body.networkProfitBase || 0),
 
         stock: req.body.stock || "SÄ±nÄ±rsÄ±z",
 
@@ -171,6 +172,7 @@ router.put(
 
           priceNormal: Number(req.body.priceNormal || 0),
           priceLicensed: Number(req.body.priceLicensed || 0),
+          networkProfitBase: Number(req.body.networkProfitBase || 0),
 
           stock: req.body.stock || "SÄ±nÄ±rsÄ±z",
 

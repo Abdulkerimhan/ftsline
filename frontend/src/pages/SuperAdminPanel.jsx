@@ -18,6 +18,7 @@ const emptyProductForm = {
   description: "",
   priceNormal: "",
   priceLicensed: "",
+  networkProfitBase: "",
   stock: "Sinirsiz",
   status: "Aktif",
 };
@@ -479,6 +480,7 @@ export default function SuperAdminPanel() {
       description: product.description || "",
       priceNormal: product.priceNormal ?? "",
       priceLicensed: product.priceLicensed ?? "",
+      networkProfitBase: product.networkProfitBase ?? "",
       stock: product.stock || "Sinirsiz",
       status: product.isActive ? "Aktif" : "Pasif",
     });
@@ -561,6 +563,7 @@ export default function SuperAdminPanel() {
     payload.append("description", productForm.description.trim());
     payload.append("priceNormal", productForm.priceNormal);
     payload.append("priceLicensed", productForm.priceLicensed);
+    payload.append("networkProfitBase", productForm.networkProfitBase || 0);
     payload.append("stock", productForm.stock || "Sinirsiz");
     payload.append("isActive", String(productForm.status === "Aktif"));
     existingImages.forEach((imageUrl) => payload.append("existingImages", imageUrl));
@@ -2064,6 +2067,20 @@ export default function SuperAdminPanel() {
                       value={productForm.priceLicensed}
                       onChange={handleProductChange}
                     />
+                  </label>
+
+                  <label className="super-field">
+                    <span>Dağıtıma Esas Net Kâr</span>
+                    <input
+                      name="networkProfitBase"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Masraflar sonrası onaylanan birim net kâr"
+                      value={productForm.networkProfitBase}
+                      onChange={handleProductChange}
+                    />
+                    <small>Ürün ve satış masrafları çıktıktan sonra yönetimin kabul ettiği birim net kâr.</small>
                   </label>
 
                   <label className="super-field">

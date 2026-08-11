@@ -66,6 +66,7 @@ const emptyProductForm = {
   description: "",
   priceNormal: "",
   priceLicensed: "",
+  networkProfitBase: "",
   stock: "SÄ±nÄ±rsÄ±z",
   status: "Aktif",
 };
@@ -372,6 +373,7 @@ export default function AdminPanel() {
       formData.append("description", productForm.description.trim());
       formData.append("priceNormal", productForm.priceNormal);
       formData.append("priceLicensed", productForm.priceLicensed);
+      formData.append("networkProfitBase", productForm.networkProfitBase || 0);
       formData.append("stock", productForm.stock || "SÄ±nÄ±rsÄ±z");
       formData.append("isActive", productForm.status === "Aktif");
 
@@ -428,6 +430,7 @@ export default function AdminPanel() {
       description: product.description || "",
       priceNormal: product.priceNormal ?? "",
       priceLicensed: product.priceLicensed ?? "",
+      networkProfitBase: product.networkProfitBase ?? "",
       stock: product.stock || "SÄ±nÄ±rsÄ±z",
       status: product.isActive ? "Aktif" : "Pasif",
     });
@@ -475,6 +478,7 @@ export default function AdminPanel() {
       formData.append("description", product.description || "");
       formData.append("priceNormal", product.priceNormal ?? 0);
       formData.append("priceLicensed", product.priceLicensed ?? 0);
+      formData.append("networkProfitBase", product.networkProfitBase ?? 0);
       formData.append("stock", product.stock || "SÄ±nÄ±rsÄ±z");
       formData.append("isActive", !product.isActive);
 
@@ -1068,6 +1072,20 @@ export default function AdminPanel() {
                       changeProductField("priceLicensed", e.target.value)
                     }
                   />
+                </div>
+
+                <div className="admin-field">
+                  <label>Dağıtıma Esas Net Kâr</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={productForm.networkProfitBase}
+                    onChange={(e) =>
+                      changeProductField("networkProfitBase", e.target.value)
+                    }
+                  />
+                  <small>Masraflar çıktıktan sonra yönetimin kabul ettiği birim net kâr.</small>
                 </div>
 
                 <div className="admin-field">

@@ -79,6 +79,14 @@ const productSchema = new mongoose.Schema(
       min: 0,
     },
 
+    // Urun ve satis masraflari dusuldukten sonra yonetimin kabul ettigi,
+    // ag dagitimlarina esas birim net kar tutari.
+    networkProfitBase: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     stock: {
       type: String,
       default: "Sınırsız",

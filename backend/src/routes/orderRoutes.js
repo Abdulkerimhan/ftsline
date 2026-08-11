@@ -131,8 +131,7 @@ async function normalizeOrderItems(items = [], buyer = null) {
     const product = productMap.get(productId);
     const licensedPrice = Number(product.priceLicensed || 0);
     const normalPrice = Number(product.priceNormal || 0);
-    const isNormalPriceOrder = hasRegisteredBuyer && !isLicensed;
-    const isLicensedPriceOrder = hasRegisteredBuyer && isLicensed;
+    const qualifiesForProductNetwork = hasRegisteredBuyer && Number(product.networkProfitBase || 0) > 0;
 
     return {
       productId: product._id,
@@ -141,12 +140,11 @@ async function normalizeOrderItems(items = [], buyer = null) {
       price: isLicensed && licensedPrice > 0 ? licensedPrice : normalPrice,
       normalPrice,
       licensedPrice,
-      networkBonusBase:
-        isNormalPriceOrder && licensedPrice > 0 && normalPrice > licensedPrice
-          ? normalPrice - licensedPrice
-          : isLicensedPriceOrder && licensedPrice > 0
-            ? licensedPrice
-          : 0,
+      // Fiyat veya fiyat farki degil, masraflar sonrasi yonetimce onaylanan net kar.
+      // Siparise anlik goruntu olarak yazilir; urun daha sonra degisse de eski dagitim degismez.
+      networkBonusBase: qualifiesForProductNetwork
+        ? Number(product.networkProfitBase || 0)
+        : 0,
       quantity,
     };
   });
@@ -264,7 +262,7 @@ router.post("/", authOptional, async (req, res) => {
             : "",
         productNetworkMode: !req.user?._id
           ? ""
-          : req.user.isLicensed
+          : hasPaidActiveLicense(req.user)
             ? "licensed_sale"
             : "normal_gap",
         stockReservations,
