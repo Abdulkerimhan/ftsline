@@ -87,6 +87,13 @@ const UserSchema = new mongoose.Schema(
       match: /^\S+@\S+\.\S+$/,
     },
 
+    legalAcceptance: {
+      termsAcceptedAt: { type: Date, default: null },
+      privacyNoticeAcknowledgedAt: { type: Date, default: null },
+      termsVersion: { type: String, default: "" },
+      privacyVersion: { type: String, default: "" },
+    },
+
     phone: {
       type: String,
       default: "",

@@ -176,9 +176,17 @@ router.post("/", authOptional, async (req, res) => {
       paymentProof,
       orderType,
       licensePlan,
+      preInformationAccepted,
+      distanceSalesAccepted,
     } = req.body;
     const isLicenseOrder = orderType === "license";
     const selectedLicensePlan = isLicenseOrder ? getLicensePlan(licensePlan) : null;
+
+    if (preInformationAccepted !== true || distanceSalesAccepted !== true) {
+      return res.status(400).json({
+        message: "Ön bilgilendirme formu ve mesafeli satış sözleşmesi onaylanmalıdır.",
+      });
+    }
 
     if (isLicenseOrder && !selectedLicensePlan) {
       return res.status(400).json({ message: "Gecersiz lisans plani." });
@@ -242,6 +250,13 @@ router.post("/", authOptional, async (req, res) => {
           : "bank_transfer",
         paymentStatus: "pending",
         paymentProof: ["bank_transfer", "usdt_trc20"].includes(paymentMethod) ? String(paymentProof || "").trim() : "",
+        legalAcceptance: {
+          preInformationAcceptedAt: new Date(),
+          distanceSalesAcceptedAt: new Date(),
+          preInformationVersion: "2026-08-11",
+          distanceSalesVersion: "2026-08-11",
+          ipAddress: String(req.ip || "").slice(0, 100),
+        },
         paymentNetwork: paymentMethod === "usdt_trc20" ? "TRC20" : "",
       paymentAddress:
           paymentMethod === "usdt_trc20"

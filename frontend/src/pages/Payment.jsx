@@ -53,8 +53,8 @@ export default function Payment() {
         district: "Ilce",
         address: "Adres",
         note: "Siparis Notu",
-        agreement:
-          "Mesafeli satis sozlesmesini ve manuel odeme kosullarini kabul ediyorum.",
+        preInformation: "Ön Bilgilendirme Formu'nu okudum ve kabul ediyorum.",
+        distanceSales: "Mesafeli Satış Sözleşmesi'ni okudum ve kabul ediyorum.",
         completePayment: "Siparisi Olustur",
         processing: "Siparis Olusturuluyor...",
         backToCart: "Sepete Geri Don",
@@ -74,7 +74,7 @@ export default function Payment() {
         requiredCity: "Sehir zorunludur.",
         requiredDistrict: "Ilce zorunludur.",
         requiredAddress: "Adres zorunludur.",
-        agreementRequired: "Satis sozlesmesini onaylamalisiniz.",
+        agreementRequired: "Ön bilgilendirme formu ve mesafeli satış sözleşmesini onaylamalısınız.",
         loginRequired: "Lisans siparisi olusturmak icin giris yapmalisiniz.",
         serverError: "Siparis olusturulurken bir hata olustu.",
       },
@@ -113,7 +113,8 @@ export default function Payment() {
         district: "District",
         address: "Address",
         note: "Order Note",
-        agreement: "I accept the distance sales agreement and manual payment terms.",
+        preInformation: "I have read and accept the Pre-Information Form.",
+        distanceSales: "I have read and accept the Distance Sales Agreement.",
         completePayment: "Create Order",
         processing: "Creating Order...",
         backToCart: "Back to Cart",
@@ -166,7 +167,8 @@ export default function Payment() {
     district: "",
     address: "",
     note: "",
-    agreement: false,
+    preInformationAccepted: false,
+    distanceSalesAccepted: false,
     paymentMethod: "bank_transfer",
     paymentProof: "",
   });
@@ -242,7 +244,7 @@ export default function Payment() {
     if (!form.city.trim()) return t.requiredCity;
     if (!form.district.trim()) return t.requiredDistrict;
     if (!form.address.trim()) return t.requiredAddress;
-    if (!form.agreement) return t.agreementRequired;
+    if (!form.preInformationAccepted || !form.distanceSalesAccepted) return t.agreementRequired;
 
     return "";
   }
@@ -335,6 +337,8 @@ export default function Payment() {
       licensePlan: isLicenseOrder ? selectedLicensePlan : "",
       paymentMethod: form.paymentMethod,
       paymentProof: form.paymentMethod === "bank_transfer" ? form.paymentProof.trim() : "",
+      preInformationAccepted: form.preInformationAccepted,
+      distanceSalesAccepted: form.distanceSalesAccepted,
     };
 
     const res = await fetch(`${API}/orders`, {
@@ -550,11 +554,20 @@ export default function Payment() {
               <label className="payment-checkbox">
                 <input
                   type="checkbox"
-                  name="agreement"
-                  checked={form.agreement}
+                  name="preInformationAccepted"
+                  checked={form.preInformationAccepted}
                   onChange={handleChange}
                 />
-                <span>{t.agreement}</span>
+                <span><a href="/legal/pre-information" target="_blank" rel="noreferrer">{language === "tr" ? "Ön Bilgilendirme Formu'nu" : "Pre-Information Form"}</a> {language === "tr" ? "okudum ve kabul ediyorum." : "— I have read and accept it."}</span>
+              </label>
+              <label className="payment-checkbox">
+                <input
+                  type="checkbox"
+                  name="distanceSalesAccepted"
+                  checked={form.distanceSalesAccepted}
+                  onChange={handleChange}
+                />
+                <span><a href="/legal/distance-sales" target="_blank" rel="noreferrer">{language === "tr" ? "Mesafeli Satış Sözleşmesi'ni" : "Distance Sales Agreement"}</a> {language === "tr" ? "okudum ve kabul ediyorum." : "— I have read and accept it."}</span>
               </label>
 
               {errorMsg && <div className="payment-error">{errorMsg}</div>}

@@ -16,6 +16,7 @@ import Payment from "./pages/Payment.jsx";
 import OrderTracking from "./pages/OrderTracking.jsx";
 import SuperAdminPanel from "./pages/SuperAdminPanel.jsx";
 import LiveTranslator from "./i18n/LiveTranslator.jsx";
+import LegalDocument from "./pages/LegalDocument.jsx";
 
 function getStoredUser() {
   try {
@@ -87,6 +88,10 @@ export default function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/order-tracking" element={<OrderTracking />} />
+        <Route path="/legal/terms" element={<LegalDocument />} />
+        <Route path="/legal/kvkk" element={<LegalDocument />} />
+        <Route path="/legal/pre-information" element={<LegalDocument />} />
+        <Route path="/legal/distance-sales" element={<LegalDocument />} />
 
         <Route
           path="/dashboard"

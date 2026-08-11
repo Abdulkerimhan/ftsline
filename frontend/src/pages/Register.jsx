@@ -30,6 +30,11 @@ const text = {
     verify: "Kodu Doğrula",
     verifying: "Kod doğrulanıyor...",
     resend: "Kodu Yeniden Gönder",
+    termsRequired: "Üyelik ve Kullanım Koşulları ile KVKK Aydınlatma Metni alanlarını işaretlemelisiniz.",
+    termsPrefix: "Üyelik ve Kullanım Koşulları'nı",
+    termsSuffix: "okudum ve kabul ediyorum.",
+    privacyPrefix: "KVKK Aydınlatma Metni'ni",
+    privacySuffix: "okudum ve kişisel verilerimin işlenmesi hakkında bilgilendirildim.",
   },
   en: {
     title: "Register",
@@ -56,6 +61,11 @@ const text = {
     verify: "Verify Code",
     verifying: "Verifying code...",
     resend: "Resend Code",
+    termsRequired: "You must accept the Terms of Use and acknowledge the Privacy Notice.",
+    termsPrefix: "I have read the Membership and Terms of Use",
+    termsSuffix: "and accept them.",
+    privacyPrefix: "I have read the KVKK Privacy Notice",
+    privacySuffix: "and have been informed about processing of my personal data.",
   },
 };
 
@@ -74,6 +84,7 @@ export default function Register() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [legal, setLegal] = useState({ terms: false, privacy: false });
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -90,6 +101,8 @@ export default function Register() {
       email: form.email.trim(),
       password: form.password,
       sponsor: sponsorFromLink.trim(),
+      termsAccepted: legal.terms,
+      privacyNoticeAcknowledged: legal.privacy,
     });
 
     if (!data?.verificationRequired) {
@@ -105,6 +118,7 @@ export default function Register() {
     if (form.username.trim().length < 5) return setErrorMsg(tt.usernameLength);
     if (!/^(?=.*[a-z])[a-z0-9]{5,20}$/.test(form.username.trim())) return setErrorMsg(tt.usernameInvalid);
     if (form.password.length < 6) return setErrorMsg(tt.passwordLength);
+    if (!legal.terms || !legal.privacy) return setErrorMsg(tt.termsRequired);
 
     setLoading(true);
     setErrorMsg("");
@@ -157,6 +171,14 @@ export default function Register() {
               <input name="password" type={showPassword ? "text" : "password"} placeholder={tt.password} value={form.password} onChange={handleChange} autoComplete="new-password" style={{ ...inputStyle, width: "100%", paddingRight: "60px", boxSizing: "border-box" }} />
               <button type="button" onClick={() => setShowPassword((previous) => !previous)} style={toggleStyle}>{showPassword ? tt.hide : tt.show}</button>
             </div>
+            <label style={legalRowStyle}>
+              <input type="checkbox" checked={legal.terms} onChange={(event) => setLegal((previous) => ({ ...previous, terms: event.target.checked }))} style={legalCheckboxStyle} />
+              <span><a href="/legal/terms" target="_blank" rel="noreferrer" style={legalLinkStyle}>{tt.termsPrefix}</a> {tt.termsSuffix}</span>
+            </label>
+            <label style={legalRowStyle}>
+              <input type="checkbox" checked={legal.privacy} onChange={(event) => setLegal((previous) => ({ ...previous, privacy: event.target.checked }))} style={legalCheckboxStyle} />
+              <span><a href="/legal/kvkk" target="_blank" rel="noreferrer" style={legalLinkStyle}>{tt.privacyPrefix}</a> {tt.privacySuffix}</span>
+            </label>
             {errorMsg && <div style={errorStyle}>{errorMsg}</div>}
             <button type="submit" disabled={loading} style={buttonStyle(loading)}>
               {loading ? tt.loading : tt.submit}
@@ -204,3 +226,6 @@ const errorStyle = { color: "#dc2626", fontSize: "14px", background: "#fef2f2", 
 const successStyle = { color: "#166534", fontSize: "14px", background: "#f0fdf4", padding: "10px 12px", borderRadius: "10px" };
 const buttonStyle = (loading) => ({ marginTop: "4px", padding: "14px", borderRadius: "12px", border: "none", color: "#fff", fontSize: "16px", fontWeight: "700", background: loading ? "#94a3b8" : "#1d4ed8", cursor: loading ? "not-allowed" : "pointer" });
 const secondaryButtonStyle = { padding: "12px", borderRadius: "12px", border: "1px solid #bfdbfe", color: "#1d4ed8", background: "#eff6ff", fontSize: "14px", fontWeight: "700", cursor: "pointer" };
+const legalRowStyle = { display: "grid", gridTemplateColumns: "20px 1fr", gap: "10px", alignItems: "start", color: "#334155", fontSize: "13px", lineHeight: "1.5", cursor: "pointer" };
+const legalCheckboxStyle = { width: "18px", height: "18px", marginTop: "1px", accentColor: "#1d4ed8" };
+const legalLinkStyle = { color: "#1d4ed8", fontWeight: "800", textDecoration: "underline" };

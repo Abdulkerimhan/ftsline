@@ -11,6 +11,7 @@ import {
 const router = express.Router();
 const USERNAME_REGEX = /^(?=.*[a-z])[a-z0-9]{5,20}$/;
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
+const LEGAL_TEXT_VERSION = "2026-08-11";
 
 function generateCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -76,12 +77,18 @@ async function sendVerificationEmail({ to, code }) {
 
 router.post("/register", async (req, res) => {
   try {
-    let { username, fullName, email, password, sponsor } = req.body || {};
+    let { username, fullName, email, password, sponsor, termsAccepted, privacyNoticeAcknowledged } = req.body || {};
     username = String(username || "").trim().toLowerCase();
     fullName = String(fullName || "").trim();
     email = String(email || "").trim().toLowerCase();
     password = String(password || "");
     sponsor = String(sponsor || "").trim().toLowerCase();
+
+    if (termsAccepted !== true || privacyNoticeAcknowledged !== true) {
+      return res.status(400).json({
+        message: "Kullanım koşulları ve KVKK Aydınlatma Metni onaylanmalıdır",
+      });
+    }
 
     if (!USERNAME_REGEX.test(username)) {
       return res.status(400).json({ message: "Geçersiz kullanıcı adı" });
@@ -118,6 +125,12 @@ router.post("/register", async (req, res) => {
         email,
         passwordHash: await bcrypt.hash(password, 10),
         sponsor,
+        legalAcceptance: {
+          termsAcceptedAt: new Date(),
+          privacyNoticeAcknowledgedAt: new Date(),
+          termsVersion: LEGAL_TEXT_VERSION,
+          privacyVersion: LEGAL_TEXT_VERSION,
+        },
         code,
         expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
@@ -189,6 +202,7 @@ router.post("/verify-registration", async (req, res) => {
       role: "user",
       sponsor: sponsorUser._id,
       referralCode: pending.username,
+      legalAcceptance: pending.legalAcceptance,
     });
     await User.findByIdAndUpdate(sponsorUser._id, { $inc: { teamCount: 1 } });
     await PendingRegistration.deleteOne({ _id: pending._id });

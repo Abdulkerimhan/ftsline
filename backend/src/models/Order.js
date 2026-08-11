@@ -233,6 +233,14 @@ const orderSchema = new mongoose.Schema(
       maxlength: 200,
     },
 
+    legalAcceptance: {
+      preInformationAcceptedAt: { type: Date, required: true },
+      distanceSalesAcceptedAt: { type: Date, required: true },
+      preInformationVersion: { type: String, required: true, default: "2026-08-11" },
+      distanceSalesVersion: { type: String, required: true, default: "2026-08-11" },
+      ipAddress: { type: String, default: "", trim: true },
+    },
+
     paymentNetwork: {
       type: String,
       enum: ["", "TRC20"],
