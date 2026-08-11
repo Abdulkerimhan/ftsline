@@ -73,12 +73,6 @@ export default function LegalDocument() {
           ))}
         </div>
 
-        {(pathname === "/legal/pre-information" || pathname === "/legal/distance-sales") && (
-          <aside className="legal-review-note">
-            Satıcıya ait resmi unvan, açık adres, MERSİS/vergi ve iletişim bilgilerinin canlı satıştan önce mali müşavir ve avukat tarafından tamamlanıp doğrulanması gerekir.
-          </aside>
-        )}
-
         <div className="legal-actions">
           <button type="button" onClick={() => window.close()}>Pencereyi Kapat</button>
           <Link to="/contact">Bize Ulaşın</Link>
