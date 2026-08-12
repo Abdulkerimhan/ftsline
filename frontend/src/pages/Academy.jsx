@@ -11,6 +11,38 @@ const defaultLessonCovers = [
   "/images/academy/yayina-cikis.svg",
 ];
 
+const academyCoverThemes = [
+  { label: "E-TİCARET BAŞLANGIÇ", colors: ["#0b4fa8", "#13a6c8"], accent: "#71e2ff" },
+  { label: "ÜRÜN VE TEDARİK", colors: ["#075985", "#0d9488"], accent: "#facc15" },
+  { label: "SOSYAL MEDYA VE REKLAM", colors: ["#5b21b6", "#db2777"], accent: "#67e8f9" },
+  { label: "SİPARİŞ VE MÜŞTERİ", colors: ["#1d4ed8", "#0891b2"], accent: "#fb923c" },
+];
+
+function AcademyCover({ courseIndex, lessonIndex, title }) {
+  if (courseIndex === 0) {
+    return <img src={defaultLessonCovers[lessonIndex % defaultLessonCovers.length]} alt={`${title} ders görseli`} loading="lazy" />;
+  }
+
+  const theme = academyCoverThemes[courseIndex % academyCoverThemes.length];
+  const variant = lessonIndex % 6;
+  const normalizedTitle = String(title || theme.label).toLocaleUpperCase("tr-TR");
+  const displayTitle = normalizedTitle.length > 29 ? `${normalizedTitle.slice(0, 28)}…` : normalizedTitle;
+  const gradientId = `academy-gradient-${courseIndex}-${variant}`;
+
+  return (
+    <svg className="academy-topic-cover" viewBox="0 0 640 270" role="img" aria-label={`${title} ders görseli`}>
+      <defs><linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1"><stop stopColor={theme.colors[0]} /><stop offset="1" stopColor={theme.colors[1]} /></linearGradient></defs>
+      <rect width="640" height="270" rx="22" fill={`url(#${gradientId})`} />
+      <circle cx="550" cy="42" r="72" fill="#fff" opacity=".13" /><circle cx="582" cy="218" r="105" fill="#071a3d" opacity=".12" />
+      <text x="34" y="43" fill="#fff" fontSize="23" fontWeight="900" fontFamily="Arial, sans-serif">{displayTitle}</text>
+      <text x="35" y="68" fill="#fff" opacity=".82" fontSize="13" fontWeight="700" fontFamily="Arial, sans-serif">{theme.label} • DERS {lessonIndex + 1}</text>
+      {courseIndex % 4 === 1 && <g transform={`translate(${variant % 2 ? 305 : 330} 82)`}><path d="M30 42 130 0l100 42-100 45z" fill="#ccfbf1"/><path d="m30 42 100 45v95L30 136z" fill="#99f6e4"/><path d="m230 42-100 45v95l100-46z" fill="#5eead4"/><circle cx="232" cy="154" r="45" fill="#fff" stroke={theme.accent} strokeWidth="12"/><path d="m264 187 44 42" stroke={theme.accent} strokeWidth="18" strokeLinecap="round"/><path d="m210 154 14 14 28-35" fill="none" stroke="#0f766e" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/></g>}
+      {courseIndex % 4 === 2 && <g transform={`translate(${variant % 2 ? 320 : 350} 80)`}><rect width="105" height="170" rx="22" fill="#fdf4ff" stroke="#f0abfc" strokeWidth="8"/><rect x="17" y="24" width="71" height="103" rx="8" fill="#c4b5fd"/><circle cx="52" cy="148" r="9" fill="#6d28d9"/><path d="M118 55 210 18v104l-92-37z" fill={theme.accent}/><rect x="104" y="50" width="30" height="45" rx="8" fill="#fff"/><path d="m204 38 39-22M210 70h48m-54 30 39 22" stroke="#fff" strokeWidth="9" strokeLinecap="round"/></g>}
+      {courseIndex % 4 === 3 && <g transform={`translate(${variant % 2 ? 292 : 330} 91)`}><rect y="26" width="150" height="105" rx="10" fill="#e0f2fe"/><path d="M0 26 75 0l75 26-75 29z" fill="#fff"/><path d="M160 65h70l38 38v28H160z" fill={theme.accent}/><path d="M184 78h37l21 25h-58z" fill="#fff" opacity=".8"/><circle cx="190" cy="137" r="20" fill="#071a3d" stroke="#fff" strokeWidth="7"/><circle cx="245" cy="137" r="20" fill="#071a3d" stroke="#fff" strokeWidth="7"/><path d="M24 81h86m-86 22h62" stroke="#38bdf8" strokeWidth="8" strokeLinecap="round"/></g>}
+    </svg>
+  );
+}
+
 function embedVideoUrl(value) {
   const url = String(value || "").trim();
   if (!url) return "";
@@ -200,11 +232,7 @@ export default function Academy({ language = "tr" }) {
             {lessons.map((lesson, index) => (
               <article className={`academy-lesson-card ${courseColors[(courseIndex + index) % courseColors.length]}`} key={lesson._id}>
                 <button className="academy-card-cover" type="button" onClick={() => setSelectedLessonId(lesson._id)}>
-                  <img
-                    src={defaultLessonCovers[index % defaultLessonCovers.length]}
-                    alt={`${lesson.title} ders görseli`}
-                    loading="lazy"
-                  />
+                  <AcademyCover courseIndex={courseIndex} lessonIndex={index} title={lesson.title} />
                 </button>
                 <div className="academy-card-body">
                   <small>{lesson.durationMinutes ? `${lesson.durationMinutes} ${isTr ? "dk" : "min"}` : (isTr ? "Ders" : "Lesson")}</small>
