@@ -105,10 +105,12 @@ const CAREER_LABELS = {
 };
 
 const emptyVisitorData = {
-  summary: { totalViews: 0, todayViews: 0, uniqueVisitors30Days: 0, todayUniqueVisitors: 0 },
+  summary: { totalViews: 0, todayViews: 0, uniqueVisitors30Days: 0, todayUniqueVisitors: 0, periodViews: 0, periodUniqueVisitors: 0 },
   topPages: [],
   recent: [],
   retentionDays: 90,
+  period: "day",
+  periodLabel: "Son 24 saat",
 };
 
 const CAREER_LEVEL_ALIASES = {
@@ -166,6 +168,7 @@ export default function SuperAdminPanel() {
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
   const [visitorData, setVisitorData] = useState(emptyVisitorData);
   const [visitorsLoading, setVisitorsLoading] = useState(false);
+  const [visitorPeriod, setVisitorPeriod] = useState("day");
 
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -269,9 +272,9 @@ export default function SuperAdminPanel() {
     setAnnouncementsLoading(false);
   }
 
-  async function loadVisitors() {
+  async function loadVisitors(period = visitorPeriod) {
     setVisitorsLoading(true);
-    const data = await request("/analytics/admin/overview?limit=150", {}, null);
+    const data = await request(`/analytics/admin/overview?limit=150&period=${period}`, {}, null);
     if (data) {
       setVisitorData({
         ...emptyVisitorData,
@@ -1704,6 +1707,7 @@ export default function SuperAdminPanel() {
 
   function renderVisitors() {
     const summary = visitorData.summary || emptyVisitorData.summary;
+    const periodLabel = visitorData.periodLabel || "Seçilen dönem";
     return (
       <section className="super-card super-visitors">
         <div className="super-section-head">
@@ -1711,14 +1715,35 @@ export default function SuperAdminPanel() {
             <h2>Ziyaretçi Analizi</h2>
             <p>Sayfa ziyaretleri, yaklaşık konum ve cihaz bilgileri. Yalnızca Süper Admin görebilir.</p>
           </div>
-          <button type="button" className="super-btn" onClick={loadVisitors} disabled={visitorsLoading}>
+          <button type="button" className="super-btn" onClick={() => loadVisitors(visitorPeriod)} disabled={visitorsLoading}>
             {visitorsLoading ? "Yükleniyor..." : "Verileri Yenile"}
           </button>
         </div>
 
+        <div className="super-visitor-periods" aria-label="Ziyaret dönemi">
+          {[
+            ["hour", "Son 1 saat"],
+            ["day", "Son 24 saat"],
+            ["month", "Son 30 gün"],
+          ].map(([value, label]) => (
+            <button
+              type="button"
+              key={value}
+              className={visitorPeriod === value ? "is-active" : ""}
+              onClick={() => {
+                setVisitorPeriod(value);
+                loadVisitors(value);
+              }}
+              disabled={visitorsLoading}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div className="super-visitor-stats">
-          <div><span>Bugünkü ziyaret</span><strong>{summary.todayViews}</strong></div>
-          <div><span>Bugünkü tekil ziyaretçi</span><strong>{summary.todayUniqueVisitors}</strong></div>
+          <div><span>{periodLabel} ziyaret</span><strong>{summary.periodViews}</strong></div>
+          <div><span>{periodLabel} tekil ziyaretçi</span><strong>{summary.periodUniqueVisitors}</strong></div>
           <div><span>30 günlük tekil ziyaretçi</span><strong>{summary.uniqueVisitors30Days}</strong></div>
           <div><span>Toplam sayfa görüntüleme</span><strong>{summary.totalViews}</strong></div>
         </div>
@@ -1741,7 +1766,7 @@ export default function SuperAdminPanel() {
           </div>
         </div>
 
-        <h3 className="super-visitor-recent-title">Son ziyaretler</h3>
+        <h3 className="super-visitor-recent-title">{periodLabel} içindeki ziyaretler</h3>
         <div className="super-table-wrap">
           <table className="super-table super-visitor-table">
             <thead>

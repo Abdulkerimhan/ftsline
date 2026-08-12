@@ -69,7 +69,7 @@ function sanitizeReferrer(value) {
 async function resolveLocation(ip, ipHash, req) {
   const headerCountry = req.headers["cf-ipcountry"] || req.headers["x-vercel-ip-country"];
   const headerCity = req.headers["x-vercel-ip-city"];
-  if (headerCountry || headerCity) {
+  if (headerCity) {
     return {
       country: safeText(headerCountry, "Bilinmiyor", 100),
       city: safeText(safeDecode(headerCity), "Bilinmiyor", 120),
@@ -78,7 +78,7 @@ async function resolveLocation(ip, ipHash, req) {
 
   const previous = await VisitorEvent.findOne({
     ipHash,
-    country: { $ne: "Bilinmiyor" },
+    city: { $nin: ["Bilinmiyor", ""] },
   }).select("country city").lean();
   if (previous) return { country: previous.country, city: previous.city };
 
@@ -102,7 +102,10 @@ async function resolveLocation(ip, ipHash, req) {
   } catch {
     // Konum servisi yanit vermezse ziyaret kaydi yine olusturulur.
   }
-  return { country: "Bilinmiyor", city: "Bilinmiyor" };
+  return {
+    country: safeText(headerCountry, "Bilinmiyor", 100),
+    city: "Bilinmiyor",
+  };
 }
 
 router.post("/visit", async (req, res) => {
@@ -147,17 +150,26 @@ router.get("/admin/overview", authRequired, superAdminOnly, async (req, res) => 
   try {
     const limit = Math.min(Math.max(Number(req.query.limit) || 100, 10), 250);
     const now = new Date();
+    const periods = {
+      hour: { milliseconds: 60 * 60 * 1000, label: "Son 1 saat" },
+      day: { milliseconds: 24 * 60 * 60 * 1000, label: "Son 24 saat" },
+      month: { milliseconds: 30 * 24 * 60 * 60 * 1000, label: "Son 30 gün" },
+    };
+    const period = periods[req.query.period] ? req.query.period : "day";
+    const periodStart = new Date(now.getTime() - periods[period].milliseconds);
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [totalViews, todayViews, uniqueResult, todayUniqueResult, recent, topPages] = await Promise.all([
+    const [totalViews, todayViews, uniqueResult, todayUniqueResult, periodViews, periodUniqueResult, recent, topPages] = await Promise.all([
       VisitorEvent.countDocuments(),
       VisitorEvent.countDocuments({ createdAt: { $gte: today } }),
       VisitorEvent.distinct("visitorKey", { createdAt: { $gte: last30Days } }),
       VisitorEvent.distinct("visitorKey", { createdAt: { $gte: today } }),
-      VisitorEvent.find().sort({ createdAt: -1 }).limit(limit).lean(),
+      VisitorEvent.countDocuments({ createdAt: { $gte: periodStart } }),
+      VisitorEvent.distinct("visitorKey", { createdAt: { $gte: periodStart } }),
+      VisitorEvent.find({ createdAt: { $gte: periodStart } }).sort({ createdAt: -1 }).limit(limit).lean(),
       VisitorEvent.aggregate([
-        { $match: { createdAt: { $gte: last30Days } } },
+        { $match: { createdAt: { $gte: periodStart } } },
         { $group: { _id: "$path", views: { $sum: 1 }, visitors: { $addToSet: "$visitorKey" } } },
         { $project: { _id: 0, path: "$_id", views: 1, uniqueVisitors: { $size: "$visitors" } } },
         { $sort: { views: -1 } },
@@ -171,7 +183,11 @@ router.get("/admin/overview", authRequired, superAdminOnly, async (req, res) => 
         todayViews,
         uniqueVisitors30Days: uniqueResult.length,
         todayUniqueVisitors: todayUniqueResult.length,
+        periodViews,
+        periodUniqueVisitors: periodUniqueResult.length,
       },
+      period,
+      periodLabel: periods[period].label,
       topPages,
       recent,
       retentionDays: 90,

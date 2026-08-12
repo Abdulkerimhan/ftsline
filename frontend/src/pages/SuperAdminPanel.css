@@ -264,6 +264,32 @@
   margin: 22px 0;
 }
 
+.super-visitor-periods {
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid #dbe6f7;
+  border-radius: 16px;
+  background: #f5f8fd;
+  margin-top: 18px;
+}
+
+.super-visitor-periods button {
+  border: 0;
+  border-radius: 11px;
+  padding: 10px 16px;
+  color: #425571;
+  background: transparent;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.super-visitor-periods button.is-active {
+  color: #fff;
+  background: linear-gradient(135deg, #174fca, #2870ed);
+  box-shadow: 0 8px 18px rgba(29, 88, 204, 0.2);
+}
+
 .super-visitor-stats > div {
   min-height: 104px;
   padding: 20px;
@@ -325,6 +351,8 @@
 }
 
 @media (max-width: 560px) {
+  .super-visitor-periods { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
+  .super-visitor-periods button { padding: 10px 8px; }
   .super-visitor-stats { grid-template-columns: 1fr; }
   .super-visitor-page { grid-template-columns: 1fr auto; }
   .super-visitor-page small { grid-column: 1 / -1; }
