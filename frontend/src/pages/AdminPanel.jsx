@@ -972,14 +972,6 @@ export default function AdminPanel() {
           Ayarlar
         </button>
 
-        <a
-          className="admin-menu admin-presentation-link"
-          href="/downloads/FTSLine-Detayli-Sunum.pptx"
-          download="FTSLine-Detayli-Sunum.pptx"
-        >
-          FTSLine Sunumu
-        </a>
-
         <button className="admin-menu logout" onClick={handleLogout}>
           Ã‡Ä±kÄ±ÅŸ Yap
         </button>
