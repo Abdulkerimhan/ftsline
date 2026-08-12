@@ -104,6 +104,13 @@ const CAREER_LABELS = {
   TAC_ELMAS: "Taç Elmas",
 };
 
+const emptyVisitorData = {
+  summary: { totalViews: 0, todayViews: 0, uniqueVisitors30Days: 0, todayUniqueVisitors: 0 },
+  topPages: [],
+  recent: [],
+  retentionDays: 90,
+};
+
 const CAREER_LEVEL_ALIASES = {
   starter: "NONE",
   bronze: "BRONZ",
@@ -157,6 +164,8 @@ export default function SuperAdminPanel() {
   const [message, setMessage] = useState("");
   const [announcementDrafts, setAnnouncementDrafts] = useState([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [visitorData, setVisitorData] = useState(emptyVisitorData);
+  const [visitorsLoading, setVisitorsLoading] = useState(false);
 
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -260,6 +269,19 @@ export default function SuperAdminPanel() {
     setAnnouncementsLoading(false);
   }
 
+  async function loadVisitors() {
+    setVisitorsLoading(true);
+    const data = await request("/analytics/admin/overview?limit=150", {}, null);
+    if (data) {
+      setVisitorData({
+        ...emptyVisitorData,
+        ...data,
+        summary: { ...emptyVisitorData.summary, ...(data.summary || {}) },
+      });
+    }
+    setVisitorsLoading(false);
+  }
+
   function updateAnnouncement(index, field, value) {
     setAnnouncementDrafts((current) => current.map((item, itemIndex) => (
       itemIndex === index ? { ...item, [field]: value } : item
@@ -331,6 +353,7 @@ export default function SuperAdminPanel() {
   useEffect(() => {
     if (activeMenu === "finance") loadFinance();
     if (activeMenu === "announcements") loadAnnouncements();
+    if (activeMenu === "visitors") loadVisitors();
   }, [activeMenu]);
 
   const stats = useMemo(() => {
@@ -1679,6 +1702,75 @@ export default function SuperAdminPanel() {
     );
   }
 
+  function renderVisitors() {
+    const summary = visitorData.summary || emptyVisitorData.summary;
+    return (
+      <section className="super-card super-visitors">
+        <div className="super-section-head">
+          <div>
+            <h2>Ziyaretçi Analizi</h2>
+            <p>Sayfa ziyaretleri, yaklaşık konum ve cihaz bilgileri. Yalnızca Süper Admin görebilir.</p>
+          </div>
+          <button type="button" className="super-btn" onClick={loadVisitors} disabled={visitorsLoading}>
+            {visitorsLoading ? "Yükleniyor..." : "Verileri Yenile"}
+          </button>
+        </div>
+
+        <div className="super-visitor-stats">
+          <div><span>Bugünkü ziyaret</span><strong>{summary.todayViews}</strong></div>
+          <div><span>Bugünkü tekil ziyaretçi</span><strong>{summary.todayUniqueVisitors}</strong></div>
+          <div><span>30 günlük tekil ziyaretçi</span><strong>{summary.uniqueVisitors30Days}</strong></div>
+          <div><span>Toplam sayfa görüntüleme</span><strong>{summary.totalViews}</strong></div>
+        </div>
+
+        <div className="super-visitor-layout">
+          <div className="super-visitor-pages">
+            <h3>En çok ziyaret edilen sayfalar</h3>
+            {visitorData.topPages?.length ? visitorData.topPages.map((page) => (
+              <div className="super-visitor-page" key={page.path}>
+                <span title={page.path}>{page.path}</span>
+                <strong>{page.views} görüntüleme</strong>
+                <small>{page.uniqueVisitors} kişi</small>
+              </div>
+            )) : <p className="super-empty">Henüz ziyaret kaydı yok.</p>}
+          </div>
+
+          <div className="super-visitor-note">
+            <strong>Gizlilik koruması açık</strong>
+            <p>IP adresleri maskelenir, konum yaklaşık gösterilir ve kayıtlar {visitorData.retentionDays || 90} gün sonra otomatik silinir.</p>
+          </div>
+        </div>
+
+        <h3 className="super-visitor-recent-title">Son ziyaretler</h3>
+        <div className="super-table-wrap">
+          <table className="super-table super-visitor-table">
+            <thead>
+              <tr>
+                <th>Tarih</th><th>Ziyaret edilen sayfa</th><th>Ülke / Şehir</th>
+                <th>Cihaz</th><th>Tarayıcı</th><th>Kaynak</th><th>Maskeli IP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visitorData.recent?.length ? visitorData.recent.map((visit) => (
+                <tr key={visit._id}>
+                  <td>{formatLicenseDate(visit.createdAt)}</td>
+                  <td><strong>{visit.path}</strong></td>
+                  <td>{visit.country || "Bilinmiyor"} / {visit.city || "Bilinmiyor"}</td>
+                  <td>{visit.device || "-"}</td>
+                  <td>{visit.browser || "-"}</td>
+                  <td className="super-visitor-referrer" title={visit.referrer}>{visit.referrer || "Direkt"}</td>
+                  <td><code>{visit.maskedIp || "-"}</code></td>
+                </tr>
+              )) : (
+                <tr><td colSpan="7" className="super-empty">Henüz ziyaret kaydı yok.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    );
+  }
+
   function renderContent() {
     if (loading) {
       return <div className="super-card super-empty">Yukleniyor...</div>;
@@ -1691,6 +1783,7 @@ export default function SuperAdminPanel() {
     if (activeMenu === "finance") return renderFinance();
     if (activeMenu === "academy") return <AcademyAdmin onMessage={setMessage} />;
     if (activeMenu === "announcements") return renderAnnouncements();
+    if (activeMenu === "visitors") return renderVisitors();
 
     return renderOverview();
   }
@@ -1764,6 +1857,13 @@ export default function SuperAdminPanel() {
           onClick={() => menuClick("announcements")}
         >
           <span className="super-menu-icon">D</span><span>Duyurular</span>
+        </button>
+
+        <button
+          className={activeMenu === "visitors" ? "active" : ""}
+          onClick={() => menuClick("visitors")}
+        >
+          <span className="super-menu-icon">Z</span><span>Ziyaretçiler</span>
         </button>
 
         <button className="logout" onClick={logout}>

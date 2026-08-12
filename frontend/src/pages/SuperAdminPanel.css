@@ -257,6 +257,79 @@
   font-weight: 700;
 }
 
+.super-visitor-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.super-visitor-stats > div {
+  min-height: 104px;
+  padding: 20px;
+  border: 1px solid #cfe0ff;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #f8fbff, #edf4ff);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.super-visitor-stats span { color: #52627a; font-weight: 800; }
+.super-visitor-stats strong { color: #154fc4; font-size: 30px; }
+
+.super-visitor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.super-visitor-pages,
+.super-visitor-note {
+  border: 1px solid #dbe6f7;
+  border-radius: 20px;
+  padding: 20px;
+  background: #fbfdff;
+}
+
+.super-visitor-pages h3 { margin-top: 0; }
+.super-visitor-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e7eef9;
+}
+.super-visitor-page:last-child { border-bottom: 0; }
+.super-visitor-page span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; }
+.super-visitor-page strong { color: #1555ce; }
+.super-visitor-page small { color: #64748b; }
+
+.super-visitor-note {
+  color: #fff;
+  background: linear-gradient(145deg, #0b2148, #1f62df);
+  align-self: stretch;
+}
+.super-visitor-note strong { font-size: 18px; }
+.super-visitor-note p { color: #deebff; line-height: 1.6; }
+.super-visitor-recent-title { margin: 4px 0 14px; }
+.super-visitor-table td { white-space: nowrap; }
+.super-visitor-referrer { max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+.super-visitor-table code { color: #294a82; background: #eef4ff; padding: 5px 8px; border-radius: 8px; }
+
+@media (max-width: 1050px) {
+  .super-visitor-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .super-visitor-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .super-visitor-stats { grid-template-columns: 1fr; }
+  .super-visitor-page { grid-template-columns: 1fr auto; }
+  .super-visitor-page small { grid-column: 1 / -1; }
+}
+
 .super-section-heading,
 .super-announcement-editor-head,
 .super-announcement-savebar {

@@ -22,6 +22,7 @@ import authRoutes from "./routes/authRoutes.js";
 import registrationRoutes from "./routes/registrationRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import academyRoutes from "./routes/academyRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 import { uploadUserAvatar } from "./utils/cloudinaryUpload.js";
 
 dotenv.config();
@@ -550,6 +551,7 @@ app.use("/api/superadmin", superadminRoutes);
 app.use("/api/earnings", earningRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/academy", academyRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 /* ================= TEST ================= */
 

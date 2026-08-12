@@ -17,6 +17,7 @@ import OrderTracking from "./pages/OrderTracking.jsx";
 import SuperAdminPanel from "./pages/SuperAdminPanel.jsx";
 import LiveTranslator from "./i18n/LiveTranslator.jsx";
 import LegalDocument from "./pages/LegalDocument.jsx";
+import VisitTracker from "./components/VisitTracker.jsx";
 
 function getStoredUser() {
   try {
@@ -63,6 +64,7 @@ export default function App() {
     <>
       <Navbar />
       <LiveTranslator />
+      <VisitTracker />
 
       <Routes>
         <Route path="/" element={<Home />} />
