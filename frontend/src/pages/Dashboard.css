@@ -1750,10 +1750,8 @@
   }
 
   .matrix-scroll {
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    -webkit-overflow-scrolling: touch;
-    padding: 20px 12px 26px;
+    overflow-x: hidden;
+    padding: 12px 4px 20px;
     background:
       radial-gradient(circle at 50% 0%, rgba(41, 94, 232, 0.12), transparent 30%),
       linear-gradient(180deg, #f8fbff 0%, #f2f6fc 100%);
@@ -1761,42 +1759,57 @@
 
   .matrix-min-width {
     min-width: 0;
-    padding-inline: 2px;
+    padding: 0;
+  }
+
+  .matrix-focus-view {
+    width: 100%;
+    padding: 12px 8px 16px;
+    border-radius: 18px;
   }
 
   .matrix-focus-toolbar {
-    margin-bottom: 14px;
+    min-height: 32px;
+    margin-bottom: 10px;
   }
 
   .matrix-focus-hint {
-    max-width: 190px;
+    max-width: 180px;
+    font-size: 10px;
+  }
+
+  .matrix-focus-depth {
+    padding: 5px 8px;
+    font-size: 10px;
   }
 
   .matrix-focused-node {
-    padding-bottom: 38px;
+    padding-bottom: 32px;
   }
 
   .matrix-focused-node::after {
-    height: 26px;
+    height: 24px;
   }
 
   .matrix-focus-children {
-    grid-template-columns: 1fr;
-    gap: 34px;
-    padding-top: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding-top: 20px;
   }
 
   .matrix-focus-children::before {
-    display: none;
+    display: block;
+    left: 25%;
+    right: 25%;
   }
 
   .matrix-focus-slot {
-    padding-top: 24px;
+    padding-top: 0;
   }
 
   .matrix-focus-slot::before {
-    top: 0;
-    height: 24px;
+    top: -20px;
+    height: 20px;
   }
 
   .matrix-focus-children .matrix-node,
@@ -1807,26 +1820,12 @@
 
   .matrix-focus-slot > .matrix-node,
   .matrix-focus-slot > .matrix-empty {
-    width: min(100%, 230px);
+    width: 100%;
+    max-width: 156px;
   }
 
   .matrix-preview-children {
-    width: min(100%, 390px);
-    gap: 10px;
-  }
-
-  .matrix-preview-children .matrix-node,
-  .matrix-preview-children .matrix-empty {
-    padding-inline: 7px;
-  }
-
-  .matrix-preview-children .matrix-person-icon {
-    width: 30px;
-    height: 30px;
-  }
-
-  .matrix-preview-children .matrix-node-name {
-    font-size: 13px;
+    display: none;
   }
 
   .matrix-back-button {
@@ -1838,9 +1837,54 @@
   }
 
   .matrix-node {
-    min-width: 108px;
-    padding: 11px 10px;
-    border-radius: 16px;
+    min-width: 0;
+    max-width: 156px;
+    padding: 11px 6px 10px;
+    border-radius: 15px;
+    box-shadow: 0 10px 22px rgba(24, 52, 96, 0.12), inset 0 1px 0 #fff;
+  }
+
+  .matrix-focused-node .matrix-node {
+    width: 154px;
+  }
+
+  .matrix-person-icon {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 5px;
+    font-size: 16px;
+  }
+
+  .matrix-node-name {
+    font-size: 13px;
+  }
+
+  .matrix-status-badge,
+  .matrix-team-count {
+    font-size: 9px;
+  }
+
+  .matrix-level-badge {
+    margin-top: 5px;
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+
+  .matrix-team-count {
+    margin-top: 5px;
+    gap: 3px;
+  }
+
+  .matrix-team-count strong {
+    min-width: 19px;
+    height: 19px;
+    font-size: 10px;
+  }
+
+  .matrix-toggle-text {
+    margin-top: 7px;
+    padding: 4px 7px;
+    font-size: 9px;
   }
 
   .matrix-children {
