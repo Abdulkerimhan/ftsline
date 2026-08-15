@@ -3,6 +3,7 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import { startBackupScheduler } from "./services/backupService.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
@@ -100,7 +101,10 @@ app.use("/uploads", express.static(uploadsRoot));
 
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB baÄŸlandÄ±"))
+  .then(() => {
+    console.log("MongoDB baÄŸlandÄ±");
+    startBackupScheduler();
+  })
   .catch((err) => {
     console.log("Mongo hata:", err);
     if (isProduction) {

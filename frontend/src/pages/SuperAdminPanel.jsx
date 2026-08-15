@@ -24,12 +24,14 @@ const emptyProductForm = {
 };
 
 const emptyFinanceData = {
-  summary: { paidSales: 0, pendingSales: 0, invoicePending: 0, totalEarnings: 0, orderCount: 0, pendingPayoutCount: 0, pendingPayoutAmount: 0 },
+  summary: { paidSales: 0, pendingSales: 0, invoicePending: 0, totalEarnings: 0, orderCount: 0, pendingPayoutCount: 0, pendingPayoutAmount: 0, pendingRefundCount: 0, pendingRefundAmount: 0 },
   orders: [],
   users: [],
   products: [],
   transactions: [],
   withdrawals: [],
+  refunds: [],
+  auditEvents: [],
 };
 
 function formatLicenseDate(value) {
@@ -253,6 +255,23 @@ export default function SuperAdminPanel() {
     }, null);
     if (updated) {
       setMessage("Finans kaydi guncellendi.");
+      await loadFinance();
+    } else {
+      setLoadingFinance(false);
+    }
+  }
+
+  async function updateRefundRequest(refundId, status) {
+    const promptLabel = status === "approved" ? "İade onay notu (isteğe bağlı):" : "İade ret gerekçesi:";
+    const adminNote = window.prompt(promptLabel, "");
+    if (adminNote === null) return;
+    setLoadingFinance(true);
+    const updated = await request(`/orders/admin/refunds/${refundId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, adminNote }),
+    }, null);
+    if (updated) {
+      setMessage(status === "approved" ? "İade onaylandı; stok ve kazanç kayıtları güncellendi." : "İade talebi reddedildi.");
       await loadFinance();
     } else {
       setLoadingFinance(false);
@@ -1573,12 +1592,15 @@ export default function SuperAdminPanel() {
             <div><span>Fatura Bekleyen</span><strong>{financeData.summary.invoicePending}</strong></div>
             <div><span>Toplam Siparis</span><strong>{financeData.summary.orderCount}</strong></div>
             <div><span>Bekleyen Hak Ediş</span><strong>{formatMoney(financeData.summary.pendingPayoutAmount)}</strong></div>
+            <div><span>Bekleyen İade</span><strong>{financeData.summary.pendingRefundCount} · {formatMoney(financeData.summary.pendingRefundAmount)}</strong></div>
           </div>
 
           <div className="super-finance-tabs">
             <button className={financeTab === "sales" ? "active" : ""} onClick={() => setFinanceTab("sales")}>Satis ve Faturalar</button>
             <button className={financeTab === "earnings" ? "active" : ""} onClick={() => setFinanceTab("earnings")}>Hak Edisler ve Kaynaklari</button>
             <button className={financeTab === "payouts" ? "active" : ""} onClick={() => setFinanceTab("payouts")}>Ödeme Talepleri</button>
+            <button className={financeTab === "refunds" ? "active" : ""} onClick={() => setFinanceTab("refunds")}>İade Talepleri</button>
+            <button className={financeTab === "audit" ? "active" : ""} onClick={() => setFinanceTab("audit")}>Denetim Kayıtları</button>
             <button className={financeTab === "products" ? "active" : ""} onClick={() => setFinanceTab("products")}>Urun Takibi</button>
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Finansta ara..." />
           </div>
@@ -1601,7 +1623,7 @@ export default function SuperAdminPanel() {
         {financeTab === "earnings" && <section className="super-card">
           <h2>Kullanici Kazanc ve Hak Edis Kaynaklari</h2>
           <div className="super-table-wrap"><table className="super-table"><thead><tr><th>Kullanici</th><th>Hak Edilen</th><th>Odenen</th><th>Bekleyen</th><th>Cuzdan</th><th>Son Hak Edis Kaynaklari</th></tr></thead>
-            <tbody>{financeUsers.map((user) => <tr key={user._id}><td><strong>{user.username}</strong><small>{user.fullName}<br />{user.email}</small></td><td>{formatMoney(user.earnedTotal)}</td><td>{formatMoney(user.paidTotal)}</td><td>{formatMoney(user.pendingTotal)}</td><td>{formatMoney(user.walletBalance)}</td><td><div className="super-earning-sources">{(user.recentSources || []).slice(0, 4).map((source, index) => <span key={`${source._id || index}`}><b>{formatEarningType(source.type)}</b> · {formatMoney(source.amount)} · {formatEarningStatus(source.status)}<small>{source.sourceUser?.username ? `Kaynak: ${source.sourceUser.username}` : "Sistem"} · {formatLicenseDate(source.createdAt)}</small></span>)}{!(user.recentSources || []).length && "Henuz hak edis yok"}</div></td></tr>)}</tbody></table>{!financeUsers.length && <div className="super-empty">Eslesen kullanici finans kaydi yok.</div>}</div>
+            <tbody>{financeUsers.map((user) => <tr key={user._id}><td><strong>{user.username}</strong><small>{user.fullName}<br />{user.email}</small></td><td>{formatMoney(user.earnedTotal)}</td><td>{formatMoney(user.paidTotal)}</td><td>{formatMoney(user.pendingTotal)}</td><td>{formatMoney(user.walletBalance)}</td><td><div className="super-earning-sources">{(user.recentSources || []).slice(0, 4).map((source, index) => <span key={`${source.id || index}`}><b>{formatEarningType(source.sourceType)}</b> · {formatMoney(source.amount)} · {formatEarningStatus(source.status)}<small>Kaynak: {source.sourceUsername || "Sistem"} · {formatLicenseDate(source.createdAt)}</small></span>)}{!(user.recentSources || []).length && "Henuz hak edis yok"}</div></td></tr>)}</tbody></table>{!financeUsers.length && <div className="super-empty">Eslesen kullanici finans kaydi yok.</div>}</div>
         </section>}
 
         {financeTab === "payouts" && <section className="super-card">
@@ -1615,6 +1637,29 @@ export default function SuperAdminPanel() {
               <td>{formatLicenseDate(item.createdAt)}</td>
               <td>{item.status === "pending" ? <div className="super-actions"><button className="super-btn" onClick={() => updateWithdrawal(item._id, "approved")}>Ödendi</button><button className="super-btn danger" onClick={() => updateWithdrawal(item._id, "rejected")}>Reddet</button></div> : "-"}</td>
             </tr>)}</tbody></table>{!(financeData.withdrawals || []).length && <div className="super-empty">Henüz hak ediş ödeme talebi yok.</div>}</div>
+        </section>}
+
+        {financeTab === "refunds" && <section className="super-card">
+          <h2>İptal ve İade Talepleri</h2>
+          <div className="super-table-wrap"><table className="super-table"><thead><tr><th>Sipariş</th><th>Kullanıcı</th><th>Tutar</th><th>Neden / Açıklama</th><th>Durum</th><th>Tarih</th><th>İşlem</th></tr></thead>
+            <tbody>{(financeData.refunds || []).map((item) => <tr key={item._id}>
+              <td><strong>#{item.order?.orderNumber || item.trackingCode || String(item.order?._id || "").slice(-8).toUpperCase()}</strong><small>{(item.order?.items || []).map((product) => product.name).join(", ")}</small></td>
+              <td><strong>{item.user?.username || "-"}</strong><small>{item.user?.fullName}<br />{item.user?.email}</small></td>
+              <td><strong>{formatMoney(item.requestedAmount)}</strong></td>
+              <td>{item.reason || "-"}<small>{item.details || "Açıklama yok"}{item.adminNote ? <><br />Not: {item.adminNote}</> : null}</small></td>
+              <td>{item.status === "pending" ? "Bekliyor" : item.status === "processing" ? "İşleniyor" : item.status === "approved" ? "Onaylandı" : item.status === "rejected" ? "Reddedildi" : "İptal"}</td>
+              <td>{formatLicenseDate(item.createdAt)}</td>
+              <td>{item.status === "pending" ? <div className="super-actions"><button className="super-btn" onClick={() => updateRefundRequest(item._id, "approved")}>İadeyi Onayla</button><button className="super-btn danger" onClick={() => updateRefundRequest(item._id, "rejected")}>Reddet</button></div> : "-"}</td>
+            </tr>)}</tbody></table>{!(financeData.refunds || []).length && <div className="super-empty">Henüz iptal veya iade talebi yok.</div>}</div>
+        </section>}
+
+        {financeTab === "audit" && <section className="super-card">
+          <h2>Değiştirilemeyen Finans Denetim Kayıtları</h2>
+          <p className="super-muted">Ödeme, fatura, hak ediş ve iade işlemleri hash zinciriyle saklanır.</p>
+          <div className="super-table-wrap"><table className="super-table"><thead><tr><th>Tarih</th><th>İşlem</th><th>Varlık</th><th>Yetkili</th><th>Tutar</th><th>Kayıt Özeti</th></tr></thead>
+            <tbody>{(financeData.auditEvents || []).map((event) => <tr key={event._id}>
+              <td>{formatLicenseDate(event.createdAt)}</td><td><strong>{event.eventType}</strong></td><td>{event.entityType}<small>{event.entityId}</small></td><td>{event.actor?.username || "Sistem"}<small>{event.actorRole}</small></td><td>{formatMoney(event.amount)}</td><td><small>{JSON.stringify(event.after || event.metadata || {})}</small></td>
+            </tr>)}</tbody></table>{!(financeData.auditEvents || []).length && <div className="super-empty">Henüz finans denetim kaydı yok.</div>}</div>
         </section>}
 
         {financeTab === "products" && <section className="super-card">

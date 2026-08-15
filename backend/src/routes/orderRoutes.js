@@ -5,6 +5,8 @@ import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
+import RefundRequest from "../models/RefundRequest.js";
+import { recordFinancialAudit } from "../services/financialAuditService.js";
 import {
   activateLicensePlanForUser,
   getLicensePlan,
@@ -339,13 +341,107 @@ router.get("/my", authRequired, async (req, res) => {
     const orders = await Order.find({ user: req.user.id })
       .sort({ createdAt: -1 })
       .lean();
+    const refunds = await RefundRequest.find({ user: req.user.id }).sort({ createdAt: -1 }).lean();
+    const refundByOrder = new Map(refunds.map((item) => [String(item.order), item]));
 
-    return res.json(orders);
+    return res.json(orders.map((order) => ({
+      ...order,
+      refundRequest: refundByOrder.get(String(order._id)) || null,
+    })));
   } catch (error) {
     console.error("Siparislerim hatasi:", error);
     return res.status(500).json({
       message: "Siparisler alinamadi.",
     });
+  }
+});
+
+/* ================= REFUND REQUESTS ================= */
+
+router.post("/:id/refund-request", authRequired, async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, user: req.user.id });
+    if (!order) return res.status(404).json({ message: "Siparis bulunamadi." });
+    if (order.orderType !== "product") return res.status(400).json({ message: "Bu siparis icin iade talebi acilamaz." });
+    if (order.paymentStatus !== "paid" || order.status === "cancelled") {
+      return res.status(409).json({ message: "Yalnizca odemesi alinmis aktif siparisler iade edilebilir." });
+    }
+    const reason = String(req.body?.reason || "other");
+    if (!["withdrawal", "defective", "wrong_product", "late_delivery", "other"].includes(reason)) {
+      return res.status(400).json({ message: "Gecersiz iade nedeni." });
+    }
+    const refund = await RefundRequest.create({
+      order: order._id,
+      user: req.user.id,
+      trackingCode: order.trackingCode,
+      requestedAmount: order.total,
+      reason,
+      details: String(req.body?.details || "").trim(),
+    });
+    order.refundRequestedAt = new Date();
+    await order.save();
+    await recordFinancialAudit({
+      eventType: "refund_requested", entityType: "refund", entityId: refund._id,
+      actor: req.user.id, actorRole: req.user.role, amount: refund.requestedAmount,
+      after: { status: refund.status, reason: refund.reason },
+      metadata: { orderId: String(order._id), trackingCode: order.trackingCode },
+    });
+    return res.status(201).json({ message: "Iade talebiniz alindi.", refund });
+  } catch (error) {
+    if (error?.code === 11000) return res.status(409).json({ message: "Bu siparis icin daha once iade talebi olusturuldu." });
+    console.error("Iade talebi hatasi:", error);
+    return res.status(500).json({ message: "Iade talebi olusturulamadi." });
+  }
+});
+
+router.get("/admin/refunds", authRequired, adminOrSuperadmin, async (req, res) => {
+  const refunds = await RefundRequest.find().sort({ createdAt: -1 })
+    .populate("user", "username fullName email")
+    .populate("order", "trackingCode total status paymentStatus items")
+    .populate("reviewedBy", "username fullName").lean();
+  return res.json(refunds);
+});
+
+router.patch("/admin/refunds/:id", authRequired, adminOrSuperadmin, async (req, res) => {
+  const decision = String(req.body?.status || "");
+  const adminNote = String(req.body?.adminNote || "").trim();
+  if (!["approved", "rejected"].includes(decision)) return res.status(400).json({ message: "Gecersiz iade karari." });
+  const refund = await RefundRequest.findOneAndUpdate(
+    { _id: req.params.id, status: "pending" }, { $set: { status: "processing" } }, { new: true }
+  );
+  if (!refund) return res.status(409).json({ message: "Talep bulunamadi veya daha once sonuclandirildi." });
+  try {
+    const order = await Order.findById(refund.order);
+    if (!order) throw new Error("Iade talebinin siparisi bulunamadi.");
+    const before = { paymentStatus: order.paymentStatus, status: order.status, refundStatus: "pending" };
+    if (decision === "approved") {
+      if (!order.stockRestoredAt && order.stockReservations?.length) {
+        await restoreOrderStock(order.stockReservations);
+        order.stockRestoredAt = new Date();
+      }
+      await cancelProductNetworkBonus(order._id);
+      order.paymentStatus = "refunded";
+      order.status = "cancelled";
+      order.refundedAt = new Date();
+      await order.save();
+    }
+    refund.status = decision;
+    refund.adminNote = adminNote;
+    refund.reviewedBy = req.user.id;
+    refund.reviewedAt = new Date();
+    await refund.save();
+    await recordFinancialAudit({
+      eventType: decision === "approved" ? "refund_approved" : "refund_rejected",
+      entityType: "refund", entityId: refund._id, actor: req.user.id, actorRole: req.user.role,
+      amount: refund.requestedAmount, before,
+      after: { paymentStatus: order.paymentStatus, status: order.status, refundStatus: decision },
+      metadata: { orderId: String(order._id), trackingCode: order.trackingCode, adminNote },
+    });
+    return res.json({ message: decision === "approved" ? "Iade onaylandi; stok ve hak edisler geri alindi." : "Iade talebi reddedildi.", refund });
+  } catch (error) {
+    await RefundRequest.updateOne({ _id: refund._id, status: "processing" }, { $set: { status: "pending" } });
+    console.error("Iade sonucu hatasi:", error);
+    return res.status(500).json({ message: error.message || "Iade talebi sonuclandirilamadi." });
   }
 });
 
@@ -465,6 +561,24 @@ router.put("/admin/:id/payment", authRequired, adminOrSuperadmin, async (req, re
           : null;
     }
 
+    await recordFinancialAudit({
+      eventType: "order_payment_updated",
+      entityType: "order",
+      entityId: finalOrder._id,
+      actor: req.user.id,
+      actorRole: req.user.role,
+      amount: finalOrder.total,
+      before: {
+        paymentStatus: previousOrder.paymentStatus,
+        paymentMethod: previousOrder.paymentMethod,
+      },
+      after: {
+        paymentStatus: finalOrder.paymentStatus,
+        paymentMethod: finalOrder.paymentMethod,
+      },
+      metadata: { trackingCode: finalOrder.trackingCode },
+    });
+
     return res.json({
       ...finalOrder,
       licenseActivation,
@@ -538,6 +652,22 @@ router.put("/admin/:id/status", authRequired, adminOrSuperadmin, async (req, res
       order.orderType === "product"
         ? await syncAcademyEnrollmentsForOrder(order)
         : null;
+
+    await recordFinancialAudit({
+      eventType: "order_status_updated",
+      entityType: "order",
+      entityId: order._id,
+      actor: req.user.id,
+      actorRole: req.user.role,
+      amount: order.total,
+      before: { status: previousOrder.status },
+      after: { status: order.status },
+      metadata: {
+        trackingCode: order.trackingCode,
+        shippingCarrier: order.shippingCarrier,
+        cargoTrackingNumber: order.cargoTrackingNumber,
+      },
+    });
 
     return res.json({ ...order, productNetworkBonus, academyEnrollment });
   } catch (error) {

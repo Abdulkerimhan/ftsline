@@ -319,6 +319,14 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    refundRequestedAt: {
+      type: Date,
+      default: null,
+    },
+    refundedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

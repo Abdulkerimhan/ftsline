@@ -1659,6 +1659,19 @@
   }
 }
 
+.dashboard-refund-button {
+  border: 1px solid #f59e0b;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #9a3412;
+  padding: 7px 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dashboard-refund-button:disabled { opacity: 0.6; cursor: wait; }
+.dashboard-refund-note { color: #9a3412; font-weight: 800; }
+
 @media (max-width: 768px) {
   .dashboard-sidebar-backdrop {
     top: 82px;

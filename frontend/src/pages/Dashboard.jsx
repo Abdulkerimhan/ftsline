@@ -124,6 +124,7 @@ export default function Dashboard({ initialSection = "overview" }) {
 
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [refundSubmitting, setRefundSubmitting] = useState("");
   const [referrals, setReferrals] = useState([]);
   const [matrixTree, setMatrixTree] = useState(() => ({
     username: user?.username || "sen",
@@ -325,6 +326,28 @@ export default function Dashboard({ initialSection = "overview" }) {
       directReferrals: directCount,
       teamCount: Math.max(prev.teamCount || 0, referralList.length),
     }));
+  }
+
+  async function requestOrderRefund(orderId) {
+    const details = window.prompt(language === "tr" ? "İade nedeninizi kısaca yazın:" : "Briefly explain your refund reason:", "");
+    if (details === null) return;
+    try {
+      setRefundSubmitting(orderId);
+      const token = sessionStorage.getItem("accessToken");
+      const res = await fetch(`${API}/orders/${orderId}/refund-request`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "other", details }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "İade talebi oluşturulamadı");
+      await fetchMyOrders();
+      window.alert(language === "tr" ? "İade talebiniz alındı." : "Your refund request was received.");
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      setRefundSubmitting("");
+    }
   }
 
   async function fetchMatrixTree() {
@@ -1302,6 +1325,8 @@ export default function Dashboard({ initialSection = "overview" }) {
                       {paymentStatusText}
                     </span>
                     <small>{paymentMethodText}</small>
+                    {order.refundRequest ? <small className="dashboard-refund-note">{language === "tr" ? "İade talebi" : "Refund"}: {order.refundRequest.status === "pending" ? (language === "tr" ? "İnceleniyor" : "Pending") : order.refundRequest.status === "approved" ? (language === "tr" ? "Onaylandı" : "Approved") : order.refundRequest.status === "rejected" ? (language === "tr" ? "Reddedildi" : "Rejected") : order.refundRequest.status}</small> : null}
+                    {!order.refundRequest && order.orderType === "product" && order.paymentStatus === "paid" && order.status !== "cancelled" && order.paymentStatus !== "refunded" ? <button type="button" className="dashboard-refund-button" disabled={refundSubmitting === order._id} onClick={() => requestOrderRefund(order._id)}>{refundSubmitting === order._id ? "..." : language === "tr" ? "İade talebi" : "Request refund"}</button> : null}
                   </div>
                 </div>
               );

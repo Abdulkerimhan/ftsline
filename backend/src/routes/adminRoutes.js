@@ -5,6 +5,8 @@ import Order from "../models/Order.js";
 import User from "../models/User.js";
 import EarningTransaction from "../models/EarningTransaction.js";
 import WithdrawalRequest from "../models/WithdrawalRequest.js";
+import RefundRequest from "../models/RefundRequest.js";
+import FinancialAuditEvent from "../models/FinancialAuditEvent.js";
 import { authRequired } from "../middleware/authMiddleware.js";
 import { uploadProductImages } from "../utils/cloudinaryUpload.js";
 import {
@@ -23,6 +25,7 @@ import {
   cancelProductNetworkBonus,
   distributeProductNetworkBonus,
 } from "../services/productNetworkBonusService.js";
+import { recordFinancialAudit } from "../services/financialAuditService.js";
 
 const router = express.Router();
 
@@ -234,7 +237,7 @@ router.get(
   requireAdminPermission("finance"),
   async (req, res) => {
     try {
-      const [orders, products, users, transactions, withdrawals] = await Promise.all([
+      const [orders, products, users, transactions, withdrawals, refunds, auditEvents] = await Promise.all([
         Order.find()
           .sort({ createdAt: -1 })
           .populate("user", "username fullName email phone")
@@ -254,6 +257,18 @@ router.get(
           .sort({ createdAt: -1 })
           .populate("user", "username fullName email")
           .populate("reviewedBy", "username fullName")
+          .lean(),
+        RefundRequest.find()
+          .sort({ createdAt: -1 })
+          .limit(250)
+          .populate("user", "username fullName email")
+          .populate("order", "orderNumber trackingCode total status paymentStatus items")
+          .populate("reviewedBy", "username fullName")
+          .lean(),
+        FinancialAuditEvent.find()
+          .sort({ createdAt: -1 })
+          .limit(500)
+          .populate("actor", "username fullName email")
           .lean(),
       ]);
 
@@ -320,6 +335,10 @@ router.get(
           pendingPayoutAmount: withdrawals
             .filter((item) => item.status === "pending")
             .reduce((sum, item) => sum + Number(item.amount || 0), 0),
+          pendingRefundCount: refunds.filter((item) => item.status === "pending").length,
+          pendingRefundAmount: refunds
+            .filter((item) => item.status === "pending")
+            .reduce((sum, item) => sum + Number(item.requestedAmount || 0), 0),
         },
         orders: orders.map(serializeFinanceOrder),
         products: products.map((product) => ({
@@ -337,6 +356,8 @@ router.get(
         ),
         transactions,
         withdrawals,
+        refunds,
+        auditEvents,
       });
     } catch (error) {
       console.error("Finans ozeti alinamadi:", error);
@@ -384,6 +405,18 @@ router.patch(
           $inc: { totalWithdrawn: request.amount },
         });
       }
+
+      await recordFinancialAudit({
+        eventType: "withdrawal_request_updated",
+        entityType: "withdrawal",
+        entityId: request._id,
+        actor: req.user._id,
+        actorRole: req.user.role,
+        amount: request.amount,
+        before: { status: "pending" },
+        after: { status, note },
+        metadata: { userId: request.user?._id || request.user },
+      });
 
       return res.json({
         message: status === "approved" ? "Hak ediş ödendi olarak işaretlendi" : "Talep reddedildi ve tutar bakiyeye iade edildi",
@@ -464,6 +497,27 @@ router.patch(
               paidAt: new Date(),
             })
           : null;
+      await recordFinancialAudit({
+        eventType: "finance_order_updated",
+        entityType: "order",
+        entityId: order._id,
+        actor: req.user._id,
+        actorRole: req.user.role,
+        amount: order.total,
+        before: {
+          paymentStatus: previousOrder.paymentStatus,
+          status: previousOrder.status,
+          invoiceIssued: previousOrder.invoiceIssued,
+          invoiceNumber: previousOrder.invoiceNumber,
+        },
+        after: {
+          paymentStatus: order.paymentStatus,
+          status: order.status,
+          invoiceIssued: order.invoiceIssued,
+          invoiceNumber: order.invoiceNumber,
+        },
+        metadata: { changedFields: Object.keys(update) },
+      });
       res.json({
         message: "Finans kaydi guncellendi",
         order: serializeFinanceOrder(order),

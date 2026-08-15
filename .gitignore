@@ -34,6 +34,7 @@ Thumbs.db
 
 # Runtime uploads: keep folder placeholders only
 backend/uploads/**
+backend/backups/
 !backend/uploads/
 !backend/uploads/products/
 !backend/uploads/products/.gitkeep
