@@ -12,6 +12,12 @@ import User from "./models/User.js";
 import SiteSetting from "./models/SiteSetting.js";
 import { processDueLicenseMatrixPayouts } from "./services/licensePlanService.js";
 import { ensureLicensedUsersMatrixPlacement } from "./services/matrixService.js";
+import {
+  isLoginLocked,
+  loginLockMessage,
+  recordFailedLogin,
+  resetFailedLogins,
+} from "./services/loginSecurityService.js";
 
 import productRoutes from "./routes/productRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -201,7 +207,7 @@ app.post("/api/auth/login", async (req, res) => {
 
     const user = await User.findOne({
       $or: [{ email: normalizedIdentifier }, { username: normalizedIdentifier }],
-    }).select("+passwordHash");
+    }).select("+passwordHash +failedLoginAttempts +loginLockedUntil");
 
     if (!user) {
       return res.status(401).json({ message: "Kullanıcı bulunamadı" });
@@ -211,11 +217,23 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(403).json({ message: "Hesap pasif" });
     }
 
+    if (isLoginLocked(user)) {
+      return res.status(423).json({ message: loginLockMessage(user) });
+    }
+
     const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Şifre yanlış" });
+      const result = await recordFailedLogin(user, { ipAddress: req.ip });
+      if (result.locked) {
+        return res.status(423).json({ message: loginLockMessage(user) });
+      }
+      return res.status(401).json({
+        message: `Şifre yanlış. ${result.attemptsRemaining} deneme hakkınız kaldı.`,
+      });
     }
+
+    await resetFailedLogins(user);
 
     const token = jwt.sign(
       {

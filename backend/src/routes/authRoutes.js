@@ -3,6 +3,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import User from "../models/User.js";
+import {
+  isLoginLocked,
+  loginLockMessage,
+  recordFailedLogin,
+  resetFailedLogins,
+} from "../services/loginSecurityService.js";
 
 const router = express.Router();
 
@@ -216,18 +222,34 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({
       $or: [{ email: loginValue }, { username: loginValue }],
     })
-      .select("+passwordHash")
+      .select("+passwordHash +failedLoginAttempts +loginLockedUntil")
       .populate("sponsor", "username fullName email");
 
     if (!user) {
       return res.status(401).json({ message: "Kullanıcı bulunamadı" });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({ message: "Hesap pasif" });
+    }
+
+    if (isLoginLocked(user)) {
+      return res.status(423).json({ message: loginLockMessage(user) });
+    }
+
     const ok = await bcrypt.compare(password, user.passwordHash);
 
     if (!ok) {
-      return res.status(401).json({ message: "Şifre yanlış" });
+      const result = await recordFailedLogin(user, { ipAddress: req.ip });
+      if (result.locked) {
+        return res.status(423).json({ message: loginLockMessage(user) });
+      }
+      return res.status(401).json({
+        message: `Şifre yanlış. ${result.attemptsRemaining} deneme hakkınız kaldı.`,
+      });
     }
+
+    await resetFailedLogins(user);
 
     const token = signToken(user);
 

@@ -106,6 +106,19 @@ const UserSchema = new mongoose.Schema(
       select: false,
     },
 
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+      min: 0,
+      select: false,
+    },
+
+    loginLockedUntil: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
     resetCode: {
       type: String,
       default: "",
@@ -323,6 +336,8 @@ UserSchema.methods.toJSON = function () {
   delete obj.passwordHash;
   delete obj.resetCode;
   delete obj.resetCodeExpiresAt;
+  delete obj.failedLoginAttempts;
+  delete obj.loginLockedUntil;
   return obj;
 };
 
